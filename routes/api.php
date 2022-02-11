@@ -1,0 +1,211 @@
+<?php
+
+use App\Http\Controllers\API\Accounting\CurrencySetupController;
+use App\Http\Controllers\API\Accounting\PC\PcController;
+use App\Http\Controllers\API\Accounting\RE\ReController;
+use App\Http\Controllers\API\Accounting\RFP\RfpController;
+use App\Http\Controllers\API\Accounting\RFP\RfpMainActualSignController;
+use App\Http\Controllers\API\Accounting\RFP\RfpMainController;
+use App\Http\Controllers\API\Accounting\RFP\RfpMainDetailController;
+use App\Http\Controllers\API\Accounting\RFP\RFPMainLiquidationController;
+use App\Http\Controllers\API\General\ActualSignController;
+use App\Http\Controllers\API\General\AttachmentController;
+use App\Http\Controllers\API\General\BusinessListController;
+use App\Http\Controllers\API\General\BusinessProjectController;
+use App\Http\Controllers\API\General\CustomController;
+use App\Http\Controllers\API\General\ProjectBusinessController;
+use App\Http\Controllers\API\General\SetupProjectController;
+use App\Http\Controllers\API\General\SystemReportingManagerController;
+use App\Http\Controllers\API\HumanResource\EmployeeController;
+use App\Http\Controllers\API\HumanResource\ITF\ItfController;
+use App\Http\Controllers\API\HumanResource\LAF\LafController;
+use App\Http\Controllers\API\HumanResource\OT\OtController;
+use App\Http\Controllers\API\User\LoginController;
+use App\Http\Controllers\API\Workflow\ApprovalController;
+use App\Http\Controllers\API\Workflow\ApprovedController;
+use App\Http\Controllers\API\Workflow\ClarificationController;
+use App\Http\Controllers\API\Workflow\InProgressController;
+use App\Http\Controllers\API\Workflow\InputController;
+use App\Http\Controllers\API\Workflow\RejectedController;
+use App\Http\Controllers\API\Workflow\WithdrawnController;
+use App\Http\Controllers\ApiController;
+use App\Models\General\SystemReportingManager;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Laravel\Passport\Http\Controllers\AccessTokenController;
+
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| is assigned the "api" middleware group. Enjoy building your API!
+|
+*/
+
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+// Accounting - RFP
+Route::resource('rfp', RfpController::class);
+Route::resource('rfp-main', RfpMainController::class);
+Route::resource('rfp-main-detail', RfpMainDetailController::class,  ['only' => ['show']]);
+Route::resource('rfp-main-liquidation', RFPMainLiquidationController::class,  ['only' => ['show']]);
+Route::resource('rfp-main-actualsign', RfpMainActualSignController::class,  ['only' => ['show']]);
+
+// Accounting - RE
+Route::post('saveRe', [ReController::class, 'saveRE']);
+Route::get('getRE/{id}', [ReController::class, 'getRE']);
+
+route::get('get-ReExpense/{id}', [ReController::class, 'getExpense']);
+route::get('get-ReTranspo/{id}', [ReController::class, 'getTranspo']);
+
+// Accounting - PC
+Route::post('savePc' ,[PcController::class, 'savePc']);
+route::get('get-PcMain/{id}', [PcController::class, 'getPcMain']);
+
+route::get('get-PcExpense/{id}', [PcController::class, 'getExpense']);
+route::get('get-PcTranspo/{id}', [PcController::class, 'getTranspo']);
+
+
+
+
+
+
+Route::resource('general-currencies', CurrencySetupController::class);
+
+
+// General
+Route::resource('general-managers', SystemReportingManagerController::class);
+Route::resource('general-projects', SetupProjectController::class);
+// To Modify
+// Route::resource('general-businesses', BusinessListController::class);
+    Route::get('general-businesses',[BusinessListController::class, 'index']);
+    Route::get('general-businesses/{compId}',[BusinessListController::class, 'showByCompId']);
+
+
+
+
+Route::resource('general-businesses-projects', BusinessProjectController::class);
+Route::resource('general-project-business', ProjectBusinessController::class);
+
+
+// Route::resource('general-actual-sign', ActualSignController::class);
+Route::get('general-actual-sign/{processid}/{frmname}/{compid}',[ActualSignController::class, 'getActualsign']);
+
+// Custom Reporting Manager
+Route::get('/reporting-manager/{id}', [CustomController::class, 'getReportingManager']);
+Route::get('/business-client/{id}', [CustomController::class, 'getClient']);
+Route::get('/business-list/{id}', [CustomController::class, 'getBusinessList']);
+
+
+
+Route::get('/get-expenseType', [CustomController::class, 'expenseType']);
+Route::get('/get-currencyType', [CustomController::class, 'currencyType']);
+Route::get('/get-transpoSetup', [CustomController::class, 'transpoSetup']);
+Route::get('/get-employees/{companyId}', [CustomController::class, 'getEmployees']);
+Route::get('/get-reports', [CustomController::class, 'getMediumOfReport']);
+Route::get('/get-leavetype', [CustomController::class, 'getLeaveType']);
+
+
+
+
+
+
+
+
+
+// Route::post('/create-rfp', [RfpMainController::class, 'saveRFP'])->name('save.rfp');
+
+// Human Resource
+Route::resource('hr-employees', EmployeeController::class);
+
+//Students praktis
+Route::prefix('/student')->group(function(){
+    Route::get('/list', [ApiController::class, 'index'])->name('index.list');
+});
+
+
+
+
+// API
+Route::post('oauth/token', [AccessTokenController::class, 'issueToken']);
+
+Route::prefix('/user')->group(function(){
+    Route::post('login',[LoginController::class, 'login']);
+    Route::middleware('auth:api')->post('logout',[LoginController::class, 'logout']);
+    Route::middleware('auth:api')->get('profile',[LoginController::class, 'profile']);
+});
+
+
+
+// Workflow
+Route::get('getWithdrawn/{loggedUserId}/{companyId}', [WithdrawnController::class, 'getWithdrawn']);
+Route::get('getInProgress/{loggedUserId}/{companyId}', [InProgressController::class, 'getInProgress']);
+Route::get('getApprovals/{loggedUserId}/{companyId}', [ApprovalController::class, 'getApprovals']);
+Route::get('getRejected/{loggedUserId}/{companyId}', [RejectedController::class, 'getRejected']);
+Route::get('getApproved/{loggedUserId}/{companyId}', [ApprovedController::class, 'getApproved']);
+Route::get('getInputs/{loggedUserId}/{companyId}', [InputController::class, 'getInputs']);
+Route::get('getClarification/{loggedUserId}/{companyId}', [ClarificationController::class, 'getClarification']);
+
+
+// get recipient of clarification
+Route::get('getRecipient/{processId}/{loggedUserId}/{companyId}/{formName}', [CustomController::class, 'getRecipient']);
+
+
+
+// get inprogress id 
+Route::get('get-Inprogress/{id}/{companyId}/{formName}', [CustomController::class, 'getInprogressId']);
+
+
+Route::get('getRfpAttachments/{id}/{forms}', [AttachmentController::class, 'getAttachments']);
+
+Route::post('withdraw-request', [CustomController::class, 'withdrawnByIDRemarks']);
+Route::post('reject-request', [CustomController::class, 'rejectedByIDRemarks']);
+Route::post('approve-request', [CustomController::class, 'approvedByIDRemarks']);
+Route::post('send-clarity', [CustomController::class, 'sendClarity']);
+Route::post('reply-request', [CustomController::class, 'clarifyReplyBtnRemarks']);
+Route::post('inputs-clarity', [CustomController::class, 'clarifyBtnInputs']);
+
+
+
+
+Route::post('rfpLiquidation', [ApprovalController::class, 'rfpLiquidation']);
+
+Route::post('validateOT', [OtController::class, 'validateOT']);
+Route::post('validateActualOT', [OtController::class, 'validateActualOT']);
+
+Route::post('save-ot', [OtController::class, 'saveOT']);
+Route::get('ot-main/{id}', [OtController::class, 'getOtMain']);
+Route::get('actual-ot-main/{id}', [OtController::class, 'getActualOtMain']);
+Route::post('approve-npu-init', [OtController::class, 'approveOTbyInit']);
+
+Route::post('save-itf', [ItfController::class, 'saveItf']);
+Route::get('itf-main/{id}', [ItfController::class, 'getItfMain']);
+Route::get('itf-details/{id}', [ItfController::class, 'getItfDetails']);
+Route::get('itf-actual-details/{id}', [ItfController::class, 'getItfActualDetails']);
+Route::post('approve-itf-actualinput', [ItfController::class, 'approveActualItfInputs']);
+
+
+Route::post('validate-laf-insert', [LafController::class, 'checkIfLafExist']);
+Route::post('save-laf', [LafController::class, 'saveLaf']);
+Route::get('get-laf-main/{id}/{companyId}', [LafController::class, 'getLafMain']);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
