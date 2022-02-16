@@ -16,7 +16,7 @@
     </head>
     <body class="hold-transition sidebar-mini">
       
-        <div id="app">
+        {{-- <div id="app"> --}}
             
         </div>
             {{-- App JS --}}

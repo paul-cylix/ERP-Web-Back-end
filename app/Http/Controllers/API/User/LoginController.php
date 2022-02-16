@@ -16,7 +16,7 @@ class LoginController extends Controller
         $login = $request->validate([
             'email' => 'required',
             'password'=> 'required',
-            'companyId' => 'required',
+            // 'companyId' => 'required',
         ]);
         if (!Auth::attempt($login)){
             return response()->json(['message' => 'The email or password you’ve entered is incorrect.'], 401);
