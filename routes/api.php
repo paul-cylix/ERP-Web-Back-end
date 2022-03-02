@@ -16,6 +16,7 @@ use App\Http\Controllers\API\General\CustomController;
 use App\Http\Controllers\API\General\ProjectBusinessController;
 use App\Http\Controllers\API\General\SetupProjectController;
 use App\Http\Controllers\API\General\SystemReportingManagerController;
+use App\Http\Controllers\API\HumanResource\DTR\DtrController;
 use App\Http\Controllers\API\HumanResource\EmployeeController;
 use App\Http\Controllers\API\HumanResource\ITF\ItfController;
 use App\Http\Controllers\API\HumanResource\LAF\LafController;
@@ -124,16 +125,30 @@ Route::get('/get-leavetype', [CustomController::class, 'getLeaveType']);
 // Human Resource
 Route::resource('hr-employees', EmployeeController::class);
 
-//Students praktis
-Route::prefix('/student')->group(function(){
-    Route::get('/list', [ApiController::class, 'index'])->name('index.list');
-});
+    // DTR
+    
+    Route::get('get-manager/{id}', [DtrController::class, 'checkManager']);
+    Route::get('get-hr-emp/{id}', [DtrController::class, 'index']);
+    Route::post('get-hr-emp', [DtrController::class, 'approveSelected']);
+    Route::post('post-hr-emp', [DtrController::class, 'approve']);
+
+
+    
+
+// //Students praktis
+// Route::prefix('/student')->group(function(){
+//     Route::get('/list', [ApiController::class, 'index'])->name('index.list');
+// });
 
 
 
 
 // API
 Route::post('oauth/token', [AccessTokenController::class, 'issueToken']);
+// Route::get('/sync', [LoginController::class, 'sync']);
+// Route::get('/getdata', [LoginController::class, 'getdata']);
+
+
 
 Route::prefix('/user')->group(function(){
     Route::post('login',[LoginController::class, 'login']);

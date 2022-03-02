@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -27,8 +28,15 @@ class LoginController extends Controller
         $ObjToken = $user->createToken('Personal Access Token');
         $token = $user->createToken('Personal Access Token')->accessToken;
         $expiration = $ObjToken->token->expires_at->diffInSeconds(Carbon::now());
-       
-        $userData = array('user' => $user, 'Personal_Access_Token' => $token, 'expires_at' => $expiration );
+        
+        // Log::debug($user->id);
+
+        $isManager = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemreportingmanager` a WHERE a.`RMID` = $user->id LIMIT 1), FALSE) AS isManager");
+        // $isManager[0]->isManager;
+        // Log::debug($isManager[0]->isManager);
+        $isManager = $isManager[0]->isManager;
+
+        $userData = array('user' => $user, 'Personal_Access_Token' => $token, 'expires_at' => $expiration, 'isManager' => $isManager );
         
   
         return response()->json($userData);
@@ -59,10 +67,6 @@ class LoginController extends Controller
         return response($response, 200);
         // return response()->json(['token' =>  $request->user()]);
     }
-
-
-
-
 
 
     /**
@@ -140,4 +144,10 @@ class LoginController extends Controller
     {
         //
     }
+
+
+
+
+
+    
 }
