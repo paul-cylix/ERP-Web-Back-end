@@ -1155,4 +1155,60 @@ class CustomController extends ApiController
 
         return response()->json(['message' => 'The request is now for clarification'], 200);
     }
+
+
+        // View Message
+        public function getNotification($id,$frmname){
+            $comments = DB::select("
+            SELECT 
+                *,
+                DATE_FORMAT(a.`TS`, '%h:%i %p - %b %d, %Y') AS DTLogs,
+                (SELECT 
+                UserFull_name 
+                FROM
+                general.`users` b 
+                WHERE b.id = a.`RECEIVERID`) AS 'RECEIVERNAME',
+                (SELECT 
+                UserFull_name 
+              FROM
+                general.`users` b 
+                WHERE b.id = a.`SENDERID`) AS 'SENDERNAME',
+                (SELECT 
+                c.`USER_GRP_IND` 
+                FROM
+                general.`actual_sign` c 
+                WHERE c.`ID` = a.`ACTUALID`) AS USERLEVEL,
+                (SELECT 
+                c.`INITID` 
+                FROM
+                general.`actual_sign` c 
+                WHERE c.`ID` = a.`ACTUALID`) AS INITID 
+            FROM
+                general.`notifications` a 
+            WHERE
+                 a.`PROCESSID` = '".$id."'
+                AND a.`FRM_NAME` = '".$frmname."'
+            ");
+            return response()->json($comments,200);
+        }
+
+        public function getStatus($id, $frmname, $companyId){
+            $status = DB::select("
+                SELECT 
+                  a.`ID`,a.`USER_GRP_IND`, a.`FRM_NAME`,a.`STATUS`, a.`ORDERS`, a.`ApprovedRemarks`,DATE_FORMAT(a.`SIGNDATETIME`, '%h:%i %p - %b %d, %Y') AS signDateTime,
+                  (SELECT 
+                    UserFull_name 
+                  FROM
+                    general.`users` usr 
+                  WHERE usr.id = a.`UID_SIGN`) AS 'Approved_By' 
+                FROM
+                  general.`actual_sign` a 
+                WHERE a.`PROCESSID` = '".$id."'
+                  AND a.`FRM_NAME` = '".$frmname."' 
+                  AND a.`COMPID` = '".$companyId."'
+                ORDER BY a.`ORDERS`
+            ");
+            return response()->json($status,200);
+        
+        }
 }

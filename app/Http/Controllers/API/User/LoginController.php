@@ -31,12 +31,17 @@ class LoginController extends Controller
         
         // Log::debug($user->id);
 
+        // check if manager
         $isManager = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemreportingmanager` a WHERE a.`RMID` = $user->id LIMIT 1), FALSE) AS isManager");
-        // $isManager[0]->isManager;
-        // Log::debug($isManager[0]->isManager);
         $isManager = $isManager[0]->isManager;
 
-        $userData = array('user' => $user, 'Personal_Access_Token' => $token, 'expires_at' => $expiration, 'isManager' => $isManager );
+        // get user joined company
+        $companies = $this->showCompanies(11);
+
+        
+
+
+        $userData = array('user' => $user, 'Personal_Access_Token' => $token, 'expires_at' => $expiration, 'isManager' => $isManager, 'company' => $companies );
         
   
         return response()->json($userData);
@@ -66,6 +71,20 @@ class LoginController extends Controller
         $response = ['message' => 'You have been successfully logged out!'];
         return response($response, 200);
         // return response()->json(['token' =>  $request->user()]);
+    }
+
+    public function showCompanies($id){
+        $companies = DB::select("SELECT 
+        title_id AS companyID,
+        title_name AS companyName 
+      FROM
+        general.`project_title` a 
+        INNER JOIN general.`allowedcmp` b 
+          ON (a.`title_id` = b.`CID`) 
+      WHERE b.`UID` = $id");
+
+        return $companies;
+      
     }
 
 

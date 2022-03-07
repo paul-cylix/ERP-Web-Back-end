@@ -133,6 +133,16 @@ Route::resource('hr-employees', EmployeeController::class);
     Route::post('post-hr-emp', [DtrController::class, 'approve']);
 
 
+    // Comments
+    // getNotification
+    Route::get('notifications/{id}/{frmname}', [CustomController::class, 'getNotification']);
+
+    // Get Status
+    Route::get('status/{id}/{frmname}/{companyId}', [CustomController::class, 'getStatus']);
+
+
+
+
     
 
 // //Students praktis
@@ -152,6 +162,8 @@ Route::post('oauth/token', [AccessTokenController::class, 'issueToken']);
 
 Route::prefix('/user')->group(function(){
     Route::post('login',[LoginController::class, 'login']);
+    Route::get('companies/{id}',[LoginController::class, 'showCompanies']);
+
     Route::middleware('auth:api')->post('logout',[LoginController::class, 'logout']);
     Route::middleware('auth:api')->get('profile',[LoginController::class, 'profile']);
 });
