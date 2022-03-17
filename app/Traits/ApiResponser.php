@@ -103,6 +103,15 @@ trait ApiResponser
         return $ref;
     }
 
+    protected function getSofRef($companyId){
+        $ref = DB::select("SELECT IFNULL ((SELECT MAX(SUBSTR(a.`soNum`,10)) FROM sales_order.`sales_orders` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`titleid` = '".$companyId."'), FALSE) +1 AS 'ref'");
+        $ref = $ref[0]->ref;
+        $ref = str_pad($ref, 4, "0", STR_PAD_LEFT); 
+        $ref = "SOF-" . date('Y') . "-" . $ref;
+
+        return $ref;
+    }
+
 
     protected function showAll(Collection $collection, $code = 200){
         
@@ -391,5 +400,53 @@ trait ApiResponser
 
     protected function deleteLafMain($request){
         LafMain::where('main_id', $request->processId)->delete();
+    }
+
+// SOF
+
+    // get duration days
+    // Date Accepted
+    // $projectStart = date_create($request->projectStart); 
+    // $projectStart = date_format($projectStart, 'Y-m-d');
+    protected function dateDifference($projectStart, $projectEnd){
+        $projectStartConverted = strtotime($projectStart);
+        $projectEndConverted = strtotime($projectEnd);
+
+        $projectDuation = ($projectEndConverted - $projectStartConverted)/60/60/24;
+        return $projectDuation;
+    }
+
+    protected function dateFormatter($date){
+
+        $isTrue =json_decode($date,true);
+        if ($isTrue) {
+            $date = date_create($date);
+            $date = date_format($date, 'Y-m-d');
+            return $date;
+        } else {
+            return null;
+        }
+        
+
+    }
+
+    protected function amountFormatter($amount){
+        $amount = floatval(str_replace(',', '', $amount));
+        return $amount;
+    }
+
+    protected function sofTypeConvert($sof){
+        if($sof === 'DLV'){
+            return ['Sales Order - Delivery', 6];
+        }
+        if($sof === 'PRJ'){
+            return ['Sales Order - Project', 8];
+        }
+        if($sof === 'DMO'){
+            return ['Sales Order - Demo', 5];
+        }
+        if($sof === 'POC'){
+            return ['Sales Order - POC', 5];
+        }
     }
 }
