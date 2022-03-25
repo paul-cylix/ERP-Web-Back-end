@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API\General;
 use App\Http\Controllers\ApiController;
 use App\Models\General\SetupProject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class SetupProjectController extends ApiController
 {
@@ -51,9 +53,14 @@ class SetupProjectController extends ApiController
      * @param  \App\Models\General\SetupProject  $setupProject
      * @return \Illuminate\Http\Response
      */
-    public function show(SetupProject $setupProject)
+    public function show($id)
     {
-        //
+
+        $response = DB::select("SELECT * FROM general.`setup_project` a
+        INNER JOIN general.`business_list` b
+        ON a.`ClientID` = b.`Business_Number`
+        WHERE a.`SOID` = '".$id."'");
+        return response()->json($response, 200);
     }
 
     /**

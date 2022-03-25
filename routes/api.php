@@ -228,21 +228,50 @@ Route::get('get-laf-main/{id}/{companyId}', [LafController::class, 'getLafMain']
 // Sales Order
 // Business List
 Route::get('customer-name/{companyId}', [SofController::class, 'customerName']);
+// Business List by id
+Route::get('customer-data/{companyId}/{businessId}', [SofController::class, 'customerName']);
 // get address by selected business list / customer name
 Route::get('customer-address/{customerId}', [SofController::class, 'getCustomerAddress']);
 // get customer contact info
 Route::get('customer-contact/{customerId}', [SofController::class, 'getContacts']);
 // get a list of project code
 Route::get('customer-projectcode/{customerId}',[SofController::class, 'getSetupProject']);
+// get a customer delegates
+Route::get('customer-delegates/{customerId}',[SofController::class, 'getDelegates']);
+// get all coordinators
+Route::get('customer-cooridnators',[SofController::class, 'getCoordinators']);
+// get all coordinators
+Route::get('selected-cooridnator/{id}',[SofController::class, 'getSelectedCoordinator']);
 // get system and document details
 Route::get('customer-system-details',[SofController::class, 'getSystemDetails']);
+Route::get('customer-selected-system-details/{id}',[SofController::class, 'getSelectedSystemDetails']);
 Route::get('customer-document-details',[SofController::class, 'getDocumentDetails']);
+Route::get('customer-selected-document-details/{id}',[SofController::class, 'getSelectedDocumentDetails']);
+
+
 // Insert System and Document Details
 Route::post('customer-details-insert', [SofController::class, 'insertSofModalDetails']);
 // check if project code exist
 Route::post('customer-projectcode-check', [SofController::class, 'checkIfProjectCodeExist']);
+// check if project code exist with Soid
+Route::post('customer-projectcode-check-soid', [SofController::class, 'checkIfProjectCodeExistSoid']);
 // create sof request
 Route::post('save-sof', [SofController::class, 'saveSOF']);
+// get sales_order.sales_orders by id
+Route::get('get-salesorder/{id}', [SofController::class, 'getSalesOrder']);
+// get sales_order systems
+Route::get('get-salesorder-system/{id}', [SofController::class, 'getSalesOrderSystem']);
+// get sales_order documents
+Route::get('get-salesorder-document/{id}', [SofController::class, 'getSalesOrderDocument']);
+
+
+
+
+
+
+
+
+
 
 
 

@@ -15,6 +15,7 @@ use App\Models\Accounting\RE\ReMain;
 use App\Models\HumanResource\ITF\ItfMain;
 use App\Models\HumanResource\LAF\LafMain;
 use App\Models\HumanResource\OT\OtMain;
+use Illuminate\Support\Facades\Log;
 
 class CustomController extends ApiController
 {
@@ -117,6 +118,15 @@ class CustomController extends ApiController
             LafMain::where('main_id', $request->reqId)->update(['status' => 'Withdrawn']);
             return response()->json(['message' => 'Leave Request has been Successfully withdrawn'], 200);
         }
+
+        if($request->frmClass === 'sales_order_frm'){
+            Log::debug($request);
+
+            $this->withdrawActualSign($request);
+            DB::update("UPDATE sales_order.`sales_orders` a SET a.`Status` = 'Withdrawn'  WHERE a.`id` = '".$request->reqId."' AND a.`titleid` = '".$request->companyId."' ");
+            return response()->json(['message' => 'Sales Order Request has been Successfully withdrawn'], 200);
+            
+        }
     }
 
     // change to withdrawn 
@@ -192,6 +202,18 @@ class CustomController extends ApiController
 
             return response()->json(['message' => 'Leave Request has been Rejected'], 200);
         }
+
+
+        if ($request->frmClass === 'sales_order_frm') {
+            // Log::debug($request);
+
+            DB::update("UPDATE sales_order.`sales_orders` a SET a.`Status` =  'Rejected' WHERE a.`id` = '".$request->processId."' AND a.`titleid` = '".$request->companyId."' ");
+            DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `status` = 'Rejected', UID_SIGN = '".$request->loggedUserId."', SIGNDATETIME = NOW(), ApprovedRemarks = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'SALES_ORDER_FRM' AND `COMPID` = '".$request->companyId."'  ;");
+        
+            return response()->json(['message' => 'Sales Order Request has been Rejected'], 200);
+            
+        }
+
     }
 
     public function rejectedRequest($request)
@@ -375,11 +397,90 @@ class CustomController extends ApiController
                 return response()->json(['message' => 'Leave Request has been Successfully approved'], 200);
             }
             
-
-
-
    
         }
+
+        if($request->frmClass === 'sales_order_frm'){
+            $isCoordinatorRequired = $request->isCoordinatorRequired;
+            $isCoordinatorRequired = json_decode($isCoordinatorRequired);
+
+            $isDmoPocComplete = $request->isDmoPocComplete;
+            $isDmoPocComplete = json_decode($isDmoPocComplete);
+
+            $isSiConfirmation = $request->isSiConfirmation;
+            $isSiConfirmation = json_decode($isSiConfirmation);
+
+
+            if($isCoordinatorRequired){
+                // 1
+                log::debug('1');
+                DB::table('sales_order.projectcoordinator')->insert([
+                    'CoordID' => $request->coordinatorID,
+                    'CoordinatorName' =>$request->coordinatorName,
+                    'SOID' => $request->processId,
+                    'SOTYPE' => 'Sales Order - Project'
+                ]);
+                DB::update("UPDATE general.`setup_project` a SET a.`Coordinator` = '".$request->coordinatorID."' WHERE a.`SOID` = '".$request->processId."' AND a.`title_id` = '".$request->companyId."' ");
+                $this->approveSofActualSign($request);
+                return response()->json(['message' => 'Sales Order Request has been Successfully approved'], 200);
+
+
+            } else if($isSiConfirmation) {
+                log::debug('2');
+                $salesInvoiceReleased = json_decode($request->salesInvoiceReleased);
+                $salesInvoiceReleased = intval($salesInvoiceReleased);
+
+                $dateOfInvoice = date_create($request->dateOfInvoice);
+                $dateOfInvoice = date_format($dateOfInvoice, 'Y-m-d');
+                // log::debug(gettype($dateOfInvoice));
+                
+                DB::update("UPDATE general.`setup_project` a SET a.`ProjectStatus` = 'Closed' WHERE a.`title_id` = '".$request->companyId."' AND a.`status` LIKE 'Active%' AND a.`SOID` = '".$request->processId."'");
+                DB::update("UPDATE sales_order.`sales_orders` a 
+                SET
+                    a.`Status` = 'Completed',
+                    a.`InvoiceNumber` = '".$request->invoiceNumber."',
+                    a.`InvoiceDate` = '".$dateOfInvoice."',
+                    a.`IsInvoiceReleased` = '".$salesInvoiceReleased."'
+                WHERE a.`titleid` = '".$request->companyId."' 
+                    AND a.`id` = '".$request->processId."'
+                ");
+                DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `status` = 'Completed', UID_SIGN = '".$request->loggedUserId."', SIGNDATETIME = NOW(), ApprovedRemarks = '" .$request->remarks. "', `DoneApproving` = '1' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'SALES_ORDER_FRM' AND `COMPID` = '".$request->companyId."'  ;");
+                
+                return response()->json(['message' => 'Done! Sales Order Request has been Successfully approved'], 200);
+
+            
+            } else if($isDmoPocComplete) {
+                // 3
+                log::debug('3');
+
+                DB::update("UPDATE general.`setup_project` a SET a.`ProjectStatus` = 'Closed' WHERE a.`title_id` = '".$request->companyId."' AND a.`status` LIKE 'Active%' AND a.`SOID` = '".$request->processId."'");
+                DB::update("UPDATE sales_order.`sales_orders` a SET a.`Status` = 'Completed',a.`IsInvoiceReleased` = '1' WHERE a.`titleid` = '".$request->companyId."' AND a.`id` = '".$request->processId."'");
+                DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `status` = 'Completed', UID_SIGN = '".$request->loggedUserId."', SIGNDATETIME = NOW(), ApprovedRemarks = '" .$request->remarks. "', `DoneApproving` = '1' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'SALES_ORDER_FRM' AND `COMPID` = '".$request->companyId."'  ;");
+                return response()->json(['message' => 'Done! Sales Order Request has been Successfully approved'], 200);
+            } else {
+                // 4
+                log::debug('4');
+
+                $this->approveSofActualSign($request);
+                return response()->json(['message' => 'Sales Order Request has been Successfully approved'], 200);
+            }
+
+
+            // approveSofActualSign
+            
+
+
+     
+            
+       
+            // log::debug(json_decode($request->isCoordinatorRequired));
+            // approveSofActualSign
+        }
+    }
+
+    public function approveSofActualSign($request){
+        DB::update("UPDATE general.`actual_sign` SET  `webapp` = '1', `status` = 'Completed', UID_SIGN = '".$request->loggedUserId."', SIGNDATETIME = NOW(), ApprovedRemarks = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'SALES_ORDER_FRM' AND `COMPID` = '".$request->companyId."'  ;");
+        DB::update("UPDATE general.`actual_sign` SET `status` = 'In Progress' WHERE `status` = 'Not Started' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'SALES_ORDER_FRM' AND `COMPID` = '".$request->companyId."' LIMIT 1;");
     }
 
     public function addPCExpenseAndTranpo($request)
@@ -514,60 +615,17 @@ class CustomController extends ApiController
     {
 
         if ($request->form === 'Request for Payment') {
-
-            // $notificationIdClarity = DB::table('general.notifications')->insertGetId([
-            //     'ParentID' => '0',
-            //     'levels' => '0',
-            //     'FRM_NAME' => $request->form, // form
-            //     'PROCESSID' => $request->processId, // processid
-            //     'SENDERID' => $request->loggedUserId, // loggedUserId
-            //     'RECEIVERID' => $request->recipientId, // recipientId
-            //     'MESSAGE' => $request->remarks, // remarks
-            //     'TS' => NOW(),
-            //     'SETTLED' => 'NO',
-            //     'ACTUALID' => $request->inprogressId, // inprogressid
-            //     'SENDTOACTUALID' => '0',
-            //     'UserFullName' => $request->loggedUserFullname,
-
-            // ]);
-
-            // DB::update("UPDATE general.`actual_sign` a SET a.`webapp` = '1', a.`STATUS` = 'For Clarification', a.`CurrentSender` = '" . $request->loggedUserId . "', a.`CurrentReceiver` = '" . $request->recipientId . "' ,
-            // a.`NOTIFICATIONID` = '" . $notificationIdClarity . "', a.`UID_SIGN` = '" . $request->loggedUserId . "',a.`SIGNDATETIME` = NOW(), a.`ApprovedRemarks` = '" . $request->remarks . "' WHERE
-            // a.`PROCESSID` = '" . $request->processId . "' AND a.`COMPID` = '" . $request->companyId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`STATUS` = 'In Progress'
-            // ");
             $notificationIdClarity = $this->addNotification($request);
             $this->clarifyActualSign($request, $notificationIdClarity);
             DB::update("UPDATE accounting.`request_for_payment` a SET a.`STATUS` = 'For Clarification'  WHERE a.`ID` = '" . $request->processId . "';");
             return response()->json(['message' => 'Payment Request is now for clarification'], 200);
         }
         if ($request->form === 'Reimbursement Request') {
-
-            // $notificationIdClarity = DB::table('general.notifications')->insertGetId([
-            //     'ParentID' => '0',
-            //     'levels' => '0',
-            //     'FRM_NAME' => $request->form, // form
-            //     'PROCESSID' => $request->processId, // processid
-            //     'SENDERID' => $request->loggedUserId, // loggedUserId
-            //     'RECEIVERID' => $request->recipientId, // recipientId
-            //     'MESSAGE' => $request->remarks, // remarks
-            //     'TS' => NOW(),
-            //     'SETTLED' => 'NO',
-            //     'ACTUALID' => $request->inprogressId, // inprogressid
-            //     'SENDTOACTUALID' => '0',
-            //     'UserFullName' => $request->loggedUserFullname,
-
-            // ]);
-
-            // DB::update("UPDATE general.`actual_sign` a SET a.`webapp` = '1', a.`STATUS` = 'For Clarification', a.`CurrentSender` = '" . $request->loggedUserId . "', a.`CurrentReceiver` = '" . $request->recipientId . "' ,
-            // a.`NOTIFICATIONID` = '" . $notificationIdClarity . "', a.`UID_SIGN` = '" . $request->loggedUserId . "',a.`SIGNDATETIME` = NOW(), a.`ApprovedRemarks` = '" . $request->remarks . "' WHERE
-            // a.`PROCESSID` = '" . $request->processId . "' AND a.`COMPID` = '" . $request->companyId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`STATUS` = 'In Progress'
-            // ");
             $notificationIdClarity = $this->addNotification($request);
             $this->clarifyActualSign($request, $notificationIdClarity);
             DB::update("UPDATE accounting.`reimbursement_request` a SET a.`STATUS` = 'For Clarification'  WHERE a.`ID` = '" . $request->processId . "';");
             return response()->json(['message' => 'Reimbursement Request is now for clarification'], 200);
         }
-
 
         if ($request->form === 'Petty Cash Request') {
             $notificationIdClarity = $this->addNotification($request);
@@ -596,6 +654,18 @@ class CustomController extends ApiController
             LafMain::where('main_id', $request->processId)->update(['status' => 'For Clarification']);
             return response()->json(['message' => 'Leave Request is now for clarification'], 200);
         }
+
+        if ($request->frmClass === 'sales_order_frm') {
+
+            Log::debug($request);
+
+            $notificationIdClarity = $this->addNotification($request);
+            $this->clarifyActualSign($request, $notificationIdClarity);
+            DB::update("UPDATE sales_order.`sales_orders` a SET a.`Status` =  'For Clarification' WHERE a.`id` = '".$request->processId."' AND a.`titleid` = '".$request->companyId."' ");           
+            return response()->json(['message' => 'Sales Order Request is now for clarification'], 200);
+        }
+
+
     }
 
     // use to send a notification when clarity in - general.notification
@@ -604,7 +674,7 @@ class CustomController extends ApiController
         $notificationIdClarity = DB::table('general.notifications')->insertGetId([
             'ParentID' => '0',
             'levels' => '0',
-            'FRM_NAME' => $request->form, // form
+            'FRM_NAME' => $request->form, // form name
             'PROCESSID' => $request->processId, // processid
             'SENDERID' => $request->loggedUserId, // loggedUserId
             'RECEIVERID' => $request->recipientId, // recipientId

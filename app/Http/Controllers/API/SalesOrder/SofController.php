@@ -14,6 +14,12 @@ class SofController extends ApiController
         $businesslist = DB::select("SELECT a.`Business_Number`, a.`business_fullname`, a.`CLIENTCODE`, a.`term_type`, a.`PMName` FROM general.`business_list` a WHERE a.`status` LIKE 'Active%' AND a.`title_id` = '".$companyId."' AND a.`Type` = 'CLIENT' ORDER BY a.`business_fullname` ASC");
         return response()->json($businesslist, 200);
     }
+
+    // get customer by id
+    public function customerData($companyId, $business_id){
+        $businesslist = DB::select("SELECT a.`Business_Number`, a.`business_fullname`, a.`CLIENTCODE`, a.`term_type`, a.`PMName` FROM general.`business_list` a WHERE a.`status` LIKE 'Active%' AND a.`title_id` = '".$companyId."' AND a.`Type` = 'CLIENT' AND a.`Business_Number` = '".$business_id."' ORDER BY a.`business_fullname` ASC");
+        return response()->json($businesslist, 200);
+    }
     
     // billing address
     public function getCustomerAddress($customerId){
@@ -30,12 +36,58 @@ class SofController extends ApiController
         return response()->json(DB::select("SELECT a.`project_no`, a.`project_id` FROM general.`setup_project` a WHERE a.`ClientID` = '".$customerId."' "));
     }
 
+    public function getDelegates($customerId){
+        return response()->json(DB::select("SELECT * FROM general.`delegates` a WHERE a.`ClientID` = '".$customerId."' "));
+    }
+
     public function getSystemDetails(){
         return response()->json(DB::select("SELECT * FROM sales_order.`systems_type` a ORDER BY a.`id` DESC"));
     }
+
+    public function getSelectedSystemDetails($id){
+      
+        return response()->json(DB::select("SELECT 
+        IFNULL(
+          (SELECT 
+            'True' 
+          FROM
+            sales_order.`sales_order_system` b 
+          WHERE b.sysID = a.id 
+            AND b.soid = '".$id."'),
+          'False'
+        ) AS 'selected',
+        type_name,
+        a.`id` AS 'sysID' 
+      FROM
+        sales_order.`systems_type` a ORDER BY a.`id` DESC"));
+    }
+
+
     public function getDocumentDetails(){
         return response()->json(DB::select("SELECT * FROM sales_order.`documentlist` a ORDER BY a.`ID` DESC" ));
     }
+
+    public function getSelectedDocumentDetails($id){
+        return response()->json(DB::select("SELECT 
+        IFNULL(
+          (SELECT 
+            'True' 
+          FROM
+            sales_order.`sales_order_docs` b 
+          WHERE b.DocID = a.ID 
+            AND b.soid = '".$id."'),
+          'False'
+        ) AS 'selected',
+        DocumentName,
+        a.`ID` AS 'DocID' 
+        FROM
+        sales_order.`documentlist` a ORDER BY a.`ID` DESC
+        
+        "));
+    }
+
+
+
 
     // Insert name of System Details or Document Details
     public function insertSofModalDetails(Request $request){
@@ -82,6 +134,11 @@ class SofController extends ApiController
     // Check if project code exist
     public function checkIfProjectCodeExist(Request $request){
         return response()->json(DB::select("SELECT IFNULL((SELECT TRUE FROM general.`setup_project` a WHERE a.`project_no` = '".$request->projectCode."'), FALSE) AS isExist"));
+    }
+
+    // Check if project code exist
+    public function checkIfProjectCodeExistSoid(Request $request){
+        return response()->json(DB::select("SELECT IFNULL((SELECT TRUE FROM general.`setup_project` a WHERE a.`project_no` = '".$request->projectCode."' AND a.`SOID` != '".$request->processId."'), FALSE) AS isExist"));
     }
 
     public function saveSOF(Request $request){
@@ -132,7 +189,8 @@ class SofController extends ApiController
         // insert sof type to the request
         $request->request->add(['form' => $softypeName]);
 
-        Log::debug($request);
+
+
 
 
 
@@ -317,7 +375,7 @@ class SofController extends ApiController
                 'DoneApproving'=>'0',
                 'WebpageLink'=>'so_approve.php',
                 // 'ApprovedRemarks'=>'',
-                'Payee'=>'',
+                'Payee'=>'N/A',
                 // 'CurrentSender'=>'0',
                 // 'CurrentReceiver'=>'0',
                 // 'NOTIFICATIONID'=>'0',
@@ -445,13 +503,35 @@ class SofController extends ApiController
             return response()->json($e, 500);
         }
 
-
-
-
     }
 
-    
 
+    public function getSalesOrder($id){
+        $result = DB::table('sales_order.sales_orders')->where('id', $id)->get();
+        return response()->json($result, 200);
+    }
+
+    public function getSalesOrderSystem($id){
+        $result = DB::table('sales_order.sales_order_system')->where('soid', $id)->get();
+        return response()->json($result, 200);
+    }
+
+    public function getSalesOrderDocument($id){
+        $result = DB::table('sales_order.sales_order_docs')->where('SOID', $id)->get();
+        return response()->json($result, 200);
+    }
+
+    public function getCoordinators(){
+        $result = DB::table('general.users')->select('id','UserName_User','UserFull_name','Employee_id')->where('id','!=','1')->where('status','ACTIVE')->orderBy('UserFull_name', 'asc')->get();
+        return response()->json($result, 200);
+    }
+
+    public function getSelectedCoordinator($id){
+        $result = DB::table('sales_order.projectcoordinator')->select('CoordID','CoordinatorName')->where('SOID',$id)->get();
+        return response()->json($result, 200);
+    }
+
+   
 
     
 

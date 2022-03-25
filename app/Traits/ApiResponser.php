@@ -418,13 +418,15 @@ trait ApiResponser
 
     protected function dateFormatter($date){
 
-        $isTrue =json_decode($date,true);
-        if ($isTrue) {
+
+        if ($date === 'null') {
+            return null;
+
+        } else {
             $date = date_create($date);
             $date = date_format($date, 'Y-m-d');
             return $date;
-        } else {
-            return null;
+
         }
         
 
