@@ -656,9 +656,6 @@ class CustomController extends ApiController
         }
 
         if ($request->frmClass === 'sales_order_frm') {
-
-            Log::debug($request);
-
             $notificationIdClarity = $this->addNotification($request);
             $this->clarifyActualSign($request, $notificationIdClarity);
             DB::update("UPDATE sales_order.`sales_orders` a SET a.`Status` =  'For Clarification' WHERE a.`id` = '".$request->processId."' AND a.`titleid` = '".$request->companyId."' ");           
@@ -842,7 +839,222 @@ class CustomController extends ApiController
 
             }
 
-            return response()->json(['message' => 'The request is now back to In Progress'], 200);
+            if ($request->frmClass === 'sales_order_frm') {
+
+                // start transaction
+                DB::beginTransaction();
+                try{  
+                // start transaction
+                
+                // check if the one who reply was the initiator
+                if(filter_var($request->isInitiator, FILTER_VALIDATE_BOOLEAN)) {
+
+                    // if the request is poc or dmo date shall be null
+                    if ($request->class === 'POC' || $request->class === 'DMO') {
+                        $projectStart = NULL;
+                        $projectEnd = NULL;
+                        $projectDuration = 0;
+                        
+                        $currency = null;
+
+                    } else {
+                        // convert string date to legit date
+                        $projectStart = $this->dateFormatter($request->projectStart);
+                        $projectEnd = $this->dateFormatter($request->projectEnd);
+                        
+
+                        // get project duration
+                        $projectDuration = $this->dateDifference($projectStart, $projectEnd);
+                        $currency = $request->currency;
+
+                    }
+
+                    $poDate = $this->dateFormatter($request->poDate);
+
+
+                    // condition if down payment percentage
+                    if(filter_var($request->downpaymentrequired, FILTER_VALIDATE_BOOLEAN)){
+                        $downPaymentPercentage = $request->downPaymentPercentage;
+                    } else {
+                        $downPaymentPercentage = 0;
+                    }
+                
+                    // validate a boolean even if its string
+                    if(filter_var($request->invoicerequired, FILTER_VALIDATE_BOOLEAN)){
+                        $invoiceDateNeeded = date_create($request->invoiceDateNeeded);
+                        $invoiceDateNeeded = date_format($invoiceDateNeeded, 'Y-m-d');
+                    } else {
+                        $invoiceDateNeeded = null;
+                    }
+
+                $projectCost = $this->amountFormatter($request->projectCost);
+
+                // default value that is added to the $request is used to set default value in actual sign
+                $request->request->add(['reportingManagerId' => '0']);
+                $request->request->add(['reportingManagerName' => 'Chua, Konrad A.']);
+                $request->request->add(['payeeName' => 'N/A']);
+                $request->request->add(['purpose' => $request->scopeOfWork]);
+                $request->request->add(['amount' => $request->projectCost]);
+
+
+                $this->insertNotification($request, $nParentId, $nReceiverId, $nActualId);
+
+                DB::table('general.setup_project')
+                ->where('SOID', $request->processId)
+                ->update([
+                'project_name' => $request->projectName,
+                'project_shorttext' => $request->projectShortText,
+                'project_location' => $request->deliveryAddress,
+                'project_remarks' => $request->scopeOfWork,
+                'project_no' => $request->projectCode,
+                'project_amount' => $projectCost,
+                'project_duration' => $projectDuration,
+                'project_effectivity' => $projectStart,
+                'project_expiry' => $projectEnd,
+                'ClientID' => $request->clientId,
+                'ProjectStatus' => 'On-Going',
+                'last_edit_datetime' => now(),
+                ]);
+
+                // done
+                
+
+                DB::table('sales_order.sales_orders')
+                ->where('id', $request->processId)
+                ->update([
+                    'pcode' =>  $request->projectCode,
+                    'project' =>    $request->projectName,
+                    'clientID' =>   $request->clientId,
+                    'client' => $request->clientName,
+                    'Contactid' =>  $request->contactPerson,
+                    'Contact' =>    $request->contactPersonName,
+                    'ContactNum' => $request->contactNumber,
+                    // 'sodate' => $request->,
+                    'podate' => $poDate,
+                    'poNum' =>  $request->poNumber,
+                    'DeliveryAddress' =>    $request->deliveryAddress,
+                    'BillTo' => $request->billingAddress,
+                    'currency' =>   $currency,
+                    'amount' => $projectCost,
+                    'remarks' =>    $request->scopeOfWork,
+                    'Remarks2' =>   $request->accountingRemarks,
+                    'DateAndTimeNeeded' =>  $projectEnd,
+                    'Terms' =>  $request->paymentTerms,
+                    'Status' => 'In Progress',  
+                    'DeadLineDate' =>   $projectEnd,
+                    'IsInvoiceRequired' =>  filter_var($request->invoicerequired, FILTER_VALIDATE_BOOLEAN),
+                    'invDate' =>    $invoiceDateNeeded,
+                    'dp_required' =>    filter_var($request->downpaymentrequired, FILTER_VALIDATE_BOOLEAN),
+                    'dp_percentage' =>  $downPaymentPercentage,
+                    'project_shorttext' =>  $request->projectShortText,
+                    'warranty' =>   $request->warranty,
+                ]);
+
+                // if coordinator is required
+                if(filter_var($request->isCoordinatorRequired, FILTER_VALIDATE_BOOLEAN)) {
+                    // delete old coordinator
+                    DB::table('sales_order.projectcoordinator')->where('SOID', $request->processId)->delete();
+                    
+                    // insert new coordinator
+                    DB::table('sales_order.projectcoordinator')->insert([
+                        'CoordID' => $request->coordinatorId,
+                        'CoordinatorName' =>$request->coordinatorName,
+                        'SOID' => $request->processId,
+                        'SOTYPE' => 'Sales Order - Project'
+                    ]);
+
+                    DB::update("UPDATE general.`setup_project` a SET a.`Coordinator` = '".$request->coordinatorId."' WHERE a.`SOID` = '".$request->processId."' AND a.`title_id` = '".$request->companyId."' ");
+                    
+                }
+
+
+                // delete systems
+                DB::table('sales_order.sales_order_system')->where('soid', $request->processId)->delete();
+                
+                $systemnames =json_decode($request->systemname,true);
+                // iterate the request system name
+                foreach($systemnames as $systemname) {
+                    $systemnameArray[] = [
+                        'soid' => $request->processId,
+                        'systemType'=> $systemname['type_name'],
+                        'sysID' => $systemname['sysID'],
+                        'imported_from_excel' => '0'
+                    ];
+                }
+                // insert iterated array to sales_order_system
+                DB::table('sales_order.sales_order_system')->insert($systemnameArray);
+        
+                // delete system docs
+                DB::table('sales_order.sales_order_docs')->where('SOID', $request->processId)->delete();
+
+                // decode a parsed document name
+                $documentnames =json_decode($request->documentname,true);
+                // iterate the request document name
+                foreach($documentnames as $documentname) {
+                    $documentnameArray[] = [
+                        'SOID' => $request->processId,
+                        'DocID'=> $documentname['DocID'],
+                        'DocName' => $documentname['DocumentName'],
+                        'imported_from_excel' => '0'
+                    ];
+                }
+                // insert iterated array to sales_order_docs
+                DB::table('sales_order.sales_order_docs')->insert($documentnameArray);
+
+                // update actual sign
+                $this->updateActualSign($request);
+                // remove attachemnts
+                $this->removeAttachments($request);
+                // add attachments
+                $this->addAttachments($request);
+                // update Status of Actual sign turn to inprogress
+                $this->updateStatus($request);
+
+                DB::commit();
+                return response()->json(['message' => 'Sales Order Request is now back to In Progress'], 200);
+
+                } else {
+
+                Log::debug("Not initiator");
+                
+                DB::table('sales_order.sales_orders')
+                ->where('id',$request->processId)
+                ->update(['Status' => 'In Progress']);
+
+                // update insert
+                $this->insertNotification($request, $nParentId, $nReceiverId, $nActualId);
+                // update Status of Actual sign turn to inprogress
+                $this->updateStatus($request);
+
+
+               DB::commit();
+               return response()->json(['message' => 'Sales Order Request is now back to In Progress'], 200);
+
+                }
+
+
+
+
+
+
+
+                // Catch
+            }catch(\Exception $e){
+                DB::rollback();
+                Log::debug($e);
+            
+                // throw error response
+                return response()->json($e, 500);
+            }
+                // end catch
+            }
+            // end reply sof
+
+
+
+
+            return response()->json(['message' => 'Try Again Later!'], 200);
+      
         } else {
             return response()->json(['message' => 'Please inform the Administrator and Try again later'], 202);
         }
