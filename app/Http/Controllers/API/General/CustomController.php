@@ -1051,9 +1051,10 @@ class CustomController extends ApiController
             // end reply sof
 
 
+            return response()->json(['message' => 'Request is now back to In Progress'], 200);
 
 
-            return response()->json(['message' => 'Try Again Later!'], 200);
+
       
         } else {
             return response()->json(['message' => 'Please inform the Administrator and Try again later'], 202);
