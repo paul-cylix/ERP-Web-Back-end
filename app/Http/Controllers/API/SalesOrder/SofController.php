@@ -291,7 +291,7 @@ class SofController extends ApiController
             'project_shorttext' => $request->projectShortText,
             // 'ForwardProcess' => '', // wala apa
             'warranty' => $request->warranty,
-            'erpweb' => '1'
+            'webapp' => '1'
         ]);
 
         // insert sales order id to general.attachmets as processID

@@ -112,6 +112,24 @@ trait ApiResponser
         return $ref;
     }
 
+    protected function getCafRef($companyId) {
+        $ref = DB::select("SELECT 
+        IFNULL(
+          (SELECT 
+            MAX(SUBSTRING(reference, 10)) 
+          FROM
+            accounting.`cash_advance_request` 
+          WHERE YEAR(ts) = YEAR(NOW()) 
+            AND TITLEID = '".$companyId."'),
+          0
+        ) + 1 'ref' ");
+        $ref = $ref[0]->ref;
+        $ref = str_pad($ref, 5, "0", STR_PAD_LEFT); 
+        $ref = "CAF-" . date('Y') . "-" . $ref;
+
+        return $ref;
+    }
+
 
     protected function showAll(Collection $collection, $code = 200){
         
@@ -295,27 +313,31 @@ trait ApiResponser
     protected function insertPcExpense($request ,$department){
         $xpData = $request->expenseData;
         $xpData = json_decode($xpData, true);
+   
+        if(count($xpData)){
+            for ($i = 0; $i < count($xpData); $i++) {
 
-        for ($i = 0; $i < count($xpData); $i++) {
-
-            $date = date_create($xpData[$i]['date_']);
-            $array[] = [
-                'PCID' => $request->processId,
-                'PAYEE' => $request->payeeName,
-                'CLIENT_NAME' => $xpData[$i]['CLIENT_NAME'],
-                'TITLEID' => $request->companyId,
-                'DESCRIPTION' => $xpData[$i]['DESCRIPTION'],
-                'AMOUNT' => floatval(str_replace(',', '', $xpData[$i]['AMOUNT'])),
-                'GUID' => $request->guid,
-                'TS' => now(),
-                'MAINID' => 1,
-                'CLIENT_ID' => $xpData[$i]['CLIENT_ID'],
-                'EXPENSE_TYPE' => $xpData[$i]['EXPENSE_TYPE'],
-                'DEPT' => $department,
-                'date_' => date_format($date, 'Y-m-d H:i:s'),
-            ];
+                $date = date_create($xpData[$i]['date_']);
+                $array[] = [
+                    'PCID' => $request->processId,
+                    'PAYEE' => $request->payeeName,
+                    'CLIENT_NAME' => $xpData[$i]['CLIENT_NAME'],
+                    'TITLEID' => $request->companyId,
+                    'DESCRIPTION' => $xpData[$i]['DESCRIPTION'],
+                    'AMOUNT' => floatval(str_replace(',', '', $xpData[$i]['AMOUNT'])),
+                    'GUID' => $request->guid,
+                    'TS' => now(),
+                    'MAINID' => 1,
+                    'CLIENT_ID' => $xpData[$i]['CLIENT_ID'],
+                    'EXPENSE_TYPE' => $xpData[$i]['EXPENSE_TYPE'],
+                    'DEPT' => $department,
+                    'date_' => date_format($date, 'Y-m-d H:i:s'),
+                ];
+            }
+            PcExpenseSetup::insert($array);
         }
-        PcExpenseSetup::insert($array);
+
+
 
     }
 
@@ -323,6 +345,7 @@ trait ApiResponser
         $trData = $request->transpoData;
         $trData = json_decode($trData, true);
 
+        if(count($trData)){
         for ($i = 0; $i < count($trData); $i++) {
 
             $date = date_create($trData[$i]['date_']);
@@ -346,6 +369,7 @@ trait ApiResponser
             ];
         }
         PcTranspoSetup::insert($array);
+        }
     }
 
 

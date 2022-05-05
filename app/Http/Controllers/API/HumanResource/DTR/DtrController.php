@@ -35,6 +35,7 @@ class DtrController extends ApiController
           ON (c.`id` = d.`UID`) 
       WHERE a.`status` = 'For Approval' 
         AND RMID = '".$id."' 
+        AND c.`UserName_User` NOT LIKE '%del@%'
         ");
 
         return response($data);

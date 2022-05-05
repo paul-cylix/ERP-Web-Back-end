@@ -29,14 +29,14 @@ class LoginController extends Controller
         $token = $user->createToken('Personal Access Token')->accessToken;
         $expiration = $ObjToken->token->expires_at->diffInSeconds(Carbon::now());
         
-        // Log::debug($user->id);
+        Log::debug($user->id);
 
         // check if manager
         $isManager = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemreportingmanager` a WHERE a.`RMID` = $user->id LIMIT 1), FALSE) AS isManager");
         $isManager = $isManager[0]->isManager;
 
         // get user joined company
-        $companies = $this->showCompanies(11);
+        $companies = $this->showCompanies($user->id);
 
         
 

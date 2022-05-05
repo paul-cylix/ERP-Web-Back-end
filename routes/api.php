@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\Accounting\CAF\CafController;
 use App\Http\Controllers\API\Accounting\CurrencySetupController;
 use App\Http\Controllers\API\Accounting\PC\PcController;
 use App\Http\Controllers\API\Accounting\RE\ReController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\API\Workflow\ApprovedController;
 use App\Http\Controllers\API\Workflow\ClarificationController;
 use App\Http\Controllers\API\Workflow\InProgressController;
 use App\Http\Controllers\API\Workflow\InputController;
+use App\Http\Controllers\API\Workflow\ParticipantsController;
 use App\Http\Controllers\API\Workflow\RejectedController;
 use App\Http\Controllers\API\Workflow\WithdrawnController;
 use App\Http\Controllers\ApiController;
@@ -72,6 +74,15 @@ route::get('get-PcMain/{id}', [PcController::class, 'getPcMain']);
 
 route::get('get-PcExpense/{id}', [PcController::class, 'getExpense']);
 route::get('get-PcTranspo/{id}', [PcController::class, 'getTranspo']);
+
+
+// Accounting - CAF
+Route::post('saveCaf', [CafController::class, 'saveCaf']);
+Route::get('getCaf/{id}', [CafController::class, 'getCaf']);
+Route::post('approveCafInput', [CafController::class, 'approveCafInput']);
+
+
+
 
 
 
@@ -172,6 +183,7 @@ Route::prefix('/user')->group(function(){
 
 
 // Workflow
+Route::get('getParticipants/{loggedUserId}/{companyId}', [ParticipantsController::class, 'getParticipants']);
 Route::get('getWithdrawn/{loggedUserId}/{companyId}', [WithdrawnController::class, 'getWithdrawn']);
 Route::get('getInProgress/{loggedUserId}/{companyId}', [InProgressController::class, 'getInProgress']);
 Route::get('getApprovals/{loggedUserId}/{companyId}', [ApprovalController::class, 'getApprovals']);
@@ -198,6 +210,9 @@ Route::post('approve-request', [CustomController::class, 'approvedByIDRemarks'])
 Route::post('send-clarity', [CustomController::class, 'sendClarity']);
 Route::post('reply-request', [CustomController::class, 'clarifyReplyBtnRemarks']);
 Route::post('inputs-clarity', [CustomController::class, 'clarifyBtnInputs']);
+
+Route::get('createfolder', [CustomController::class, 'createFolder']);
+
 
 
 

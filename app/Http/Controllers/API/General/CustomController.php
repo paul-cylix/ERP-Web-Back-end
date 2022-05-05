@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\General;
 
 use App\Http\Controllers\ApiController;
+use App\Models\Accounting\CAF\CafMain;
 use App\Models\Accounting\PC\PcMain;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -94,6 +95,22 @@ class CustomController extends ApiController
             return response()->json(['message' => 'Petty Cash Request has been Successfully withdrawn'], 200);
         }
 
+        if ($request->form === 'Cash Advance Request') {
+            $this->withdrawActualSign($request);
+
+            
+            CafMain::where('id', $request->reqId)
+                ->update([
+                    'status' => 'Withdrawn',
+                ]);
+
+            return response()->json(['message' => 'Cash Advance Request has been Successfully withdrawn'], 200);
+        }
+
+
+
+
+
 
         if ($request->form === 'Overtime Request') {
             $this->withdrawActualSign($request);
@@ -172,6 +189,15 @@ class CustomController extends ApiController
             DB::update("UPDATE accounting.`petty_cash_request` a SET a.`STATUS` = 'Rejected'  WHERE a.`ID` = '" . $request->processId . "'  ");
             return response()->json(['message' => 'Petty Cash Request has been Rejected'], 200);
         }
+
+        if ($request->form === 'Cash Advance Request') {
+            $this->rejectedRequest($request);
+            CafMain::where('id', $request->processId)->update(['status' => 'Rejected']);
+            return response()->json(['message' => 'Cash Advance Request has been Rejected'], 200);
+        }
+
+
+
 
         if ($request->form === 'Overtime Request') {
             $this->rejectedRequest($request);
@@ -318,6 +344,7 @@ class CustomController extends ApiController
             } catch (\Exception $e) {
                 DB::rollback();
                 $success = false;
+                Log::debug($e);
                 return response()->json(['message' => 'Failed to liquidate. Try again later!'], 202);
             }
 
@@ -332,6 +359,46 @@ class CustomController extends ApiController
                 return response()->json(['message' => 'Petty Cash Request has been Successfully approved'], 200);
             }
         }
+
+        if ($request->form === 'Cash Advance Request') {
+
+            DB::beginTransaction();
+            try{  
+                // if this is the first approver then run and insert approved amount
+                if (filter_var($request->isFirstApprover, FILTER_VALIDATE_BOOLEAN)) {
+                    // log::debug($request);
+                    $this->approveActualSIgn($request);
+                    CafMain::where('id', $request->processId)
+                        ->update([
+                            'approved_amount' => floatval(str_replace(',', '', $request->approvedAmount)),
+                        ]);
+                } elseif (filter_var($request->isForAcknowledgement, FILTER_VALIDATE_BOOLEAN)) {
+                    log::debug($request);
+                    CafMain::where('id', $request->processId)
+                        ->update([
+                            'status' => 'Completed',
+                            'IsReleased' => 1,
+                        ]);
+                    $this->doneApproving($request);
+                    
+                } else {
+                    $this->approveActualSIgn($request);
+                }
+                
+
+                DB::commit();
+                return response()->json(['message' => 'Cash Advance Request has been Successfully approved'], 200);
+
+        
+            }catch(\Exception $e){
+                DB::rollback();
+            
+                // throw error response
+                return response()->json($e, 500);
+            }
+        }
+        
+
 
         if ($request->form === 'Overtime Request') {
             $isCompleted = DB::select("SELECT IFNULL((SELECT a.`ID` FROM general.`actual_sign` a WHERE a.`PROCESSID` = '" . $request->processId . "' AND a.`ORDERS` = 3 AND a.`COMPID` = '" . $request->companyId . "' AND a.`STATUS` = 'In Progress' AND a.`FRM_NAME` = '" . $request->form . "'), FALSE) AS tableCheck;");
@@ -460,6 +527,9 @@ class CustomController extends ApiController
             } else {
                 // 4
                 log::debug('4');
+                if(filter_var($request->isAccountingAcknowledgement, FILTER_VALIDATE_BOOLEAN)){
+                    DB::update("UPDATE sales_order.`sales_orders` a SET a.`ForwardProcess` = 1 WHERE a.`titleid` = '".$request->companyId."' AND a.`id` = '".$request->processId."'");
+                }
 
                 $this->approveSofActualSign($request);
                 return response()->json(['message' => 'Sales Order Request has been Successfully approved'], 200);
@@ -634,6 +704,13 @@ class CustomController extends ApiController
             return response()->json(['message' => 'Petty Cash Request is now for clarification'], 200);
         }
 
+        if ($request->form === 'Cash Advance Request') {
+            $notificationIdClarity = $this->addNotification($request);
+            $this->clarifyActualSign($request, $notificationIdClarity);
+            CafMain::where('id', $request->processId)->update(['status' => 'For Clarification']);
+            return response()->json(['message' => 'Cash Advance Request is now for clarification'], 200);
+        }
+
         if ($request->form === 'Overtime Request') {
             $notificationIdClarity = $this->addNotification($request);
             $this->clarifyActualSign($request, $notificationIdClarity);
@@ -772,7 +849,55 @@ class CustomController extends ApiController
                 $this->removeAttachments($request);
                 // add attachments
                 $this->addAttachments($request);
+
+      
+
+                $data = DB::select("SELECT a.`DEPARTMENT` FROM accounting.`petty_cash_request` a WHERE a.`id` = $request->processId");
+                $department = $data[0]->DEPARTMENT;
+
+                $this->deletePcExpense($request);
+                $this->deletePcTranspo($request);
+
+                $this->insertPcExpense($request, $department);
+                $this->insertPcTranspo($request, $department);
+
             }
+
+
+
+            if ($request->class === 'CAF') {
+                
+                // Insert data from general notifications
+                $this->insertNotification($request, $nParentId, $nReceiverId, $nActualId);
+                $this->updateCafMain($request);
+
+                // Update Actual Sign
+                ActualSign::where('PROCESSID', $request->processId)
+                ->where('FRM_NAME', $request->form)
+                ->where('COMPID', $request->companyId)
+                ->update([
+                    'PODATE' => date_create($request->dateNeeded),
+                    'DATE' => date_create($request->dateNeeded),
+                    'REMARKS' => $request->purpose,
+                    'DUEDATE' => date_create($request->dateNeeded),
+                    'RM_ID' => $request->reportingManagerId,
+                    'REPORTING_MANAGER' => $request->reportingManagerName,
+                    'Amount' => floatval(str_replace(',', '', $request->requestedAmount))
+                ]);
+
+                $this->updateStatus($request);
+
+
+            }
+
+
+
+
+
+
+
+
+
 
             if ($request->class === 'OT') {
                 // Insert data from general notifications
@@ -1132,6 +1257,7 @@ class CustomController extends ApiController
     }
 
 
+    
 
 
     // update records that belongs to the request not to the user
@@ -1151,6 +1277,23 @@ class CustomController extends ApiController
                 'CLIENT_ID' => $request->clientId,
                 'TITLEID' => $request->companyId,
                 'TS' => now(),
+            ]);
+    }
+
+    public function updateCafMain($request)
+    {
+        CafMain::where('id', $request->processId)
+            ->update([
+                'date_needed'        => $request->dateNeeded,
+                'requested_amount'   => floatval(str_replace(',', '', $request->requestedAmount)),
+                'date_from'          => $request->payableDateFrom,
+                'date_to'            => $request->payableDateTo,
+                'employee_id'        => $request->employeeId,
+                'employee_name'      => $request->employeeName,
+                'installment_amount' => floatval(str_replace(',', '', $request->installmentAmount)),
+                'purpose'            => $request->purpose,
+                'status'             => 'In Progress',
+                'reporting_manager'  => $request->reportingManagerName,
             ]);
     }
 
@@ -1494,4 +1637,13 @@ class CustomController extends ApiController
             return response()->json($status,200);
         
         }
+
+
+
+        public function createFolder() {
+            mkdir('C:\Users\Iverson\Desktop\Cylix\test');
+        }
+
+
+        
 }
