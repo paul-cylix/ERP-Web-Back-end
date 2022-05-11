@@ -41,6 +41,8 @@ class CafController extends ApiController
             $cafMain->webapp             = 1;
             $cafMain->save();
 
+
+            log::debug($request);
             
             for ($x = 0; $x < 5; $x++) {
                 $actualSignData[] =

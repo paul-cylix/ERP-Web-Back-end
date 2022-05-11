@@ -18,6 +18,7 @@ class LafController extends ApiController
         $data = LafMain::select('leave_date')
             ->where('employee_id', $request->employeeId)
             ->where('TITLEID', $request->companyId)
+            ->whereIn('status', ['Completed', 'In Progress', 'For Clarification'])
             ->whereIn('leave_date', $leaveDates)
             ->get();
 
