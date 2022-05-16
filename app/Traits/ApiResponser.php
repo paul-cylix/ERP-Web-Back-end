@@ -40,8 +40,6 @@ trait ApiResponser
         $GUID = trim($GUID, '}');
         return $GUID;
 
-
-        // testing
     }
     
     protected function getRfpRef(){
