@@ -23,6 +23,7 @@ use App\Http\Controllers\API\HumanResource\ITF\ItfController;
 use App\Http\Controllers\API\HumanResource\LAF\LafController;
 use App\Http\Controllers\API\HumanResource\OT\OtController;
 use App\Http\Controllers\API\SalesOrder\SofController;
+use App\Http\Controllers\API\SupplyChain\ScController;
 use App\Http\Controllers\API\User\LoginController;
 use App\Http\Controllers\API\Workflow\ApprovalController;
 use App\Http\Controllers\API\Workflow\ApprovedController;
@@ -279,6 +280,10 @@ Route::get('get-salesorder-system/{id}', [SofController::class, 'getSalesOrderSy
 // get sales_order documents
 Route::get('get-salesorder-document/{id}', [SofController::class, 'getSalesOrderDocument']);
 
+
+
+// Supply Chain
+Route::get('get-materials/{companyId}', [ScController::class, 'getMaterials']);
 
 
 

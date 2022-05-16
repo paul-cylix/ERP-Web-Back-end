@@ -444,14 +444,20 @@ class CustomController extends ApiController
 
 
         if ($request->form === 'Leave Request') {
+            Log::debug('1');
             $isCompleted = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`actual_sign` a 
-            WHERE a.`PROCESSID` = $request->processId 
+            WHERE a.`PROCESSID` = '".$request->processId."'
             AND a.`USER_GRP_IND` = 'Acknowledgement of Reporting Manager' 
             AND a.`FRM_NAME` = 'Leave Request'
-            AND a.`COMPID` = $request->companyId
+            AND a.`COMPID` = '".$request->companyId."'
             AND a.`STATUS` = 'Completed'), FALSE) AS tableCheck");
 
+            Log::debug($isCompleted[0]->tableCheck);
+            
             if (!empty($isCompleted[0]->tableCheck)) {
+
+            Log::debug('1.5 inside if');
+
                 $this->doneApproving($request);
                 LafMain::where('main_id', $request->processId)
                     ->update([
@@ -459,12 +465,14 @@ class CustomController extends ApiController
                     ]);
 
                 return response()->json(['message' => 'Done! Leave Request has been Successfully approved'], 200);
+
             } else {
+                Log::debug('2 else');
+            
                 $this->approveActualSIgn($request);
                 return response()->json(['message' => 'Leave Request has been Successfully approved'], 200);
             }
             
-   
         }
 
         if($request->frmClass === 'sales_order_frm'){
