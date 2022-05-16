@@ -39,7 +39,6 @@ trait ApiResponser
         $GUID = trim($GUID, '{');
         $GUID = trim($GUID, '}');
         return $GUID;
-
     }
     
     protected function getRfpRef(){
