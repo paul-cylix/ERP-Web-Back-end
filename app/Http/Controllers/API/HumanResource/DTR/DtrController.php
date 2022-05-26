@@ -33,7 +33,7 @@ class DtrController extends ApiController
           ON (a.`SysPK_Empl` = c.`Employee_id`) 
         INNER JOIN general.`systemreportingmanager` d 
           ON (c.`id` = d.`UID`) 
-      WHERE a.`status` = 'For Approval' 
+      WHERE a.`dummy_status` = 'For Approval' 
         AND RMID = '".$id."' 
         AND c.`UserName_User` NOT LIKE '%del@%'
         ");
@@ -60,7 +60,7 @@ class DtrController extends ApiController
 
             // DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d H:i:s')."', a.`Status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
             // DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".date_format($in_am, 'Y-m-d H:i:s')."', a.`out_pm` = '".date_format($out_pm, 'Y-m-d H:i:s')."' ,a.`Status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
-            DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".$in_am."', a.`out_pm` = '".$out_pm."' ,a.`Status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
+            DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".$in_am."', a.`out_pm` = '".$out_pm."' ,a.`dummy_status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
         
         }
         // return response($request->setStatus);
@@ -82,7 +82,7 @@ class DtrController extends ApiController
         
 
         // DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`Status` = $request->setStatus WHERE a.`id` = '".$request->id."' ");
-        DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".$in_am."', a.`out_pm` = '".$out_pm."' ,a.`Status` = '".$request->setStatus."' WHERE a.`id` = '".$request->id."' ");
+        DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".$in_am."', a.`out_pm` = '".$out_pm."' ,a.`dummy_status` = '".$request->setStatus."' WHERE a.`id` = '".$request->id."' ");
         
         return response()->json(['message' => 'Attendance is now Active'], 200);
 

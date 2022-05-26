@@ -26,6 +26,8 @@ class CreateUsersTable extends Migration
             $table->string('lname')->nullable();
             $table->string('department')->nullable();
             $table->string('positionName')->nullable();
+            $table->integer('companyId')->nullable();
+            $table->string('companyName')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

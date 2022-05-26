@@ -23,6 +23,7 @@ use App\Http\Controllers\API\HumanResource\ITF\ItfController;
 use App\Http\Controllers\API\HumanResource\LAF\LafController;
 use App\Http\Controllers\API\HumanResource\OT\OtController;
 use App\Http\Controllers\API\SalesOrder\SofController;
+use App\Http\Controllers\API\SupplyChain\CartController;
 use App\Http\Controllers\API\SupplyChain\ScController;
 use App\Http\Controllers\API\User\LoginController;
 use App\Http\Controllers\API\Workflow\ApprovalController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\API\Workflow\ApprovedController;
 use App\Http\Controllers\API\Workflow\ClarificationController;
 use App\Http\Controllers\API\Workflow\InProgressController;
 use App\Http\Controllers\API\Workflow\InputController;
+use App\Http\Controllers\API\Workflow\ListController;
 use App\Http\Controllers\API\Workflow\ParticipantsController;
 use App\Http\Controllers\API\Workflow\RejectedController;
 use App\Http\Controllers\API\Workflow\WithdrawnController;
@@ -168,7 +170,7 @@ Route::resource('hr-employees', EmployeeController::class);
 
 // API
 Route::post('oauth/token', [AccessTokenController::class, 'issueToken']);
-// Route::get('/sync', [LoginController::class, 'sync']);
+Route::get('/sync', [LoginController::class, 'sync']);
 // Route::get('/getdata', [LoginController::class, 'getdata']);
 
 
@@ -192,6 +194,8 @@ Route::get('getRejected/{loggedUserId}/{companyId}', [RejectedController::class,
 Route::get('getApproved/{loggedUserId}/{companyId}', [ApprovedController::class, 'getApproved']);
 Route::get('getInputs/{loggedUserId}/{companyId}', [InputController::class, 'getInputs']);
 Route::get('getClarification/{loggedUserId}/{companyId}', [ClarificationController::class, 'getClarification']);
+Route::get('getLists/{companyId}', [ListController::class, 'getLists']);
+
 
 
 // get recipient of clarification
@@ -283,9 +287,15 @@ Route::get('get-salesorder-document/{id}', [SofController::class, 'getSalesOrder
 
 
 // Supply Chain
-Route::get('get-materials/{companyId}', [ScController::class, 'getMaterials']);
+Route::post('get-materials', [ScController::class, 'getMaterials']);
+Route::get('get-category', [ScController::class, 'getCategory']);
+Route::get('get-subcategory', [ScController::class, 'getSubCategory']);
+Route::get('get-brand', [ScController::class, 'getBrand']);
 
 
+
+Route::post('cart-store', [CartController::class, 'store']);
+Route::get('cart-show/{loggedUserId}/{companyId}', [CartController::class, 'showCart']);
 
 
 
