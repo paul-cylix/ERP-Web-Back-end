@@ -19,10 +19,18 @@ class CartController extends ApiController
         return response()->json('Item has beed added to your cart' , 200);
     }
 
-    public function showCart($loggedUserId, $companyId) {
-        $cartData = Cart::where('userId', $loggedUserId)->where('companyId', $companyId)->get();
+    public function showCartOne($loggedUserId, $companyId){
+        $cartData = Cart::where('userId', $loggedUserId)
+        ->where('companyId', $companyId)
+        ->whereIn('status', [1,2])->get();
         return response()->json($cartData);
     }
 
+    public function showCart($loggedUserId, $companyId, $status) {
+        $cartData = Cart::where('userId', $loggedUserId)
+        ->where('companyId', $companyId)
+        ->where('status', $status)->get();
+        return response()->json($cartData);
+    }
 
 }

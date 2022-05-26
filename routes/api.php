@@ -295,7 +295,10 @@ Route::get('get-brand', [ScController::class, 'getBrand']);
 
 
 Route::post('cart-store', [CartController::class, 'store']);
-Route::get('cart-show/{loggedUserId}/{companyId}', [CartController::class, 'showCart']);
+Route::get('cartone-show/{loggedUserId}/{companyId}', [CartController::class, 'showCartOne']);
+Route::get('cart-show/{loggedUserId}/{companyId}/{status}', [CartController::class, 'showCart']);
+
+
 
 
 

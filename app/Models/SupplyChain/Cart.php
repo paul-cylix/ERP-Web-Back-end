@@ -9,8 +9,9 @@ class Cart extends Model
 {
     use HasFactory;
 
-    const CHECKED = 1;
-    const UNCHECK = 0;
+    const UNCHECK = 1;
+    const CHECKED = 2;
+    const PURCHASED = 3;
 
     const AVAILABLE = 1;
 
@@ -20,7 +21,7 @@ class Cart extends Model
     protected $fillable = [
         "userId",
         "companyId",
-        "item_code",
+        "group_detail_id",
         "uom_id",
         "uom_name",
         "status",
