@@ -15,16 +15,26 @@ class Cart extends Model
 
     const AVAILABLE = 1;
 
+    protected $primaryKey = 'cart_id';
 
     public $timestamps = true;
 
     protected $fillable = [
-        "userId",
-        "companyId",
-        "group_detail_id",
-        "uom_id",
-        "uom_name",
-        "status",
-        "quantity",
+        "cart_userid",
+        "cart_companyid",
+        "cart_group_detail_id",
+        "cart_uom_id",
+        "cart_uom_name",
+        "cart_status",
+        "cart_quantity",
     ];
+
+
+    // userId
+    // companyId
+    // group_detail_id
+    // uom_id
+    // uom_name
+    // status
+    // quantity
 }

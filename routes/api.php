@@ -170,7 +170,7 @@ Route::resource('hr-employees', EmployeeController::class);
 
 // API
 Route::post('oauth/token', [AccessTokenController::class, 'issueToken']);
-Route::get('/sync', [LoginController::class, 'sync']);
+// Route::get('/sync', [LoginController::class, 'sync']);
 // Route::get('/getdata', [LoginController::class, 'getdata']);
 
 
@@ -292,13 +292,11 @@ Route::get('get-category', [ScController::class, 'getCategory']);
 Route::get('get-subcategory', [ScController::class, 'getSubCategory']);
 Route::get('get-brand', [ScController::class, 'getBrand']);
 
-
-
 Route::post('cart-store', [CartController::class, 'store']);
 Route::get('cartone-show/{loggedUserId}/{companyId}', [CartController::class, 'showCartOne']);
 Route::get('cart-show/{loggedUserId}/{companyId}/{status}', [CartController::class, 'showCart']);
-
-
+Route::post('cart-destroy', [CartController::class, 'destroy']);
+Route::post('cart-checkout', [CartController::class, 'checkout']);
 
 
 
