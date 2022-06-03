@@ -30,9 +30,23 @@ class CartController extends ApiController
 
 
     public function showCartOne($loggedUserId, $companyId){
-        $cartData = Cart::where('cart_userid', $loggedUserId)
-        ->where('cart_companyid', $companyId)
-        ->whereIn('cart_status', [1,2])->get();
+
+        $cartData = DB::table('carts as cart')
+        ->select('cart.*','product.group_detail_id','product.item_code','product.unit_measure as uom_name','product.description'
+        ,'product.specification' ,'product.uom_id','product.unit_measure as abbrev','product.has_serial','product.type as category'
+        ,'product.brand','brand.id as brand_id','brand.description as brand_name'
+        ,'category.id as category_id','category.type as category_name'
+        
+        )
+        ->join('procurement.setup_group_detail AS product', 'cart.cart_group_detail_id', '=', 'product.group_detail_id')
+        ->join('procurement.setup_brand AS brand', 'brand.id', '=', 'product.brand_id')
+        ->join('procurement.setup_group_type AS category', 'category.id', '=', 'product.category_id')
+        ->where('cart.cart_userId', $loggedUserId)
+        ->where('cart.cart_companyid', $companyId)
+        ->whereIn('cart.cart_status', [1,2])->get();
+
+
+
         return response()->json($cartData);
     }
 
