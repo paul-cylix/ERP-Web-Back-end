@@ -26,6 +26,7 @@ use App\Http\Controllers\API\SalesOrder\SofController;
 use App\Http\Controllers\API\SupplyChain\CartController;
 use App\Http\Controllers\API\SupplyChain\ScController;
 use App\Http\Controllers\API\User\LoginController;
+use App\Http\Controllers\API\User\RegisterController;
 use App\Http\Controllers\API\Workflow\ApprovalController;
 use App\Http\Controllers\API\Workflow\ApprovedController;
 use App\Http\Controllers\API\Workflow\ClarificationController;
@@ -301,6 +302,10 @@ Route::post('cart-checkout', [CartController::class, 'checkout']);
 
 
 
+
+// Testing Registration
+Route::post('register', [RegisterController::class, 'register']);
+Route::get('show-user', [RegisterController::class, 'showUsers']);
 
 
 
