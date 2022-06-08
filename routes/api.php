@@ -314,6 +314,7 @@ Route::post('save-user-attendance', [CylixPortalController::class, 'saveUserAtte
 
 
 
+
 // Testing Registration
 Route::post('register', [RegisterController::class, 'register']);
 Route::get('show-user', [RegisterController::class, 'showUsers']);
