@@ -9,6 +9,7 @@ use App\Http\Controllers\API\Accounting\RFP\RfpMainActualSignController;
 use App\Http\Controllers\API\Accounting\RFP\RfpMainController;
 use App\Http\Controllers\API\Accounting\RFP\RfpMainDetailController;
 use App\Http\Controllers\API\Accounting\RFP\RFPMainLiquidationController;
+use App\Http\Controllers\API\CylixPortal\CylixPortalController;
 use App\Http\Controllers\API\General\ActualSignController;
 use App\Http\Controllers\API\General\AttachmentController;
 use App\Http\Controllers\API\General\BusinessListController;
@@ -297,6 +298,16 @@ Route::get('cartone-show/{loggedUserId}/{companyId}', [CartController::class, 's
 Route::get('cart-show/{loggedUserId}/{companyId}/{status}', [CartController::class, 'showCart']);
 Route::post('cart-destroy', [CartController::class, 'destroy']);
 Route::post('cart-checkout', [CartController::class, 'checkout']);
+
+
+
+// Cylix Portal
+Route::get('get-cp-index', [CylixPortalController::class, 'index']);
+Route::post('save-user-attendance', [CylixPortalController::class, 'saveUserAttendance']);
+
+
+
+
 
 
 
