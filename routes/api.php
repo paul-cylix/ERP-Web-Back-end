@@ -306,6 +306,9 @@ Route::post('cart-checkout', [CartController::class, 'checkout']);
 Route::get('get-cp-index', [CylixPortalController::class, 'index']);
 Route::post('save-user-attendance', [CylixPortalController::class, 'saveUserAttendance']);
 
+// Attendance Export
+Route::get('get-user-attendance', [CylixPortalController::class, 'getEmployeeAttendance']);
+Route::post('post-filtered-attendance', [CylixPortalController::class, 'getFilteredEmployeeAttendance']);
 
 
 

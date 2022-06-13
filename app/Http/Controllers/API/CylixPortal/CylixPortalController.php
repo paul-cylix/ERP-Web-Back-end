@@ -155,6 +155,100 @@ class CylixPortalController extends ApiController
     }
 
 
+    public function getEmployeeAttendance(){
+        $queryData = DB::select("
+        SELECT 
+            a.`id`,
+            a.`userid` AS 'user_id',
+            a.`emp_name` AS 'employee_name',
+            DATE_FORMAT(a.`date_entry`, '%m/%d/%Y') AS 'dtr_date', 
+            (SELECT DATE_FORMAT(MIN(b.`time_entry`),'%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'IN' AND b.`userid` = a.`userid`) AS 'in',
+            IFNULL(
+	            (SELECT DATE_FORMAT(MAX(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`),
+	            (SELECT DATE_FORMAT(MIN(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = DATE_ADD(a.`date_entry`,INTERVAL 1 DAY) AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`)
+	            )AS 'out'
+            FROM erpweb.`app` a
+            GROUP BY a.`date_entry`,a.`userid`
+        ");
+        return response()->json($queryData);
+    }
+
+    public function getFilteredEmployeeAttendance(Request $request){
+
+        Log::debug(gettype($request->dateRange));
+
+        if ($request->dateRange && $request->employee) {
+            $user_id = $request->employee['code'];
+            $start = date("Y-m-d",strtotime($request->dateRange[0]));   
+            $end = date("Y-m-d",strtotime($request->dateRange[1])); 
+
+            $queryData = DB::select("
+            SELECT 
+                a.`id`,
+                a.`userid` AS 'user_id',
+                a.`emp_name` AS 'employee_name',
+                DATE_FORMAT(a.`date_entry`, '%m/%d/%Y') AS 'dtr_date', 
+                (SELECT DATE_FORMAT(MIN(b.`time_entry`),'%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'IN' AND b.`userid` = a.`userid`) AS 'in',
+                IFNULL(
+                    (SELECT DATE_FORMAT(MAX(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`),
+                    (SELECT DATE_FORMAT(MIN(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = DATE_ADD(a.`date_entry`,INTERVAL 1 DAY) AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`)
+                    )AS 'out'
+                FROM erpweb.`app` a
+                WHERE a.`userid` = '".$user_id."'
+                AND a.`date_entry` BETWEEN '".$start."' 
+                AND '".$end."'
+                GROUP BY a.`date_entry`,a.`userid`
+            ");
+
+        } elseif($request->dateRange == false && $request->employee) {
+        
+            $user_id = $request->employee['code'];
+
+            $queryData = DB::select("
+            SELECT 
+                a.`id`,
+                a.`userid` AS 'user_id',
+                a.`emp_name` AS 'employee_name',
+                DATE_FORMAT(a.`date_entry`, '%m/%d/%Y') AS 'dtr_date', 
+                (SELECT DATE_FORMAT(MIN(b.`time_entry`),'%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'IN' AND b.`userid` = a.`userid`) AS 'in',
+                IFNULL(
+                    (SELECT DATE_FORMAT(MAX(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`),
+                    (SELECT DATE_FORMAT(MIN(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = DATE_ADD(a.`date_entry`,INTERVAL 1 DAY) AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`)
+                    )AS 'out'
+                FROM erpweb.`app` a
+                WHERE a.`userid` = '".$user_id."'
+                GROUP BY a.`date_entry`,a.`userid`
+            ");
+        } elseif($request->dateRange && $request->employee == false) {
+            $start = date("Y-m-d",strtotime($request->dateRange[0]));   
+            $end = date("Y-m-d",strtotime($request->dateRange[1]));   
+
+            $queryData = DB::select("
+            SELECT 
+                a.`id`,
+                a.`userid` AS 'user_id',
+                a.`emp_name` AS 'employee_name',
+                DATE_FORMAT(a.`date_entry`, '%m/%d/%Y') AS 'dtr_date', 
+                (SELECT DATE_FORMAT(MIN(b.`time_entry`),'%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'IN' AND b.`userid` = a.`userid`) AS 'in',
+                IFNULL(
+                    (SELECT DATE_FORMAT(MAX(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = a.`date_entry` AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`),
+                    (SELECT DATE_FORMAT(MIN(b.`time_entry`), '%h:%i %p') FROM erpweb.`app` b WHERE b.`date_entry` = DATE_ADD(a.`date_entry`,INTERVAL 1 DAY) AND b.`mode` = 'OUT' AND b.`userid` = a.`userid`)
+                    )AS 'out'
+                FROM erpweb.`app` a
+                WHERE a.`date_entry` BETWEEN '".$start."' 
+                AND '".$end."'
+                GROUP BY a.`date_entry`,a.`userid`
+            ");
+        } 
+
+  
+        return response()->json($queryData);
+        
+    }
+
+
+
+
 
 
 }
