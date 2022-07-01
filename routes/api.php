@@ -293,6 +293,7 @@ Route::post('get-materials', [ScController::class, 'getMaterials']);
 Route::get('get-category', [ScController::class, 'getCategory']);
 Route::get('get-subcategory', [ScController::class, 'getSubCategory']);
 Route::get('get-brand', [ScController::class, 'getBrand']);
+Route::post('cart-purchase', [ScController::class, 'purchase']);
 
 Route::post('cart-store', [CartController::class, 'store']);
 Route::get('cartone-show/{loggedUserId}/{companyId}', [CartController::class, 'showCartOne']);
