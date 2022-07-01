@@ -6,6 +6,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\SupplyChain\Cart;
 
 class ScController extends ApiController
 {
@@ -100,6 +101,8 @@ class ScController extends ApiController
             ];
 
             array_push($arrayCart, $cartData);
+
+            Cart::where('cart_id', $value->cart_id)->update(['cart_status' => 3]);
         }
 
         // insert in requisition_details 
