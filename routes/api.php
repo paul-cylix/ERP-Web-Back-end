@@ -290,9 +290,14 @@ Route::get('get-salesorder-document/{id}', [SofController::class, 'getSalesOrder
 
 // Supply Chain
 Route::post('get-materials', [ScController::class, 'getMaterials']);
+Route::post('get-search-materials', [ScController::class, 'searchMaterials']);
+
 Route::get('get-category', [ScController::class, 'getCategory']);
+Route::get('get-uom', [ScController::class, 'getUom']);
 Route::get('get-subcategory', [ScController::class, 'getSubCategory']);
 Route::get('get-brand', [ScController::class, 'getBrand']);
+
+
 
 Route::post('cart-store', [CartController::class, 'store']);
 Route::get('cartone-show/{loggedUserId}/{companyId}', [CartController::class, 'showCartOne']);

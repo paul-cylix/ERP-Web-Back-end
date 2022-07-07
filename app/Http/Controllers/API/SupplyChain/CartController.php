@@ -11,15 +11,22 @@ use Illuminate\Support\Facades\DB;
 class CartController extends ApiController
 {
     public function store(Request $request) {
+        log::debug($request);
+
         $cart            = new Cart();
         $cart->cart_userid    = $request->loggedUserId;
         $cart->cart_companyid = $request->companyId;
         $cart->cart_group_detail_id = $request->id;
-        $cart->cart_uom_id    = $request->uomId;
-        $cart->cart_uom_name  = $request->uomName;
+        $cart->cart_uom_id    = $request->cart_uom_id;
+        $cart->cart_uom_name  = $request->cart_uom_name;
+        $cart->cart_quantity  = $request->cart_quantity;
+
         $cart->save();
         return response()->json('Item has beed added to your cart' , 200);
     }
+
+
+
 
 
 

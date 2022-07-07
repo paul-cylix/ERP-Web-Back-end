@@ -244,7 +244,10 @@ class OtController extends ApiController
     }
 
     public function getOtMain($id){
-        $otData = OtMain::where('main_id',$id)->get();
+        // $otData = OtMain::where('main_id',$id)->get();
+
+        $otData = DB::select("SELECT *,(SELECT b.`project_name` FROM general.`setup_project` b WHERE b.`project_id` = a.`PRJID` ) AS 'PRJNAME' FROM humanresource.`overtime_request` a WHERE a.`main_id` = '".$id."'");
+
         return response()->json($otData, 200);
     }
 
@@ -266,7 +269,7 @@ class OtController extends ApiController
         a.`PRJID`,
         a.`cust_name`,
         a.`cust_id`,
-        (SELECT project_name FROM general.`setup_project` WHERE project_id = a.`PRJID`) AS 'Project_Name',
+        (SELECT project_name FROM general.`setup_project` WHERE project_id = a.`PRJID`) AS 'PRJNAME',
         a.`overtime_date`,
         a.`id`
       FROM
