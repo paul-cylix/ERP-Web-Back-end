@@ -11,15 +11,22 @@ use Illuminate\Support\Facades\DB;
 class CartController extends ApiController
 {
     public function store(Request $request) {
+        log::debug($request);
+
         $cart            = new Cart();
         $cart->cart_userid    = $request->loggedUserId;
         $cart->cart_companyid = $request->companyId;
         $cart->cart_group_detail_id = $request->id;
-        $cart->cart_uom_id    = $request->uomId;
-        $cart->cart_uom_name  = $request->uomName;
+        $cart->cart_uom_id    = $request->cart_uom_id;
+        $cart->cart_uom_name  = $request->cart_uom_name;
+        $cart->cart_quantity  = $request->cart_quantity;
+
         $cart->save();
         return response()->json('Item has beed added to your cart' , 200);
     }
+
+
+
 
 
 
@@ -40,7 +47,8 @@ class CartController extends ApiController
         )
         ->join('procurement.setup_group_detail AS product', 'cart.cart_group_detail_id', '=', 'product.group_detail_id')
         ->join('procurement.setup_brand AS brand', 'brand.id', '=', 'product.brand_id')
-        ->join('procurement.setup_group_type AS category', 'category.id', '=', 'product.category_id')
+        ->join('procurement.setup_group_type AS category', 'category.id', '=', 'product.group_id')
+        ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 'product.category_id')
         ->where('cart.cart_userId', $loggedUserId)
         ->where('cart.cart_companyid', $companyId)
         ->whereIn('cart.cart_status', [1,2])->get();
