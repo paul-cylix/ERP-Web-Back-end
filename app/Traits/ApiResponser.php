@@ -41,6 +41,20 @@ trait ApiResponser
         return $GUID;
 
     }
+
+    protected function getMainRef($type){
+        if($type == "SURF") {
+            $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`requisition_no`,11)) FROM procurement.`requisition_main` a WHERE YEAR(tstamp) = YEAR(NOW()) AND a.`trans_type` = '".$type."' ), FALSE) +1 AS 'ref'");
+        }
+        else {
+            $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`requisition_no`,10)) FROM procurement.`requisition_main` a WHERE YEAR(tstamp) = YEAR(NOW()) AND a.`trans_type` = '".$type."' ), FALSE) +1 AS 'ref'");
+        }
+        $ref = $ref[0]->ref;
+        $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
+        $ref = $type."/" . date('Y') . "/" . $ref;
+
+        return $ref;
+    }
     
     protected function getRfpRef(){
         $now = Carbon::now();
