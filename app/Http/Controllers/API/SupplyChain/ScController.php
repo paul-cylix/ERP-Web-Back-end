@@ -71,7 +71,6 @@ class ScController extends ApiController
 
     public function searchMaterials(Request $request){
         $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_brand('%', '".$request->companyId."', '".$request->keyword."','".$request->brand."')");
-
         return response()->json($posts);
     }
 

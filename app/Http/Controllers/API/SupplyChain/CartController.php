@@ -42,7 +42,7 @@ class CartController extends ApiController
         ->select('cart.*','product.group_detail_id','product.item_code','product.unit_measure as uom_name','product.description'
         ,'product.specification' ,'product.uom_id','product.unit_measure as abbrev','product.has_serial','product.type as category'
         ,'product.brand','brand.id as brand_id','brand.description as brand_name'
-        ,'category.id as category_id','category.type as category_name'
+        ,'category.id as category_id','category.type as category_name', 'subcat.group_id as subcategory_id', 'subcat.group_description as subcategory_name', 'subcat.group_type as subcategory_category_id'
         
         )
         ->join('procurement.setup_group_detail AS product', 'cart.cart_group_detail_id', '=', 'product.group_detail_id')

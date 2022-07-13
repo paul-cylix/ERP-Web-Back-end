@@ -26,6 +26,16 @@ class SetupProjectController extends ApiController
         return $this->showAll($data);
     }
 
+    public function getprojects($companyId) {
+        $data = SetupProject::select('project_id','project_name')
+        ->where('project_type','!=','MAIN OFFICE')
+        ->where('status','=','Active')
+        ->where('title_id','=',$companyId)
+        ->orderBy('project_name')
+        ->get();
+        return $this->showAll($data);
+    }
+
     /**
      * Show the form for creating a new resource.
      *

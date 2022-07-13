@@ -100,6 +100,9 @@ Route::resource('general-currencies', CurrencySetupController::class);
 // General
 Route::resource('general-managers', SystemReportingManagerController::class);
 Route::resource('general-projects', SetupProjectController::class);
+Route::get('general-getprojects/{compId}',[SetupProjectController::class, 'getprojects']);
+
+
 // To Modify
 // Route::resource('general-businesses', BusinessListController::class);
     Route::get('general-businesses',[BusinessListController::class, 'index']);

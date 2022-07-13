@@ -152,16 +152,33 @@ trait ApiResponser
         $removedFiles = json_decode($removedFiles, true);
 
         // Log::alert(count($removedFiles));
-        // Log::alert($removedFiles);
+        Log::alert($removedFiles);
 
+        log::debug($removedFiles);
+        
 
         if (count($removedFiles) > 0) {
-            for ($i = 0; $i < count($removedFiles); $i++) {
-                DB::table('general.attachments')->where('id', $removedFiles[0]['id'])->delete();
 
-                $public_path = public_path($removedFiles[0]['filepath'] . '/' . $removedFiles[0]['filename']);
+            // DB::beginTransaction();
+            // try{
+            Log::alert($removedFiles);
+            
+
+            for ($i = 0; $i < count($removedFiles); $i++) {
+                DB::table('general.attachments')->where('id', $removedFiles[$i]['id'])->delete();
+
+                $public_path = public_path($removedFiles[$i]['filepath'] . '/' . $removedFiles[$i]['filename']);
+                log::debug($public_path);
                 unlink($public_path);
             }
+
+            // DB::commit();
+
+            // }catch(\Exception $e){
+            //     DB::rollback();
+            //     log::debug($e);
+            // }
+
         }
     }
 
