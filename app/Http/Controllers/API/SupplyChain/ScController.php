@@ -110,63 +110,104 @@ class ScController extends ApiController
 
     public function purchase(Request $request) {
 
-        // insert in requisition_main table
-        $m_id = DB::table('procurement.requisition_main')->insertGetId([
-            "requisition_no" => $request->requisition_no,
-            "draft_num" => '',
-            "deadline_date" => $request->planned_delivery_date,
-            "trans_date" =>   $request->requested_date,
-            "trans_type" =>   $request->trans_type,
-            "delivery_date" => $request->delivery_date,
-            "remarks" => $request->remarks,
-            "status" => 'In Progress',
-            "userid" => $request->userid,
-            "costid" => $request->costid,
-            "costname" => $request->costname,
-            "clientid" => $request->clientid,
-            "clientname" => $request->clientname,
-            "short_text" => $request->short_text
-        ]);
+        DB::beginTransaction();
+        try {
+            $guid = $this->getGuid();
+            $mainRef = $this->getMainRef($request->trans_type);
+            $soid = DB::table('general.setup_project as sp')->select('sp.SOID')->where('sp.project_id', $request->costid)->get();
 
-        $cartData = DB::table('carts AS c')
-        ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
-        ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
-        ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
-        ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
-        ->where('c.cart_userId', $request->userid)
-        ->where('cart_companyId', $request->companyId)
-        ->where('cart_status', 2)->get();
+            $SOID = 0;
+            $SONUM = 0;
+            
+            if(count($soid) == 0) {
+                $SOID = 0;
+                $SONUM = 0;
+            }
+            else {
+                $soNum = DB::table('sales_order.sales_orders as so')->select('so.soNum')->where('so.id', $soid[0]->SOID)->get();
+                $SOID = $soid[0]->SOID;
+                $SONUM = $soNum[0]->soNum;
+            }
 
-        $arrayCart = [];
-
-        foreach ($cartData as $key => $value) {
-            $cartData = [
-                'requisition_id' => $m_id,
-                'itemid' => $value->cart_id,
-                'item_name' => $value->specification,
-                'item_description' => $value->description,
-                'uom' => $value->cart_uom_name,
-                'uomid' => $value->cart_uom_id,
-                'req_qty' => $value->cart_quantity,
-                'costID' => $request->costid,
-                'cost_name' => $request->costname,
-                'client_id' => $request->clientid,
-                'client_name' => $request->clientname,
-                'date_needed' => $request->planned_delivery_date,
-                'date_delivered' => $request->delivery_date,
-                'notes' => '',
+            // insert in requisition_main table
+            $m_id = DB::table('procurement.requisition_main')->insertGetId([
+                "requisition_no" => $mainRef,
+                "draft_num" => '',
+                "deadline_date" => $request->planned_delivery_date,
+                "trans_date" =>   $request->requested_date,
+                "trans_type" =>   $request->trans_type,
+                "remarks" => $request->remarks,
                 "status" => 'In Progress',
-            ];
+                "userid" => $request->userid,
+                "costid" => $request->costid,
+                "costname" => $request->costname,
+                "clientid" => $request->clientid,
+                "clientname" => $request->clientname,
+                "short_text" => $request->short_text,
+                "GUID" => $guid,
+                "req_person_id" => $request->req_person_id,
+                "rmid" => $request->rmid,
+                "type" => $request->type,
+                "title_id" => $request->companyId,
+                "procss_type" => $request->procss_type,
+                "so_id" => $SOID,
+                "so_num" => $SONUM,
+            ]);
 
-            array_push($arrayCart, $cartData);
+            $cartData = DB::table('carts AS c')
+            ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
+            ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+            ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+            ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+            ->where('c.cart_userId', $request->userid)
+            ->where('cart_companyId', $request->companyId)
+            ->where('cart_status', 2)->get();
 
-            Cart::where('cart_id', $value->cart_id)->update(['cart_status' => 3]);
+            $arrayCart = [];
+
+            foreach ($cartData as $key => $value) {
+                $cartData = [
+                    'requisition_id' => $m_id,
+                    'itemid' => $value->cart_id,
+                    'item_name' => $value->specification,
+                    'item_description' => $value->description,
+                    'uom' => $value->cart_uom_name,
+                    'uomid' => $value->cart_uom_id,
+                    'req_qty' => $value->cart_quantity,
+                    'costID' => $request->costid,
+                    'cost_name' => $request->costname,
+                    'client_id' => $request->clientid,
+                    'client_name' => $request->clientname,
+                    'date_needed' => $request->planned_delivery_date,
+                    'notes' => '',
+                    "status" => 'In Progress',
+                    "factor" => '',
+                    "factorqty" => 0,
+                    "PR_qty" => 0,
+                    "resrve_qty" => 0,
+                    "ActualQty" => 0,
+                    "duomid" => $value->cart_uom_id,
+                    "reservuomname" => '',
+                ];
+
+                array_push($arrayCart, $cartData);
+
+                Cart::where('cart_id', $value->cart_id)->update(['cart_status' => 3]);
+            }
+
+            // insert in requisition_details 
+            $result = DB::table('procurement.requisition_details')->insert($arrayCart);
+
+            DB::commit();
+
+            return response()->json('Your item has been purchased!' , 200);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+        
+            // throw error response
+            return response()->json($e, 500);
         }
-
-        // insert in requisition_details 
-        $result = DB::table('procurement.requisition_details')->insert($arrayCart);
-
-        return response()->json('Your item has been purchased!' , 200);
 
     }
 }
