@@ -22,4 +22,11 @@ class AttachmentController extends ApiController
 
 
     }
+
+    public function getFile() {
+        $filepath = $_GET['filepath'];
+        $filename = $_GET['filename'];
+        $file_location = $filepath. '/' .$filename;
+        return response()->file(public_path(). '/' .$file_location);
+    }
 }

@@ -322,7 +322,8 @@ Route::post('post-filtered-attendance', [CylixPortalController::class, 'getFilte
 
 
 
-
+// for previewing image or pdf
+Route::get('getFile', [AttachmentController::class, 'getFile']);
 
 
 
@@ -330,7 +331,6 @@ Route::post('post-filtered-attendance', [CylixPortalController::class, 'getFilte
 // Testing Registration
 Route::post('register', [RegisterController::class, 'register']);
 Route::get('show-user', [RegisterController::class, 'showUsers']);
-
 
 
 
