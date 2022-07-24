@@ -38,7 +38,7 @@ class CartController extends ApiController
 
     public function showCartOne($loggedUserId, $companyId){
 
-        $cartData = DB::table('carts as cart')
+        $cartData = DB::table('procurement.carts as cart')
         ->select('cart.*','product.group_detail_id','product.item_code','product.unit_measure as uom_name','product.description'
         ,'product.specification' ,'product.uom_id','product.unit_measure as abbrev','product.has_serial','product.type as category'
         ,'product.brand','brand.id as brand_id','brand.description as brand_name'
@@ -59,7 +59,7 @@ class CartController extends ApiController
     }
 
     public function showCart($loggedUserId, $companyId, $status) {
-        $cartData = DB::table('carts AS c')
+        $cartData = DB::table('procurement.carts AS c')
         ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
         ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
         // ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.category_id')
