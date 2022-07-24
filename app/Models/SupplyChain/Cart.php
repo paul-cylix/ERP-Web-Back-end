@@ -15,6 +15,8 @@ class Cart extends Model
 
     const AVAILABLE = 1;
 
+    protected $table = 'procurement.carts';
+
     protected $primaryKey = 'cart_id';
 
     public $timestamps = true;
