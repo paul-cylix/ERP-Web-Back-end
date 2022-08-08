@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\General;
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use App\Models\General\Attachments;
+use Illuminate\Support\Facades\Storage;
 
 class AttachmentController extends ApiController
 {
@@ -23,10 +24,17 @@ class AttachmentController extends ApiController
 
     }
 
-    public function getFile() {
+    // public function getFile() {
+    //     $filepath = $_GET['filepath'];
+    //     $filename = $_GET['filename'];
+    //     $file_location = $filepath. '/' .$filename;
+    //     return response()->file(public_path(). '/' .$file_location);
+    // }
+
+    public function downloadFile(){
         $filepath = $_GET['filepath'];
         $filename = $_GET['filename'];
         $file_location = $filepath. '/' .$filename;
-        return response()->file(public_path(). '/' .$file_location);
+        return Storage::download($file_location);
     }
 }

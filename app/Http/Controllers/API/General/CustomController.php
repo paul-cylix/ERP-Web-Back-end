@@ -181,7 +181,7 @@ class CustomController extends ApiController
             // WHERE  a.`PROCESSID` = '" . $request->processId . "' AND a.`STATUS` = 'In Progress' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`COMPID` = '" . $request->companyId . "' ;");
             $this->rejectedRequest($request);
             DB::update("UPDATE accounting.`reimbursement_request` a SET a.`STATUS` = 'Rejected'  WHERE a.`ID` = '" . $request->processId . "';");
-            return response()->json(['message' => 'Reimbursement Request has been  rRjected'], 200);
+            return response()->json(['message' => 'Reimbursement Request has been  Rejected'], 200);
         }
 
         if ($request->form === 'Petty Cash Request') {
@@ -259,38 +259,28 @@ class CustomController extends ApiController
 
             // Acknowledgement of Accounting - Approval - Done Approving
             if ($forApprove) {
-                // DB::update("UPDATE general.`actual_sign` a SET  a.`DoneApproving` ='1',a.`STATUS` = 'Completed', a.`UID_SIGN` = '" . $request->loggedUserId . "', a.`TS` = NOW(), a.`SIGNDATETIME` = NOW(), a.`ApprovedRemarks` = '" . $request->remarks . "' WHERE a.`REFERENCE` = '" . $request->referenceNumber . "' AND a.`STATUS` = 'In Progress' AND a.`COMPID` = '" . $request->companyId . "' AND  a.`ORDERS` = '4' AND a.`PROCESSID` = '" . $request->processId . "';");
                 $this->doneApproving($request);
 
-                RfpMain::where('ID', $request->processId)
+                RfpMain:: where('ID', $request->processId)
                     ->update([
                         'ISRELEASED' => 1,
-                        'STATUS' => 'Completed',
+                        'STATUS'     => 'Completed',
                     ]);
 
                 return response()->json(['message' => "Done Approving has been Successfully approved"], 200);
             } else {
                 $this->approveActualSIgn($request);
-                // DB::update("UPDATE general.`actual_sign` a SET a.`webapp` ='1', a.`status` = 'Completed', a.`UID_SIGN` = '" . $request->loggedUserId . "', a.`SIGNDATETIME` = NOW(), a.`ApprovedRemarks` = '" . $request->remarks . "' WHERE a.`status` = 'In Progress' AND a.`PROCESSID` = '" . $request->processId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`COMPID` = '" . $request->companyId . "' ;");
-                // DB::update("UPDATE general.`actual_sign` a SET a.`status` = 'In Progress' WHERE a.`status` = 'Not Started' AND a.`PROCESSID` = '" . $request->processId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`COMPID` = '" . $request->companyId . "' LIMIT 1;");
-
                 return response()->json(['message' => 'Payment Request has been Successfully approved'], 200);
             }
         }
 
         if ($request->form === 'Reimbursement Request') {
-
             if ($request->isInitiator === 'true') {
-                // DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `DoneApproving` = '1', `status` = 'Completed', UID_SIGN = '" . $request->loggedUserId . "', SIGNDATETIME = NOW(), ApprovedRemarks = '" . $request->remarks . "' WHERE `status` = 'In Progress' AND PROCESSID = '" . $request->processId . "' AND `FRM_NAME` = '" . $request->form . "' AND `COMPID` = '" . $request->companyId . "' ;");
                 $this->doneApproving($request);
-
                 DB::update("UPDATE accounting.`reimbursement_request` a SET a.`STATUS` = 'Completed'  WHERE a.`ID` = '" . $request->processId . "' AND a.`TITLEID` = '" . $request->companyId . "' ");
                 return response()->json(['message' => 'Done! Request has been Successfully approved'], 200);
             } else {
                 $this->approveActualSIgn($request);
-                // DB::update("UPDATE general.`actual_sign` a SET a.`webapp` = '1', a.`status` = 'Completed', a.`UID_SIGN` = '" . $request->loggedUserId . "', a.`SIGNDATETIME` = NOW(), a.`ApprovedRemarks` = '" . $request->remarks . "' WHERE a.`status` = 'In Progress' AND a.`PROCESSID` = '" . $request->processId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`COMPID` = '" . $request->companyId . "' ;");
-                // DB::update("UPDATE general.`actual_sign` a SET `status` = 'In Progress' WHERE a.`status` = 'Not Started' AND a.`PROCESSID` = '" . $request->processId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`COMPID` = '" . $request->companyId . "' LIMIT 1;");
-
                 return response()->json(['message' => 'Reimbursement Request has been Successfully approved'], 200);
             }
         }
@@ -327,15 +317,23 @@ class CustomController extends ApiController
             DB::beginTransaction();
             try {
 
+                $loggedUserId = DB::table('accounting.petty_cash_request as a')->select('a.UID as loggedUserId','a.GUID as guid')->where('id',$request->processId)->get();
+                $userId = $loggedUserId[0]->loggedUserId;
+                $guid = $loggedUserId[0]->guid;
+
+
+                $request->merge([
+                    'loggedUserId' => $userId,
+                ]);
+                
                 $this->deletePcExpense($request);
                 $this->deletePcTranspo($request);
 
-                $this->insertPcExpense($request, $department);
-                $this->insertPcTranspo($request, $department);
+                $this->insertPcExpense($request, $department, $guid);
+                $this->insertPcTranspo($request, $department, $guid);
                 
                 $this->removeAttachments($request);
-                $this->addAttachments($request);
-                
+                $this->insertAttachments($request, $request->processId, $request->referenceNumber);
                 $this->approveActualSIgn($request);
 
                 DB::commit();
@@ -858,6 +856,13 @@ class CustomController extends ApiController
                 // add attachments
                 $this->addAttachments($request);
 
+                $loggedUserId = DB::table('accounting.petty_cash_request as a')->select('a.UID as loggedUserId','a.GUID as guid')->where('id',$request->processId)->get();
+                $userId = $loggedUserId[0]->loggedUserId;
+                $guid = $loggedUserId[0]->guid;
+
+
+                // update the initid by requestor
+                DB::table('general.attachments as a')->where('a.REQID', $request->processId)->where('a.formName', $request->form)->update(['a.INITID' => $userId]);
       
 
                 $data = DB::select("SELECT a.`DEPARTMENT` FROM accounting.`petty_cash_request` a WHERE a.`id` = $request->processId");
@@ -866,8 +871,8 @@ class CustomController extends ApiController
                 $this->deletePcExpense($request);
                 $this->deletePcTranspo($request);
 
-                $this->insertPcExpense($request, $department);
-                $this->insertPcTranspo($request, $department);
+                $this->insertPcExpense($request, $department, $guid);
+                $this->insertPcTranspo($request, $department, $guid);
 
             }
 
@@ -1062,7 +1067,6 @@ class CustomController extends ApiController
                     'Contactid' =>  $request->contactPerson,
                     'Contact' =>    $request->contactPersonName,
                     'ContactNum' => $request->contactNumber,
-                    // 'sodate' => $request->,
                     'podate' => $poDate,
                     'poNum' =>  $request->poNumber,
                     'DeliveryAddress' =>    $request->deliveryAddress,
@@ -1317,6 +1321,18 @@ class CustomController extends ApiController
         $tdArray = json_decode($tdArray, true);
         $td = count($tdArray);
 
+        $department = DB::table('accounting.reimbursement_request as re_main' )
+        ->select('re_main.DEPARTMENT as department')
+        ->where('id', $request->processId)
+        ->get();
+
+
+        $department = $department[0]->department;
+
+
+
+        // log::debug($department[0]->department);
+
         DB::table('accounting.reimbursement_expense_details')->where('REID', $request->processId)->delete();
         DB::table('accounting.reimbursement_request_details')->where('REID', $request->processId)->delete();
 
@@ -1343,7 +1359,7 @@ class CustomController extends ApiController
                         'STATUS' => 'ACTIVE',
                         'CLIENT_ID' => $xdArray[$i]['CLIENT_ID'],
                         'EXPENSE_TYPE' => $xdArray[$i]['EXPENSE_TYPE'],
-                        'DEPT' => $request->loggedUserDepartment,
+                        'DEPT' => $department,
                         'RELEASEDCASH' => '0',
                         'date_' => date_create($xdArray[$i]['date_']),
 
@@ -1374,7 +1390,7 @@ class CustomController extends ApiController
                         'MAINID' => $request->mainId,
                         'STATUS' => 'ACTIVE',
                         'CLIENT_ID' => $tdArray[$i]['CLIENT_ID'],
-                        'DEPT' => $request->loggedUserDepartment,
+                        'DEPT' => $department,
                         'RELEASEDCASH' => '0',
                         'date_' => date_create($tdArray[$i]['date_']),
 

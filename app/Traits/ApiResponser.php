@@ -198,26 +198,32 @@ trait ApiResponser
 
     protected function addAttachments($request){
         // Additional attachments
+
         if ($request->hasFile('file')) {
 
             foreach ($request->file as $file) {
                 $completeFileName = $file->getClientOriginalName();
-                $fileNameOnly = pathinfo($completeFileName, PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $randomized = rand();
-                $newFileName = str_replace(' ', '', $fileNameOnly) . '-' . $randomized . '' . time() . '.' . $extension;
-                $reqRef = str_replace('-', '_', $request->referenceNumber);
-                $mimeType = $file->getMimeType();
+                $fileNameOnly     = pathinfo($completeFileName, PATHINFO_FILENAME);
+                $fileNameOnly     = preg_replace('/[^A-Za-z0-9\-]/', '', $fileNameOnly);                                      // Removes special chars.
+                $extension        = $file->getClientOriginalExtension();
+                $randomized       = rand(1000,9999);
+                $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
+                $reqRef           = str_replace('-', '_', $request->referenceNumber);
+                $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter. $randomized.'.' . $extension;
+                $mimeType         = $file->getMimeType();
+
+
+
+                // $date = date()
                 // $myPath = "C:/Users/Iverson/Desktop/Attachments/".session('LoggedUser_CompanyID')."/RFP/".$rfpCode;
 
-                // For moving the file
-                $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;
-                // For preview
-                $storagePath = "storage/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;
-                $symPath = "public/Attachments/{$request->class}";
-                $file->storeAs($destinationPath, $completeFileName);
-                $fileDestination = $storagePath . '/' . $completeFileName;
-                $image = base64_encode(file_get_contents($file));
+                
+                $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;   // For moving the file
+                $storagePath     = "storage/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;  // For preview
+                $file->storeAs($destinationPath, $newFileName);
+                // $symPath = "public/Attachments/{$request->class}";
+                // $fileDestination = $storagePath . '/' . $completeFileName;
+                // $image = base64_encode(file_get_contents($file));
 
                 // DB::table('repository.rfp')->insert([
                 //     'REFID' => $request->processId,
@@ -228,19 +234,19 @@ trait ApiResponser
                 // ]);
 
                 $attachmentsData = [
-                    'INITID' => $request->loggedUserId,
-                    'REQID' => $request->processId,
-                    'filename' => $completeFileName,
-                    'filepath' => $storagePath,
-                    'fileExtension' => $extension,
-                    'newFilename' => $newFileName,
-                    'fileDestination' => $destinationPath,
-                    'mimeType' => $mimeType,
-                    'imageBytes' => $image,
-                    'formName' => $request->form,
-                    'created_at' => date('Y-m-d H:i:s')
+                    'INITID'           => $request->loggedUserId,
+                    'REQID'            => $request->processId,
+                    'filename'         => $newFileName,
+                    'filepath'         => $storagePath,
+                    'fileExtension'    => $extension,
+                    'originalFilename' => $completeFileName,
+                    'newFilename'      => $newFileName,
+                    'fileDestination'  => $destinationPath,
+                    'mimeType'         => $mimeType,
+                    'formName'         => $request->form,
+                    'created_at'       => date('Y-m-d H:i:s')
                 ];
-                Attachments::insert($attachmentsData);
+                Attachments:: insert($attachmentsData);
             }
         }
     }
@@ -252,45 +258,40 @@ trait ApiResponser
 
             foreach ($request->file as $file) {
                 $completeFileName = $file->getClientOriginalName();
-                $fileNameOnly = pathinfo($completeFileName, PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $randomized = rand();
-                $newFileName = str_replace(' ', '', $fileNameOnly) . '-' . $randomized . '' . time() . '.' . $extension;
-                $reqRef = str_replace('-', '_', $reference);
-                $mimeType = $file->getMimeType();
+                $fileNameOnly     = pathinfo($completeFileName, PATHINFO_FILENAME);
+                $fileNameOnly     = preg_replace('/[^A-Za-z0-9\-]/', '', $fileNameOnly);                                      // Removes special chars.
+                $extension        = $file->getClientOriginalExtension();
+                $randomized       = rand(1000,9999);
+                $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
+                $reqRef           = str_replace('-', '_', $reference);
+                $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter. $randomized.'.' . $extension;
+                $mimeType         = $file->getMimeType();
                 // $myPath = "C:/Users/Iverson/Desktop/Attachments/".session('LoggedUser_CompanyID')."/RFP/".$rfpCode;
 
-                // For moving the file
-                $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;
-                // For preview
-                $storagePath = "storage/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;
-                $symPath = "public/Attachments/{$request->class}";
-                $file->storeAs($destinationPath, $completeFileName);
-                $fileDestination = $storagePath . '/' . $completeFileName;
-                $image = base64_encode(file_get_contents($file));
+                
+                $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;   // For moving the file
+                $storagePath     = "storage/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;  // For preview
+                $file->storeAs($destinationPath, $newFileName);
+                // $symPath = "public/Attachments/{$request->class}";
+                // $fileDestination = $storagePath . '/' . $completeFileName;
+                // $image = base64_encode(file_get_contents($file));
 
-                // DB::table('repository.rfp')->insert([
-                //     'REFID' => $request->processId,
-                //     'FileName' => $completeFileName,
-                //     'IMG' => $image,
-                //     'UID' => $request->loggedUserId,
-                //     'Ext' => $extension
-                // ]);
 
                 $attachmentsData = [
-                    'INITID' => $request->loggedUserId,
-                    'REQID' => $processId,
-                    'filename' => $completeFileName,
-                    'filepath' => $storagePath,
-                    'fileExtension' => $extension,
-                    'newFilename' => $newFileName,
-                    'fileDestination' => $destinationPath,
-                    'mimeType' => $mimeType,
-                    'imageBytes' => $image,
-                    'formName' => $request->form,
-                    'created_at' => date('Y-m-d H:i:s')
+                    'INITID'           => $request->loggedUserId,
+                    'REQID'            => $processId,
+                    'filename'         => $newFileName,
+                    'filepath'         => $storagePath,
+                    'fileExtension'    => $extension,
+                    'originalFilename' => $completeFileName,
+                    'newFilename'      => $newFileName,
+                    'fileDestination'  => $destinationPath,
+                    'mimeType'         => $mimeType,
+                    'formName'         => $request->form,
+                    'created_at'       => date('Y-m-d H:i:s')
                 ];
-                Attachments::insert($attachmentsData);
+
+                Attachments:: insert($attachmentsData);
             }
         }
     }
@@ -342,7 +343,7 @@ trait ApiResponser
         DB::update("UPDATE general.`actual_sign` a SET a.`status` = 'In Progress' WHERE a.`status` = 'Not Started' AND a.`PROCESSID` = '" . $request->processId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`COMPID` = '" . $request->companyId . "' LIMIT 1;");
     }
 
-    protected function insertPcExpense($request ,$department){
+    protected function insertPcExpense($request ,$department, $guid){
         $xpData = $request->expenseData;
         $xpData = json_decode($xpData, true);
    
@@ -357,7 +358,7 @@ trait ApiResponser
                     'TITLEID' => $request->companyId,
                     'DESCRIPTION' => $xpData[$i]['DESCRIPTION'],
                     'AMOUNT' => floatval(str_replace(',', '', $xpData[$i]['AMOUNT'])),
-                    'GUID' => $request->guid,
+                    'GUID' => $guid,
                     'TS' => now(),
                     'MAINID' => 1,
                     'CLIENT_ID' => $xpData[$i]['CLIENT_ID'],
@@ -373,7 +374,7 @@ trait ApiResponser
 
     }
 
-    protected function insertPcTranspo($request, $department){
+    protected function insertPcTranspo($request, $department, $guid){
         $trData = $request->transpoData;
         $trData = json_decode($trData, true);
 
@@ -392,7 +393,7 @@ trait ApiResponser
                 'AMT_SPENT' => floatval(str_replace(',', '', $trData[$i]['AMT_SPENT'])),
                 'TITLEID' => $request->companyId,
                 'MOT' => $trData[$i]['MOT'],
-                'GUID' => $request->guid,
+                'GUID' => $guid,
                 'TS' => now(),
                 'MAINID' => 1,
                 'CLIENT_ID' => $trData[$i]['CLIENT_ID'],

@@ -42,6 +42,7 @@ use App\Models\General\SystemReportingManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
+use Illuminate\Support\Facades\Storage;
 
 
 /*
@@ -323,10 +324,8 @@ Route::post('post-filtered-attendance', [CylixPortalController::class, 'getFilte
 
 
 // for previewing image or pdf
-Route::get('getFile', [AttachmentController::class, 'getFile']);
-
-
-
+// Route::get('getFile', [AttachmentController::class, 'getFile']);
+Route::get('downloadFile', [AttachmentController::class, 'downloadFile']);
 
 // Testing Registration
 Route::post('register', [RegisterController::class, 'register']);

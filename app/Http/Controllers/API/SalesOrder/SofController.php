@@ -145,12 +145,8 @@ class SofController extends ApiController
 
         DB::beginTransaction();
         try{  
-        
-        // Log::debug(gettype($request->invoicerequired));
-        
-
-        
-        $guid = $this->getGuid();
+                
+        $guid   = $this->getGuid();
         $reqRef = $this->getSofRef($request->companyId);
         $request->request->add(['referenceNumber' => $reqRef]);
         $request->request->add(['class' => $request->softype]);
@@ -158,8 +154,8 @@ class SofController extends ApiController
 
         // convert string date to legit date
         $projectStart = $this->dateFormatter($request->projectStart);
-        $projectEnd = $this->dateFormatter($request->projectEnd);
-        $poDate = $this->dateFormatter($request->poDate);
+        $projectEnd   = $this->dateFormatter($request->projectEnd);
+        $poDate       = $this->dateFormatter($request->poDate);
 
         // get project duation
         $projectDuration = $this->dateDifference($projectStart, $projectEnd);
@@ -182,215 +178,176 @@ class SofController extends ApiController
         $projectCost = $this->amountFormatter($request->projectCost);
         
         // convert 'DLV' to 'Sales Order - Delivery' & etc.
-        $softype = $this->sofTypeConvert($request->softype);
+        $softype     = $this->sofTypeConvert($request->softype);
         $softypeName = $softype[0];
-        $sofCount = $softype[1];
+        $sofCount    = $softype[1];
 
         // insert sof type to the request
         $request->request->add(['form' => $softypeName]);
 
-
-
-
-
-
-
         // insert date to setup_projet
         $setupProject_ID = DB::table('general.setup_project')->insertGetId([
-            'project' => 'Project Site',
-            'project_name' => $request->projectName,
-            'project_shorttext' => $request->projectShortText,
-            'project_type' => 'Project Site',
-            'project_location' => $request->deliveryAddress, 
-            'project_remarks' => $request->scopeOfWork ,
-            'date_saved' => now(),
-            'title_id' => $request->companyId,
-            'project_no' => $request->projectCode,
-            'project_amount' => $projectCost,
-            'project_duration' => $projectDuration,
+            'project'             => 'Project Site',
+            'project_name'        => $request->projectName,
+            'project_shorttext'   => $request->projectShortText,
+            'project_type'        => 'Project Site',
+            'project_location'    => $request->deliveryAddress,
+            'project_remarks'     => $request->scopeOfWork,
+            'date_saved'          => now(),
+            'title_id'            => $request->companyId,
+            'project_no'          => $request->projectCode,
+            'project_amount'      => $projectCost,
+            'project_duration'    => $projectDuration,
             'project_effectivity' => $projectStart,
-            'project_expiry' => $projectEnd,
-            'status' => 'ACTIVE', 
-            'Main_office_id' => $request->companyId,
-            'OfficeAlias_Code' => '',
-            'OfficeAlias' => '',
-            // 'telno' => '0',
-            'fax' => '225',
-            'PROJECT_TYPES' => '',
-            // 'logoname' =>   $request->clientID,
-            'DeptHead' => '0',
-            'Coordinator' => '0',
-            'ClientID' => $request->clientID,
-            'total_cost' => '0',
-            'GID' => '0',
-            'ProjectStatus' => 'On-Going', 
+            'project_expiry'      => $projectEnd,
+            'status'              => 'ACTIVE',
+            'Main_office_id'      => $request->companyId,
+            'OfficeAlias_Code'    => '',
+            'OfficeAlias'         => '',
+            'fax'                 => '225',
+            'PROJECT_TYPES'       => '',
+            'DeptHead'            => '0',
+            'Coordinator'         => '0',
+            'ClientID'            => $request->clientID,
+            'total_cost'          => '0',
+            'GID'                 => '0',
+            'ProjectStatus'       => 'On-Going',
             'imported_from_excel' => '0',
-            'SOID' => null, //wala pa
-            // 'short_text' => '0',
-            'last_edit_by' => '0',
-            // 'last_edit_datetime' => $request->projectName,
-            'branch_name' => '',
-            'IncludeEmail' => '0'
-
+            'SOID'                => null,                         //wala pa
+            'last_edit_by'        => '0',
+            'branch_name'         => '',
+            'IncludeEmail'        => '0'
         ]);
 
         // insert data to sales_orders
         $salesOrders_ID = DB::table('sales_order.sales_orders')->insertGetId([
-            'titleid' => $request->companyId,
-            'DraftNum' => '',
-            'MAINID' => '1', // wala pa
-            'projID' => $setupProject_ID,
-            'pcode' => $request->projectCode,
-            'project' => $request->projectName,
-            'clientID' =>  $request->clientID,
-            'client' => $request->client,
-            'DraftStat' => '0',
-            'Contactid' => $request->contactPerson,
-            'Contact' => $request->contactPersonName,
-            'ContactNum' => $request->contactNumber,
-            'SubConID' => '0', //wala pa
-            'SubConName' => '',  // wala pa
-            'sodate' => now(), // wala pa
-            'soNum' => $reqRef, // wala pa
-            'podate' => $poDate,
-            'poNum' => $request->poNumber,
-            // 'ParentOrderId' => '',  // wala pa
-            // 'ParentSONum' => '',  // wala pa
-            'DeliveryAddress' =>  $request->deliveryAddress,
-            'BillTo' => $request->billingAddress,
-            'currency' => $request->currency,
-            'amount' => $projectCost,
-            'UID' => $request->loggedUserId,
-            'fname' => $request->loggedUserFirstName,
-            'lname' => $request->loggedUserLastName,
-            'department' => $request->loggedUserDepartment,
-            'reportmanager' => 'Chua, Konrad A.', 
-            'position' => $request->loggedUserPosition,
-            'remarks' => $request->scopeOfWork,
-            'Remarks2' => $request->accountingRemarks,
-            'purpose' => $softypeName,
-            'DateAndTimeNeeded' => $projectEnd,
-            'Terms' => $request->paymentTerms,
-            'GUID' => $guid, 
-            'DeadLineDate' => $projectEnd,
-            'Status' => 'In Progress',
-            'TS' => now(),
-            // 'InvolvedCost' =>'', //wala pa
-            'DeliveryStatus' => 'On-Going', //wala pa
-            'Coordinator' => '0', //wala pa
-            'IsInvoiceRequired' => filter_var($request->invoicerequired, FILTER_VALIDATE_BOOLEAN),
-            'invDate' => $invoiceDateNeeded,
-            'IsInvoiceReleased' => '0', //wala pa
-            'IsBeginning' => 'No', //wala pa
-            // 'deliveryOption' => '', //wala pa
-            // 'InvoiceDate' => '', //wala pa
-            'InvoiceNumber' => '', // wala pa
-            'imported_from_excel' => '0', //wala pa
-            'dp_required' => filter_var($request->downpaymentrequired, FILTER_VALIDATE_BOOLEAN),
-            'dp_percentage' => $downPaymentPercentage,
-            'project_shorttext' => $request->projectShortText,
-            // 'ForwardProcess' => '', // wala apa
-            'warranty' => $request->warranty,
-            'webapp' => '1'
+            'titleid'             => $request->companyId,
+            'DraftNum'            => '',
+            'MAINID'              => '1',                                                                  // wala pa
+            'projID'              => $setupProject_ID,
+            'pcode'               => $request->projectCode,
+            'project'             => $request->projectName,
+            'clientID'            => $request->clientID,
+            'client'              => $request->client,
+            'DraftStat'           => '0',
+            'Contactid'           => $request->contactPerson,
+            'Contact'             => $request->contactPersonName,
+            'ContactNum'          => $request->contactNumber,
+            'SubConID'            => '0',                                                                  //wala pa
+            'SubConName'          => '',                                                                   // wala pa
+            'sodate'              => now(),                                                                // wala pa
+            'soNum'               => $reqRef,                                                              // wala pa
+            'podate'              => $poDate,
+            'poNum'               => $request->poNumber,
+            'DeliveryAddress'     => $request->deliveryAddress,
+            'BillTo'              => $request->billingAddress,
+            'currency'            => $request->currency,
+            'amount'              => $projectCost,
+            'UID'                 => $request->loggedUserId,
+            'fname'               => $request->loggedUserFirstName,
+            'lname'               => $request->loggedUserLastName,
+            'department'          => $request->loggedUserDepartment,
+            'reportmanager'       => 'Chua, Konrad A.',
+            'position'            => $request->loggedUserPosition,
+            'remarks'             => $request->scopeOfWork,
+            'Remarks2'            => $request->accountingRemarks,
+            'purpose'             => $softypeName,
+            'DateAndTimeNeeded'   => $projectEnd,
+            'Terms'               => $request->paymentTerms,
+            'GUID'                => $guid,
+            'DeadLineDate'        => $projectEnd,
+            'Status'              => 'In Progress',
+            'TS'                  => now(),
+            'DeliveryStatus'      => 'On-Going',                                                           //wala pa
+            'Coordinator'         => '0',                                                                  //wala pa
+            'IsInvoiceRequired'   => filter_var($request->invoicerequired, FILTER_VALIDATE_BOOLEAN),
+            'invDate'             => $invoiceDateNeeded,
+            'IsInvoiceReleased'   => '0',                                                                  //wala pa
+            'IsBeginning'         => 'No',                                                                 //wala pa
+            'InvoiceNumber'       => '',                                                                   // wala pa
+            'imported_from_excel' => '0',                                                                  //wala pa
+            'dp_required'         => filter_var($request->downpaymentrequired, FILTER_VALIDATE_BOOLEAN),
+            'dp_percentage'       => $downPaymentPercentage,
+            'project_shorttext'   => $request->projectShortText,
+            'warranty'            => $request->warranty,
+            'webapp'              => '1'
         ]);
 
         // insert sales order id to general.attachmets as processID
         $request->request->add(['processId' => $salesOrders_ID]);
-
-
         // update sales order id in setup_project
-        DB::update("UPDATE general.`setup_project` a SET a.`SOID` = '".$salesOrders_ID."' WHERE a.`project_id` = '".$setupProject_ID."' ;");
+        DB:: update("UPDATE general.`setup_project` a SET a.`SOID` = '".$salesOrders_ID."' WHERE a.`project_id` = '".$setupProject_ID."' ;");
         // decode a parsed system name
-        $systemnames =json_decode($request->systemname,true);
+        $systemnames = json_decode($request->systemname,true);
         // iterate the request system name
         foreach($systemnames as $systemname) {
             $systemnameArray[] = [
-                'soid' => $salesOrders_ID,
-                'systemType'=> $systemname['type_name'],
-                'sysID' => $systemname['id'],
+                'soid'                => $salesOrders_ID,
+                'systemType'          => $systemname['type_name'],
+                'sysID'               => $systemname['id'],
                 'imported_from_excel' => '0'
             ];
         }
         // insert iterated array to sales_order_system
-        DB::table('sales_order.sales_order_system')->insert($systemnameArray);
+        DB:: table('sales_order.sales_order_system')->insert($systemnameArray);
 
         // decode a parsed document name
-        $documentnames =json_decode($request->documentname,true);
+        $documentnames = json_decode($request->documentname,true);
         // iterate the request document name
         foreach($documentnames as $documentname) {
             $documentnameArray[] = [
-                'SOID' => $salesOrders_ID,
-                'DocID'=> $documentname['ID'],
-                'DocName' => $documentname['DocumentName'],
+                'SOID'                => $salesOrders_ID,
+                'DocID'               => $documentname['ID'],
+                'DocName'             => $documentname['DocumentName'],
                 'imported_from_excel' => '0'
             ];
         }
         // insert iterated array to sales_order_docs
-        DB::table('sales_order.sales_order_docs')->insert($documentnameArray);
-
-
-        
-        
+        DB:: table('sales_order.sales_order_docs')->insert($documentnameArray);
 
         // Actual Sign
         for ($x = 0; $x < $sofCount; $x++) {
             $array[] = array(
-                'PROCESSID'=>$salesOrders_ID,
-                'USER_GRP_IND'=>'0',
-                'FRM_NAME'=> $softypeName,
-                'TaskTitle'=>'',
-                'NS'=>'',
-                'FRM_CLASS'=>'SALES_ORDER_FRM',
-                'REMARKS'=>$request->scopeOfWork,
-                'STATUS'=>'Not Started',
-                // 'UID_SIGN'=>'0',
-                'TS'=>now(),
-                'DUEDATE'=>$projectEnd,
-                // 'SIGNDATETIME'=>'',
-                'ORDERS'=>$x,
-                'REFERENCE'=>$reqRef,
-                'PODATE'=>$poDate,
-                'PONUM'=>$request->poNumber,
-                'DATE'=>$projectEnd,
-                'INITID'=> $request->loggedUserId,
-                'FNAME'=> $request->loggedUserFirstName,
-                'LNAME'=> $request->loggedUserLastName,
-                // 'MI'=>'',
-                'DEPARTMENT'=> $request->loggedUserDepartment,
-                'RM_ID'=> '0',
-                'REPORTING_MANAGER'=> 'Chua, Konrad A.',
-
-                'PROJECTID'=>$setupProject_ID,
-                'PROJECT'=>$request->projectName,
-
-                'COMPID'=> $request->companyId,
-                'COMPANY'=> $request->companyName,
-                'TYPE'=> $softypeName,
-                'CLIENTID'=>$request->clientID,
-                'CLIENTNAME'=>$request->client,
-                // 'VENDORID'=>'0',
-                // 'VENDORNAME'=>'',
-                'Max_approverCount'=> $sofCount,
-                // 'GUID_GROUPS'=>'',
-                'DoneApproving'=>'0',
-                'WebpageLink'=>'so_approve.php',
-                // 'ApprovedRemarks'=>'',
-                'Payee'=>'N/A',
-                // 'CurrentSender'=>'0',
-                // 'CurrentReceiver'=>'0',
-                // 'NOTIFICATIONID'=>'0',
-                // 'SENDTOID'=>'0',
-                // 'NRN'=>'imported',
-                // 'imported_from_excel'=>'0',
-                'Amount'=>$projectCost,
+                'PROCESSID'         => $salesOrders_ID,
+                'USER_GRP_IND'      => '0',
+                'FRM_NAME'          => $softypeName,
+                'TaskTitle'         => '',
+                'NS'                => '',
+                'FRM_CLASS'         => 'SALES_ORDER_FRM',
+                'REMARKS'           => $request->scopeOfWork,
+                'STATUS'            => 'Not Started',
+                'TS'                => now(),
+                'DUEDATE'           => $projectEnd,
+                'ORDERS'            => $x,
+                'REFERENCE'         => $reqRef,
+                'PODATE'            => $poDate,
+                'PONUM'             => $request->poNumber,
+                'DATE'              => $projectEnd,
+                'INITID'            => $request->loggedUserId,
+                'FNAME'             => $request->loggedUserFirstName,
+                'LNAME'             => $request->loggedUserLastName,
+                'DEPARTMENT'        => $request->loggedUserDepartment,
+                'RM_ID'             => '0',
+                'REPORTING_MANAGER' => 'Chua, Konrad A.',
+                'PROJECTID'         => $setupProject_ID,
+                'PROJECT'           => $request->projectName,
+                'COMPID'            => $request->companyId,
+                'COMPANY'           => $request->companyName,
+                'TYPE'              => $softypeName,
+                'CLIENTID'          => $request->clientID,
+                'CLIENTNAME'        => $request->client,
+                'Max_approverCount' => $sofCount,
+                'DoneApproving'     => '0',
+                'WebpageLink'       => 'so_approve.php',
+                'Payee'             => 'N/A',
+                'Amount'            => $projectCost,
             );
             }
-
 
             if($request->softype === 'DLV'){
                 if ($array[0]['ORDERS'] == 0){
                     $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS'] = 'In Progress';
+                    $array[0]['STATUS']       = 'In Progress';
                 }
         
                 if ($array[1]['ORDERS'] == 1){
@@ -415,7 +372,7 @@ class SofController extends ApiController
             } else if ($request->softype === 'PRJ'){
                 if ($array[0]['ORDERS'] == 0){
                     $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS'] = 'In Progress';
+                    $array[0]['STATUS']       = 'In Progress';
                 }
         
                 if ($array[1]['ORDERS'] == 1){
@@ -448,7 +405,7 @@ class SofController extends ApiController
             } else if ($request->softype === 'DMO'){
                 if ($array[0]['ORDERS'] == 0){
                     $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS'] = 'In Progress';
+                    $array[0]['STATUS']       = 'In Progress';
                 }
         
                 if ($array[1]['ORDERS'] == 1){
@@ -470,7 +427,7 @@ class SofController extends ApiController
             } else if ($request->softype === 'POC'){
                 if ($array[0]['ORDERS'] == 0){
                     $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS'] = 'In Progress';
+                    $array[0]['STATUS']       = 'In Progress';
                 }
         
                 if ($array[1]['ORDERS'] == 1){
@@ -490,8 +447,9 @@ class SofController extends ApiController
                 }
             }
 
+            $request->request->add(['processId' => $salesOrders_ID]);
+            $request->request->add(['referenceNumber' => $reqRef]);
             DB::table('general.actual_sign')->insert($array);
-
             $this->addAttachments($request);
 
             DB::commit();

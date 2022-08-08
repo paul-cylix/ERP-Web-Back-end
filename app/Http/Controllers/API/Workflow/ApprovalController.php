@@ -16,10 +16,11 @@ class ApprovalController extends ApiController
 
     // RFP Liquidation 
     public function rfpLiquidation(Request $request){
+        DB::beginTransaction();
+        try{  
 
-
-        DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `status` = 'Completed', `UID_SIGN` = '".$request->loggedUserId."', `SIGNDATETIME` = NOW(), `ApprovedRemarks` = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->rfpid."' AND `FRM_NAME` = '".$request->form."' AND `COMPID` = '".$request->companyId."' ;");
-        DB::update("UPDATE general.`actual_sign` SET `status` = 'In Progress' WHERE `status` = 'Not Started' AND PROCESSID = '".$request->rfpid."' AND `FRM_CLASS` = 'REQUESTFORPAYMENT' AND `COMPID` = '".$request->companyId."' LIMIT 1;");
+        DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `status` = 'Completed', `UID_SIGN` = '".$request->loggedUserId."', `SIGNDATETIME` = NOW(), `ApprovedRemarks` = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_NAME` = '".$request->form."' AND `COMPID` = '".$request->companyId."' ;");
+        DB::update("UPDATE general.`actual_sign` SET `status` = 'In Progress' WHERE `status` = 'Not Started' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'REQUESTFORPAYMENT' AND `COMPID` = '".$request->companyId."' LIMIT 1;");
 
         // Insert Liquidation
         $liquidationDataTable = $request->liquidation;
@@ -27,20 +28,20 @@ class ApprovalController extends ApiController
 
         for($i = 0; $i <count($liquidationDataTable); $i++) {
             $liqdata[] = [
-                'RFPID' =>$request->rfpid,
-                'trans_date'=>$liquidationDataTable[$i]['trans_date'],
-                'client_id' =>$liquidationDataTable[$i]['client_id'],
-                'client_name' =>$liquidationDataTable[$i]['client_name'],
-                'description'=>$liquidationDataTable[$i]['description'],
-                'date_' =>$liquidationDataTable[$i]['trans_date'],
-                'Amount' =>floatval(str_replace(',', '', $liquidationDataTable[$i]['Amount'])),
+                'RFPID'       => $request->processId,
+                'trans_date'  => $liquidationDataTable[$i]['trans_date'],
+                'client_id'   => $liquidationDataTable[$i]['client_id'],
+                'client_name' => $liquidationDataTable[$i]['client_name'],
+                'description' => $liquidationDataTable[$i]['description'],
+                'date_'       => $liquidationDataTable[$i]['trans_date'],
+                'Amount'      => floatval(str_replace(',', '', $liquidationDataTable[$i]['Amount'])),
                 
-                'currency' =>$liquidationDataTable[$i]['currency'],
-                'expense_type'=>$liquidationDataTable[$i]['expense_type'],
+                'currency'     => $liquidationDataTable[$i]['currency'],
+                'expense_type' => $liquidationDataTable[$i]['expense_type'],
             ];
         }
 
-        DB::table('accounting.rfp_liquidation')->insert($liqdata);
+        DB:: table('accounting.rfp_liquidation')->insert($liqdata);
 
         
 
@@ -51,7 +52,7 @@ class ApprovalController extends ApiController
 
         if(count($removedFiles) > 0){
             for($i = 0; $i <count($removedFiles); $i++) {
-                DB::table('general.attachments')->where('id', $removedFiles[0]['id'])->delete();
+                DB:: table('general.attachments')->where('id', $removedFiles[0]['id'])->delete();
     
                 $public_path = public_path($removedFiles[0]['filepath'].'/'.$removedFiles[0]['filename']);
                 unlink($public_path);
@@ -60,55 +61,68 @@ class ApprovalController extends ApiController
 
 
         // Additional attachments
-    if($request->hasFile('file')){
 
-        foreach($request->file as $file) {
-            $completeFileName = $file->getClientOriginalName();
-            $fileNameOnly = pathinfo($completeFileName, PATHINFO_FILENAME);
-            $extension = $file->getClientOriginalExtension();
-            $randomized = rand();
-            $newFileName = str_replace(' ', '', $fileNameOnly).'-'.$randomized.''.time().'.'.$extension;
-            $reqRef = str_replace('-', '_', $request->reference);
-            $mimeType = $file->getMimeType();
-            // $myPath = "C:/Users/Iverson/Desktop/Attachments/".session('LoggedUser_CompanyID')."/RFP/".$rfpCode;
+        $this->insertAttachments($request,$request->processId, $request->reference);
+    // if($request->hasFile('file')){
 
-            // For moving the file
-            $destinationPath = "public/Attachments/{$request->companyId}/RFP/" . $reqRef;
-            // For preview
-            $storagePath = "storage/Attachments/{$request->companyId}/RFP/" . $reqRef;
-            $symPath ="public/Attachments/RFP";
-            $file->storeAs($destinationPath, $completeFileName);
-            $fileDestination = $storagePath.'/'.$completeFileName;
-            $image = base64_encode(file_get_contents($file));
+    //     foreach($request->file as $file) {
+    //         $completeFileName = $file->getClientOriginalName();
+    //         $fileNameOnly = pathinfo($completeFileName, PATHINFO_FILENAME);
+    //         $extension = $file->getClientOriginalExtension();
+    //         $randomized = rand();
+    //         $newFileName = str_replace(' ', '', $fileNameOnly).'-'.$randomized.''.time().'.'.$extension;
+    //         $reqRef = str_replace('-', '_', $request->reference);
+    //         $mimeType = $file->getMimeType();
+    //         // $myPath = "C:/Users/Iverson/Desktop/Attachments/".session('LoggedUser_CompanyID')."/RFP/".$rfpCode;
 
-            DB::table('repository.rfp')->insert([
-                'REFID' => $request->rfpid,
-                'FileName' => $completeFileName,
-                'IMG' => $image,
-                'UID' => $request->loggedUserId,
-                'Ext' => $extension
-            ]);
+    //         // For moving the file
+    //         $destinationPath = "public/Attachments/{$request->companyId}/RFP/" . $reqRef;
+    //         // For preview
+    //         $storagePath = "storage/Attachments/{$request->companyId}/RFP/" . $reqRef;
+    //         $symPath ="public/Attachments/RFP";
+    //         $file->storeAs($destinationPath, $completeFileName);
+    //         $fileDestination = $storagePath.'/'.$completeFileName;
+    //         $image = base64_encode(file_get_contents($file));
 
-            $attachmentsData = [
-                'INITID' => 136,
-                'REQID' => $request->rfpid,
-                'filename' => $completeFileName,
-                'filepath' => $storagePath, 
-                'fileExtension' => $extension,
-                'newFilename' => $newFileName,
-                'fileDestination'=>$destinationPath,
-                'mimeType'=>$mimeType,
-                'imageBytes'=>$image,
-                'formName' => $request->form,
-                'created_at' => date('Y-m-d H:i:s')
-            ];
+    //         DB::table('repository.rfp')->insert([
+    //             'REFID' => $request->rfpid,
+    //             'FileName' => $completeFileName,
+    //             'IMG' => $image,
+    //             'UID' => $request->loggedUserId,
+    //             'Ext' => $extension
+    //         ]);
 
-            Attachments::insert($attachmentsData); 
-        }
+    //         $attachmentsData = [
+    //             'INITID' => 136,
+    //             'REQID' => $request->rfpid,
+    //             'filename' => $completeFileName,
+    //             'filepath' => $storagePath, 
+    //             'fileExtension' => $extension,
+    //             'newFilename' => $newFileName,
+    //             'fileDestination'=>$destinationPath,
+    //             'mimeType'=>$mimeType,
+    //             'imageBytes'=>$image,
+    //             'formName' => $request->form,
+    //             'created_at' => date('Y-m-d H:i:s')
+    //         ];
 
-    } 
+    //         Attachments::insert($attachmentsData); 
+    //     }
 
+    // } 
+
+
+        DB::commit();
+        // return response()->json($request, 201);
         return response()->json(['message'=>'Request has been successfully submitted!']);
+        // return response()->json(['message' => 'Cash Advance has been Successfully submitted'], 201);
+
+    }catch(\Exception $e){
+        DB::rollback();
+    
+        // throw error response
+        return response()->json($e, 500);
+    }
 
     }
 

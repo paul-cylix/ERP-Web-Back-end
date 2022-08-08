@@ -22,6 +22,7 @@ class Attachments extends Model
         'filename',
         'filepath',
         'fileExtension',
+        'originalFilename',
         'newFilename',
         'formName',
         'fileDestination',
