@@ -12,30 +12,24 @@ class DtrController extends ApiController
 {
     public function index($id){
         $data = DB::select("
-    SELECT 
-        a.`id`,
+        SELECT 
+        a.id,
         0 AS 'selected',
-        a.`EmployeeName`,
-        (SELECT 
-          b.`PositionName` 
-        FROM
-          humanresource.`employees` b 
-        WHERE b.`SysPK_Empl` = a.`SysPK_Empl` 
-        LIMIT 1) AS positionName,
-        a.`DepartmentName`,
-        a.`dtr_date`,
-        TIME_FORMAT(a.`in_am`, '%h:%i %p') AS in_am,
-        TIME_FORMAT(a.`out_pm`, '%h:%i %p') AS out_pm,
-        a.`Status` 
+        a.`userid`,
+        a.`date_entry` AS 'dtr_date',
+        TIME_FORMAT(a.`clock_in`, '%h:%i %p') AS in_am,
+        TIME_FORMAT(a.`clock_out`, '%h:%i %p') AS out_pm,
+        a.`status`,
+        b.`display_name` AS 'EmployeeName',
+        c.`positionName`,
+        c.`DepartmentName` 
       FROM
-        humanresource.`hr_emp_attendance` a 
-        INNER JOIN general.`users` c 
-          ON (a.`SysPK_Empl` = c.`Employee_id`) 
-        INNER JOIN general.`systemreportingmanager` d 
-          ON (c.`id` = d.`UID`) 
-      WHERE a.`dummy_status` = 'For Approval' 
-        AND RMID = '".$id."' 
-        AND c.`UserName_User` NOT LIKE '%del@%'
+        erpweb.`app_two` a 
+        INNER JOIN erpweb.`users_attendance` b 
+          ON a.`userid` = b.`employee_id` 
+        INNER JOIN humanresource.`employees` c 
+          ON b.`employee_id` = c.`SysPK_Empl` 
+      WHERE b.`manager_id` = '".$id."'   and a.`status` = 'For Approval'
         ");
 
         return response($data);
@@ -43,10 +37,11 @@ class DtrController extends ApiController
 
     public function approveSelected(Request $request){
         
+
+        Log::debug($request);
+
         $selectedData = $request->selectedData;
         $selectedData = json_decode($selectedData, true);
-        
-        
         
         for ($i = 0; $i < count($selectedData); $i++) {
             $dtr_date = date_create($selectedData[$i]['dtr_date']);
@@ -58,13 +53,8 @@ class DtrController extends ApiController
             $in_am = $this->merge($date, $in_am);
             $out_pm = $this->merge($date, $out_pm);
 
-            // DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d H:i:s')."', a.`Status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
-            // DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".date_format($in_am, 'Y-m-d H:i:s')."', a.`out_pm` = '".date_format($out_pm, 'Y-m-d H:i:s')."' ,a.`Status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
-            DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".$in_am."', a.`out_pm` = '".$out_pm."' ,a.`dummy_status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
-        
+            DB::update("UPDATE erpweb.`app_two` a SET a.`date_entry` = '".date_format($dtr_date, 'Y-m-d')."', a.`clock_in` =  '".$in_am."', a.`clock_out` = '".$out_pm."' ,a.`status` = '".$request->setStatus."' WHERE a.`id` = '".$selectedData[$i]['id']."' ");
         }
-        // return response($request->setStatus);
-
         return response()->json(['message' => 'Attendance is now Active'], 200);
 
     }
@@ -82,8 +72,8 @@ class DtrController extends ApiController
         
 
         // DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`Status` = $request->setStatus WHERE a.`id` = '".$request->id."' ");
-        DB::update("UPDATE humanresource.`hr_emp_attendance` a SET a.`dtr_date` = '".date_format($dtr_date, 'Y-m-d')."', a.`in_am` =  '".$in_am."', a.`out_pm` = '".$out_pm."' ,a.`dummy_status` = '".$request->setStatus."' WHERE a.`id` = '".$request->id."' ");
-        
+        DB::update("UPDATE erpweb.`app_two` a SET a.`date_entry` = '".date_format($dtr_date, 'Y-m-d')."', a.`clock_in` =  '".$in_am."', a.`clock_out` = '".$out_pm."' ,a.`status` = '".$request->setStatus."' WHERE a.`id` = '".$request->id."' ");
+
         return response()->json(['message' => 'Attendance is now Active'], 200);
 
     }
@@ -91,6 +81,8 @@ class DtrController extends ApiController
 
     public function merge($date, $time){        
         $combinedDT = date('Y-m-d H:i:s', strtotime("$date $time"));
+
+        Log::debug($combinedDT);
         return $combinedDT;
     }
 
