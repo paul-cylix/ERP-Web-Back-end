@@ -318,13 +318,13 @@ class CustomController extends ApiController
             try {
 
                 $loggedUserId = DB::table('accounting.petty_cash_request as a')->select('a.UID as loggedUserId','a.GUID as guid')->where('id',$request->processId)->get();
-                $userId = $loggedUserId[0]->loggedUserId;
+                // $userId = $loggedUserId[0]->loggedUserId;
                 $guid = $loggedUserId[0]->guid;
 
 
-                $request->merge([
-                    'loggedUserId' => $userId,
-                ]);
+                // $request->merge([
+                //     'loggedUserId' => $userId,
+                // ]);
                 
                 $this->deletePcExpense($request);
                 $this->deletePcTranspo($request);

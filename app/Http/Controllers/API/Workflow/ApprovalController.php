@@ -6,6 +6,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\General\Attachments;
+use Illuminate\Support\Facades\Log;
 
 class ApprovalController extends ApiController
 {
@@ -16,16 +17,40 @@ class ApprovalController extends ApiController
 
     // RFP Liquidation 
     public function rfpLiquidation(Request $request){
+
+        Log::debug($request);
         DB::beginTransaction();
         try{  
 
-        DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `status` = 'Completed', `UID_SIGN` = '".$request->loggedUserId."', `SIGNDATETIME` = NOW(), `ApprovedRemarks` = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_NAME` = '".$request->form."' AND `COMPID` = '".$request->companyId."' ;");
-        DB::update("UPDATE general.`actual_sign` SET `status` = 'In Progress' WHERE `status` = 'Not Started' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'REQUESTFORPAYMENT' AND `COMPID` = '".$request->companyId."' LIMIT 1;");
+            DB::table('general.actual_sign as a')
+                ->where('a.status', 'In Progress')
+                ->where('a.PROCESSID', $request->processId)
+                ->where('a.FRM_NAME', $request->form)
+                ->where('a.COMPID', $request->companyId)
+                ->update(['a.webapp' => 1, 'a.status' => 'Completed', 'a.UID_SIGN' => $request->loggedUserId, 'a.SIGNDATETIME' => now(), 'a.ApprovedRemarks' => $request->remarks]);
+        
+            DB::table('general.actual_sign as a')
+                ->where('a.status', 'Not Started')
+                ->where('a.PROCESSID', $request->processId)
+                ->where('a.FRM_CLASS', 'REQUESTFORPAYMENT')
+                ->where('a.COMPID', $request->companyId)
+                ->take(1)
+                ->update(['a.status' => 'In Progress']);
+
+                
+
+        // $this->approveActualSIgnApi($request);
+
+        // DB::update("UPDATE general.`actual_sign` a SET a.`webapp` = '1', a.`status` = 'Completed', a.`UID_SIGN` = '".$request->loggedUserId."', a.`SIGNDATETIME` = NOW(), a.`ApprovedRemarks` = '" .$request->remarks. "' WHERE a.`status` = 'In Progress' AND a.`PROCESSID` = '".$request->processId."' AND a.`FRM_NAME` = '".$request->form."' AND a.`COMPID` = '".$request->companyId."' ;");
+        // DB::update("UPDATE general.`actual_sign` a SET a.`status` = 'In Progress' WHERE a.`status` = 'Not Started' AND a.`PROCESSID` = '".$request->processId."' AND a.`FRM_CLASS` = 'REQUESTFORPAYMENT' AND a.`COMPID` = '".$request->companyId."' LIMIT 1;");
+        // DB::update("UPDATE general.`actual_sign` SET `webapp` = '1', `status` = 'Completed', `UID_SIGN` = '".$request->loggedUserId."', `SIGNDATETIME` = NOW(), `ApprovedRemarks` = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_NAME` = '".$request->form."' AND `COMPID` = '".$request->companyId."' ;");
+        // DB::update("UPDATE general.`actual_sign` SET `status` = 'In Progress' WHERE `status` = 'Not Started' AND PROCESSID = '".$request->processId."' AND `FRM_CLASS` = 'REQUESTFORPAYMENT' AND `COMPID` = '".$request->companyId."' LIMIT 1;");
 
         // Insert Liquidation
         $liquidationDataTable = $request->liquidation;
         $liquidationDataTable = json_decode($liquidationDataTable,true);
 
+        $liqdata = [];
         for($i = 0; $i <count($liquidationDataTable); $i++) {
             $liqdata[] = [
                 'RFPID'       => $request->processId,
@@ -119,6 +144,7 @@ class ApprovalController extends ApiController
 
     }catch(\Exception $e){
         DB::rollback();
+        Log::debug($e);
     
         // throw error response
         return response()->json($e, 500);

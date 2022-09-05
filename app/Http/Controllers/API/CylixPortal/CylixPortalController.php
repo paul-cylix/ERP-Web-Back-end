@@ -179,22 +179,23 @@ class CylixPortalController extends ApiController
             $start = date("Y-m-d",strtotime($request->dateRange[0]));
             // date increased by 1day   
             $end = date("Y-m-d",strtotime($request->dateRange[1]. ' +1 day')); 
-            $sql .= "WHERE a.`userid` = '".$user_id."' AND a.`date_entry` BETWEEN '".$start."' AND '".$end."' ";
+            $sql .= "WHERE a.`userid` = '".$user_id."' AND a.`date_entry` BETWEEN '".$start."' AND '".$end."' AND a.`status` = 'Active'";
             $queryData = DB::select($sql);
 
         // Employee only
         } elseif($request->dateRange == false && $request->employee) {
             $user_id = $request->employee['code'];
-            $sql .= "WHERE a.`userid` = '".$user_id."'";
+            $sql .= "WHERE a.`userid` = '".$user_id."' AND a.`status` = 'Active'";
             $queryData = DB::select($sql);
 
         // Date range only
         } elseif($request->dateRange && $request->employee == false) {
             $start = date("Y-m-d",strtotime($request->dateRange[0]));   
             $end = date("Y-m-d",strtotime($request->dateRange[1]. ' +1 day')); 
-            $sql .= "WHERE a.`date_entry` BETWEEN '".$start."' AND '".$end."'";
+            $sql .= "WHERE a.`date_entry` BETWEEN '".$start."' AND '".$end."' AND a.`status` = 'Active'";
             $queryData = DB::select($sql);
         } else {
+            $sql .= "WHERE a.`status` = 'Active'";
             $queryData = DB::select($sql);
         }
 

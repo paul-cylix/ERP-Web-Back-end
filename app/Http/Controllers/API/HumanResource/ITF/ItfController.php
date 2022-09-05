@@ -8,11 +8,17 @@ use App\Models\HumanResource\ITF\ItfDetail;
 use App\Models\HumanResource\ITF\ItfMain;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ItfController extends ApiController
 {
     public function saveItf(Request $request)
     {
+        DB::beginTransaction();
+        try {
+
+        log::debug($request);
+
         $guid = $this->getGuid();
         $reqRef = $this->getItfRef($request->companyId);
 
@@ -133,7 +139,22 @@ class ItfController extends ApiController
 
         ActualSign::insert($array);
 
+        DB::commit();
         return response()->json(['message' => 'Your Itinerary request was successfully submitted.'], 200);
+
+
+
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        log::debug($e);
+    
+        // throw error response
+        return response()->json($e, 500);
+    }
+
+
+
     }
 
     public function getItfMain($id)

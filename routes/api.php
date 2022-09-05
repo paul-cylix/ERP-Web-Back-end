@@ -297,6 +297,10 @@ Route::get('get-subcategory', [ScController::class, 'getSubCategory']);
 Route::get('get-brand', [ScController::class, 'getBrand']);
 Route::post('cart-purchase', [ScController::class, 'purchase']);
 
+Route::get('get-mrf/{req_id}/{companyid}', [ScController::class, 'getMrf']);
+
+
+
 
 
 Route::post('cart-store', [CartController::class, 'store']);
@@ -310,15 +314,15 @@ Route::post('cart-checkout', [CartController::class, 'checkout']);
 // Cylix Portal
 Route::get('get-cp-index', [CylixPortalController::class, 'index']);
 Route::post('save-user-attendance', [CylixPortalController::class, 'saveUserAttendance']);
+Route::get('get-manager/{id}', [DtrController::class, 'checkManager']); // only for erpweb to access attendance approval
 
-// Attendance Export
+
+// Attendance Export Filter
 Route::post('post-filtered-attendance', [CylixPortalController::class, 'getFilteredEmployeeAttendance']);
 
 // Attendance Approval
-Route::get('get-manager/{id}', [DtrController::class, 'checkManager']);
-Route::get('get-hr-emp/{id}', [DtrController::class, 'index']); // get dtr of all users under this manager
-
-Route::post('set-status-app-two', [DtrController::class, 'approveSelected']); // approve multiple row
+Route::get('get-dtr-logs/{id}', [DtrController::class, 'index']); // get dtr of all users under this manager
+Route::post('post-dtr-logs-approve', [DtrController::class, 'approveSelected']); // approve multiple row
 // Route::post('post-hr-emp', [DtrController::class, 'approve']); // approve only 1 row
 
 
