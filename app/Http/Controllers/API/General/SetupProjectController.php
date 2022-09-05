@@ -27,7 +27,7 @@ class SetupProjectController extends ApiController
     }
 
     public function getprojects($companyId) {
-        $data = SetupProject::select('project_id','project_name')
+        $data = SetupProject::select('project_id','project_name','SOID')
         ->where('project_type','!=','MAIN OFFICE')
         ->where('status','=','Active')
         ->where('title_id','=',$companyId)
