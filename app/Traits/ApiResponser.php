@@ -209,6 +209,7 @@ trait ApiResponser
                 $randomized       = rand(1000,9999);
                 $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
                 $reqRef           = str_replace('-', '_', $request->referenceNumber);
+                $reqRef           = str_replace('/', '_', $request->referenceNumber);
                 $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter. $randomized.'.' . $extension;
                 $mimeType         = $file->getMimeType();
 

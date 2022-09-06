@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\SupplyChain\Cart;
 use Illuminate\Support\Facades\Log;
+use App\Models\General\ActualSign;
 
 class ScController extends ApiController
 {
@@ -111,9 +112,30 @@ class ScController extends ApiController
         return response()->json($brands);
     }
 
+<<<<<<< HEAD
     public function purchase(Request $request)
     {
+=======
+    // public function purchasenew(Request $request) {
+    //     // insert in general.attachments
+    //     $mainRef = $this->getMainRef($request->trans_type);
+>>>>>>> dev004
 
+    //     $request->request->add(['processId' => 1]);
+    //     $request->request->add(['referenceNumber' => $mainRef]);
+    //     $request->request->add(['loggedUserId' => $request->userid]);
+    //     $request->request->add(['class' => $request->trans_type]);
+    //     $request->request->add(['form' => $request->type_category]);
+
+    //     // $reqRef           = str_replace('-', '_', $mainRef);
+    //     // $reqRef           = str_replace('/', '_', $mainRef);
+
+    //     $this->addAttachments($request);
+    //     // return response()->json($request->companyId. '/' .$request->trans_type. '/' .$reqRef , 200);
+    //     return response()->json('success' , 200);
+    // }
+
+    public function purchase(Request $request) {
         DB::beginTransaction();
         try {
             $guid = $this->getGuid();
@@ -122,8 +144,14 @@ class ScController extends ApiController
 
             $SOID = 0;
             $SONUM = 0;
+<<<<<<< HEAD
 
             if (count($soid) == 0) {
+=======
+            $actualSignData = [];
+            
+            if(count($soid) == 0) {
+>>>>>>> dev004
                 $SOID = 0;
                 $SONUM = 0;
             } else {
@@ -158,6 +186,7 @@ class ScController extends ApiController
             ]);
 
             $cartData = DB::table('procurement.carts AS c')
+<<<<<<< HEAD
                 ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
                 ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
                 ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
@@ -165,6 +194,15 @@ class ScController extends ApiController
                 ->where('c.cart_userId', $request->userid)
                 ->where('c.cart_companyId', $request->companyId)
                 ->where('c.cart_status', 2)->get();
+=======
+            ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
+            ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+            ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+            ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+            ->where('c.cart_userId', $request->userid)
+            ->where('cart_companyId', $request->companyId)
+            ->where('cart_status', 2)->get();
+>>>>>>> dev004
 
             $arrayCart = [];
 
@@ -201,6 +239,586 @@ class ScController extends ApiController
             // insert in requisition_details 
             DB::table('procurement.requisition_details')->insert($arrayCart);
 
+            // insert in general.actual_sign 
+            if($request->type_category == "Material Request Project") {
+                for ($x = 0; $x < 6; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'For Project Manager Approval';
+                    $actualSignData[1]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[5]['ORDERS'] == 5) {
+                    $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
+                    $actualSignData[5]['Max_approverCount'] = '6';
+                }
+            }
+            else if($request->type_category == "Material Request Delivery") {
+                for ($x = 0; $x < 6; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'For Sales Head Approval';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[1]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[5]['ORDERS'] == 5) {
+                    $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
+                    $actualSignData[5]['Max_approverCount'] = '6';
+                }
+            }
+            else if($request->type_category == "Material Request Demo" || $request->type_category == "Material Request POC") {
+                for ($x = 0; $x < 5; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'Sales Head';
+                    $actualSignData[1]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '5';
+                }
+            }
+            else if($request->type_category == "Asset Request Delivery") {
+                for ($x = 0; $x < 7; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'Sales Head';
+                    $actualSignData[1]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[5]['ORDERS'] == 5) {
+                    $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
+                    $actualSignData[5]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[6]['ORDERS'] == 6) {
+                    $actualSignData[6]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
+                    $actualSignData[6]['Max_approverCount'] = '7';
+                }
+            }
+            else if($request->type_category == "Asset Request Demo" || $request->type_category == "Asset Request POC") {
+                for ($x = 0; $x < 6; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'Sales Head';
+                    $actualSignData[1]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[5]['ORDERS'] == 5) {
+                    $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
+                    $actualSignData[5]['Max_approverCount'] = '6';
+                }
+            }
+            else if($request->type_category == "Asset Request Internal") {
+                for ($x = 0; $x < 6; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'For Approval of Management';
+                    $actualSignData[1]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[5]['ORDERS'] == 5) {
+                    $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
+                    $actualSignData[5]['Max_approverCount'] = '6';
+                }
+            }
+            else if($request->type_category == "Asset Request Project") {
+                for ($x = 0; $x < 7; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'For Project Manager Approval';
+                    $actualSignData[1]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[5]['ORDERS'] == 5) {
+                    $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement'; 
+                    $actualSignData[5]['Max_approverCount'] = '7';
+                }
+                if ($actualSignData[6]['ORDERS'] == 6) {
+                    $actualSignData[6]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
+                    $actualSignData[6]['Max_approverCount'] = '7';
+                }
+            }
+            else if($request->type_category == "Supplies Request Internal") {
+                for ($x = 0; $x < 5; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'For Approval of Management';
+                    $actualSignData[1]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '5';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '5';
+                }
+            }
+            else if($request->type_category == "Supplies Request Project") {
+                for ($x = 0; $x < 6; $x++) {
+                    $actualSignData[] = 
+                        [
+                            'PROCESSID'         => $m_id,
+                            'USER_GRP_IND'      => 'Reporting Manager',
+                            'FRM_NAME'          => $request->type_category,
+                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'REMARKS'           => $request->remarks,
+                            'STATUS'            => 'Not Started',
+                            'TS'                => now(),
+                            'DUEDATE'           => date_create($request->planned_delivery_date),
+                            'ORDERS'            => $x,
+                            'REFERENCE'         => $mainRef,
+                            'PODATE'            => date_create($request->requested_date),
+                            'DATE'              => date_create($request->requested_date),
+                            'INITID'            => $request->userid,
+                            'FNAME'             => $request->user_fname,
+                            'LNAME'             => $request->user_lname,
+                            'DEPARTMENT'        => $request->user_department,
+                            'RM_ID'             => $request->rmid,
+                            'REPORTING_MANAGER' => $request->reporting_manager,
+                            'PROJECTID'         => $request->costid,
+                            'PROJECT'           => $request->costname,
+                            'COMPID'            => $request->companyId,
+                            'COMPANY'           => $request->user_company,
+                            'TYPE'              => $request->type_category,
+                            'CLIENTID'          => $request->clientid,
+                            'CLIENTNAME'        => $request->clientname,
+                            'Max_approverCount' => '5',
+                            'DoneApproving'     => '0',
+                            'WebpageLink'       => 'mrf_approve.php',
+                            'ApprovedRemarks'   => '',
+                            'Payee'             => '',
+                            'Amount'            => '',
+                        ];
+                }
+                if ($actualSignData[0]['ORDERS'] == 0) {
+                    $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    $actualSignData[0]['STATUS']       = 'In Progress';
+                    $actualSignData[0]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[1]['ORDERS'] == 1) {
+                    $actualSignData[1]['USER_GRP_IND'] = 'Project Manager';
+                    $actualSignData[1]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[2]['ORDERS'] == 2) {
+                    $actualSignData[2]['USER_GRP_IND'] = 'Acknowledge by Material Management';
+                    $actualSignData[2]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[3]['ORDERS'] == 3) {
+                    $actualSignData[3]['USER_GRP_IND'] = 'For Input of Material Management';
+                    $actualSignData[3]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[4]['ORDERS'] == 4) {
+                    $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
+                    $actualSignData[4]['Max_approverCount'] = '6';
+                }
+                if ($actualSignData[5]['ORDERS'] == 5) {
+                    $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
+                    $actualSignData[5]['Max_approverCount'] = '6';
+                }
+            }
+
+            ActualSign:: insert($actualSignData);
+
+            // insert in general.attachments
+            $request->request->add(['processId' => $m_id]);
+            $request->request->add(['referenceNumber' => $mainRef]);
+            $request->request->add(['loggedUserId' => $request->userid]);
+            $request->request->add(['class' => $request->trans_type]);
+            $request->request->add(['form' => $request->type_category]);
+
+            $this->addAttachments($request);
+            
             DB::commit();
 
             return response()->json('Your item has been purchased!', 200);
@@ -258,5 +876,10 @@ class ScController extends ApiController
             'req_details' => $req_details,
             'attachments' => $attachments
         ], 200);
+    }
+
+    public function getAttachmentsBySoid($soid) {
+        $res = DB::select("SELECT * FROM general.`attachments` a WHERE a.`REQID` = '".$soid."' AND a.`formName` = (SELECT b.`purpose` FROM sales_order.`sales_orders` b WHERE b.`id` = a.`REQID`)");
+        return response()->json($res);
     }
 }

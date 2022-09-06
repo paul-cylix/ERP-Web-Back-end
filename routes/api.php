@@ -28,6 +28,7 @@ use App\Http\Controllers\API\SupplyChain\CartController;
 use App\Http\Controllers\API\SupplyChain\ScController;
 use App\Http\Controllers\API\User\LoginController;
 use App\Http\Controllers\API\User\RegisterController;
+use App\Http\Controllers\API\User\ProfileController;
 use App\Http\Controllers\API\Workflow\ApprovalController;
 use App\Http\Controllers\API\Workflow\ApprovedController;
 use App\Http\Controllers\API\Workflow\ClarificationController;
@@ -296,6 +297,7 @@ Route::get('get-uom', [ScController::class, 'getUom']);
 Route::get('get-subcategory', [ScController::class, 'getSubCategory']);
 Route::get('get-brand', [ScController::class, 'getBrand']);
 Route::post('cart-purchase', [ScController::class, 'purchase']);
+Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmentsBySoid']);
 
 Route::get('get-mrf/{req_id}/{companyid}', [ScController::class, 'getMrf']);
 
@@ -334,12 +336,12 @@ Route::post('post-dtr-logs-approve', [DtrController::class, 'approveSelected']);
 // Route::get('getFile', [AttachmentController::class, 'getFile']);
 Route::get('downloadFile', [AttachmentController::class, 'downloadFile']);
 
-// Testing Registration
+// Registration
 Route::post('register', [RegisterController::class, 'register']);
 Route::get('show-user', [RegisterController::class, 'showUsers']);
 
-
-
+// Change Password
+Route::post('changePassword', [ProfileController::class, 'changePassword']);
 
 
 
