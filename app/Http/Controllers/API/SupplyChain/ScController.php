@@ -171,7 +171,7 @@ class ScController extends ApiController
             foreach ($cartData as $key => $value) {
                 $cartData = [
                     'requisition_id' => $m_id,
-                    'itemid' => $value->cart_id,
+                    'itemid' => $value->cart_group_detail_id,
                     'item_name' => $value->specification,
                     'item_description' => $value->description,
                     'uom' => $value->cart_uom_name,
