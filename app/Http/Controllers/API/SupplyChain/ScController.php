@@ -186,7 +186,6 @@ class ScController extends ApiController
             ]);
 
             $cartData = DB::table('procurement.carts AS c')
-<<<<<<< HEAD
                 ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
                 ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
                 ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
@@ -194,15 +193,6 @@ class ScController extends ApiController
                 ->where('c.cart_userId', $request->userid)
                 ->where('c.cart_companyId', $request->companyId)
                 ->where('c.cart_status', 2)->get();
-=======
-            ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
-            ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
-            ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
-            ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
-            ->where('c.cart_userId', $request->userid)
-            ->where('cart_companyId', $request->companyId)
-            ->where('cart_status', 2)->get();
->>>>>>> dev004
 
             $arrayCart = [];
 
