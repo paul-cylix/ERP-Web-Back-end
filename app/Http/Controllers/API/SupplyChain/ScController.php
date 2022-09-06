@@ -13,7 +13,8 @@ use App\Models\General\ActualSign;
 class ScController extends ApiController
 {
 
-    public function getMaterials(Request $request){
+    public function getMaterials(Request $request)
+    {
         $filtered_data = json_decode($request->filtered_data, true);
         // log::debug($filtered_data);
         // $filtered_data['actual_search'];
@@ -21,31 +22,30 @@ class ScController extends ApiController
 
         if (filter_var($filtered_data['is_SearchSubmitted'], FILTER_VALIDATE_BOOLEAN) && filter_var($filtered_data['is_filtered'], FILTER_VALIDATE_BOOLEAN)) {
             // $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData('%', '".$request->companyId."', '".$filtered_data['actual_search']."')");
-          
-            if ($filtered_data['filtered_data']['type'] === 'category'){
-                $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_category('%', '".$request->companyId."', '".$filtered_data['actual_search']."','".$filtered_data['filtered_data']['category_id']."')");
+
+            if ($filtered_data['filtered_data']['type'] === 'category') {
+                $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_category('%', '" . $request->companyId . "', '" . $filtered_data['actual_search'] . "','" . $filtered_data['filtered_data']['category_id'] . "')");
             } else if ($filtered_data['filtered_data']['type'] === 'subcategory') {
-                $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_subcategory('%', '".$request->companyId."', '".$filtered_data['actual_search']."','".$filtered_data['filtered_data']['scategory_id']."')");
+                $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_subcategory('%', '" . $request->companyId . "', '" . $filtered_data['actual_search'] . "','" . $filtered_data['filtered_data']['scategory_id'] . "')");
             } else {
-                $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_brand('%', '".$request->companyId."', '".$filtered_data['actual_search']."','".$filtered_data['filtered_data']['brand_id']."')");
+                $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_brand('%', '" . $request->companyId . "', '" . $filtered_data['actual_search'] . "','" . $filtered_data['filtered_data']['brand_id'] . "')");
             }
             log::debug('1');
-        
-        } elseif (filter_var($filtered_data['is_SearchSubmitted'], FILTER_VALIDATE_BOOLEAN)){
-            $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData('%', '".$request->companyId."', '".$filtered_data['actual_search']."')");
+        } elseif (filter_var($filtered_data['is_SearchSubmitted'], FILTER_VALIDATE_BOOLEAN)) {
+            $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData('%', '" . $request->companyId . "', '" . $filtered_data['actual_search'] . "')");
             log::debug('2');
-        } elseif (filter_var($filtered_data['is_filtered'], FILTER_VALIDATE_BOOLEAN)){
+        } elseif (filter_var($filtered_data['is_filtered'], FILTER_VALIDATE_BOOLEAN)) {
             // $posts = DB::select("call procurement.llard_load_item_request_web_api('%', '".$request->companyId."')");
-            if ($filtered_data['filtered_data']['type'] === 'category'){
-                $posts = DB::select("call procurement.llard_load_item_request_web_api_category('%', '".$request->companyId."', '".$filtered_data['filtered_data']['category_id']."')");
+            if ($filtered_data['filtered_data']['type'] === 'category') {
+                $posts = DB::select("call procurement.llard_load_item_request_web_api_category('%', '" . $request->companyId . "', '" . $filtered_data['filtered_data']['category_id'] . "')");
             } else if ($filtered_data['filtered_data']['type'] === 'subcategory') {
-                $posts = DB::select("call procurement.llard_load_item_request_web_api_subcategory('%', '".$request->companyId."', '".$filtered_data['filtered_data']['scategory_id']."')");
+                $posts = DB::select("call procurement.llard_load_item_request_web_api_subcategory('%', '" . $request->companyId . "', '" . $filtered_data['filtered_data']['scategory_id'] . "')");
             } else {
-                $posts = DB::select("call procurement.llard_load_item_request_web_api_brand_filter('%', '".$request->companyId."', '".$filtered_data['filtered_data']['brand_id']."')");
+                $posts = DB::select("call procurement.llard_load_item_request_web_api_brand_filter('%', '" . $request->companyId . "', '" . $filtered_data['filtered_data']['brand_id'] . "')");
             }
             log::debug('3');
         } else {
-            $posts = DB::select("call procurement.llard_load_item_request_web_api('%', '".$request->companyId."')");
+            $posts = DB::select("call procurement.llard_load_item_request_web_api('%', '" . $request->companyId . "')");
             log::debug('4');
         }
 
@@ -56,43 +56,45 @@ class ScController extends ApiController
         // Log::debug($request);
         // log::debug($filtered_data['is_SearchSubmitted']);
         // log::debug($filtered_data->actual_search);
-        
+
         // is_SearchSubmitted
         // actual_search
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $itemCollection = collect($posts);
         $perPage = 10;
         $currentPageItems = $itemCollection->slice(($currentPage * $perPage) - $perPage, $perPage)->values();
-        $paginatedItems= new LengthAwarePaginator($currentPageItems , count($itemCollection), $perPage);
+        $paginatedItems = new LengthAwarePaginator($currentPageItems, count($itemCollection), $perPage);
         $paginatedItems->setPath($request->url());
 
         return response()->json($paginatedItems, 200);
-
     }
 
-    public function searchMaterials(Request $request){
-        $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_brand('%', '".$request->companyId."', '".$request->keyword."','".$request->brand."')");
+    public function searchMaterials(Request $request)
+    {
+        $posts = DB::select("call procurement.llard_load_item_request_web_api_searchData_brand('%', '" . $request->companyId . "', '" . $request->keyword . "','" . $request->brand . "')");
         return response()->json($posts);
     }
 
 
 
     // Filters
-    public function getCategory(){
+    public function getCategory()
+    {
         $categories = DB::table('procurement.setup_group_type')
-                ->where('status', '=', 'Active')
-                ->select('id', 'type as name')
-                ->get();
+            ->where('status', '=', 'Active')
+            ->select('id', 'type as name')
+            ->get();
         return response()->json($categories);
     }
 
-    public function getUom(){
+    public function getUom()
+    {
         $uom = DB::select("SELECT a.`base1_uomid` AS 'uom_id', a.`base1_uom` AS 'uom_name' FROM procurement.`setup_group_detail` a WHERE a.`base1_uomid` != 0 GROUP BY a.`base1_uomid`");
         return response()->json($uom);
-
     }
 
-    public function getSubCategory(){
+    public function getSubCategory()
+    {
         $subCategories = DB::table('procurement.setup_group')
             ->where('status', '=', 'Active')
             ->select('group_id as id', 'group_description as name', 'group_type as category_id')
@@ -100,15 +102,17 @@ class ScController extends ApiController
         return response()->json($subCategories);
     }
 
-    public function getBrand(){
+    public function getBrand()
+    {
         $brands = DB::table('procurement.setup_brand')
-            ->whereIn('status',  ['Active','ACTIVE'])
+            ->whereIn('status',  ['Active', 'ACTIVE'])
             ->select('id', 'description as name')
             ->get();
         return response()->json($brands);
     }
 
-    public function purchase(Request $request) {
+    public function purchase(Request $request)
+    {
         DB::beginTransaction();
         try {
             $guid = $this->getGuid();
@@ -118,12 +122,11 @@ class ScController extends ApiController
             $SOID = 0;
             $SONUM = 0;
             $actualSignData = [];
-            
-            if(count($soid) == 0) {
+
+            if (count($soid) == 0) {
                 $SOID = 0;
                 $SONUM = 0;
-            }
-            else {
+            } else {
                 $soNum = DB::table('sales_order.sales_orders as so')->select('so.soNum')->where('so.id', $soid[0]->SOID)->get();
                 $SOID = $soid[0]->SOID;
                 $SONUM = $soNum[0]->soNum;
@@ -155,13 +158,13 @@ class ScController extends ApiController
             ]);
 
             $cartData = DB::table('procurement.carts AS c')
-            ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
-            ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
-            ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
-            ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
-            ->where('c.cart_userId', $request->userid)
-            ->where('cart_companyId', $request->companyId)
-            ->where('cart_status', 2)->get();
+                ->join('procurement.setup_group_detail AS s', 'c.cart_group_detail_id', '=', 's.group_detail_id')
+                ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+                ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+                ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+                ->where('c.cart_userId', $request->userid)
+                ->where('cart_companyId', $request->companyId)
+                ->where('cart_status', 2)->get();
 
             $arrayCart = [];
 
@@ -199,9 +202,9 @@ class ScController extends ApiController
             DB::table('procurement.requisition_details')->insert($arrayCart);
 
             // insert in general.actual_sign 
-            if($request->type_category == "Material Request Project") {
+            if ($request->type_category == "Material Request Project") {
                 for ($x = 0; $x < 6; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -261,10 +264,9 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            }
-            else if($request->type_category == "Material Request Delivery") {
+            } else if ($request->type_category == "Material Request Delivery") {
                 for ($x = 0; $x < 6; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -324,10 +326,9 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            }
-            else if($request->type_category == "Material Request Demo" || $request->type_category == "Material Request POC") {
+            } else if ($request->type_category == "Material Request Demo" || $request->type_category == "Material Request POC") {
                 for ($x = 0; $x < 5; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -383,10 +384,9 @@ class ScController extends ApiController
                     $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
                     $actualSignData[4]['Max_approverCount'] = '5';
                 }
-            }
-            else if($request->type_category == "Asset Request Delivery") {
+            } else if ($request->type_category == "Asset Request Delivery") {
                 for ($x = 0; $x < 7; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -450,10 +450,9 @@ class ScController extends ApiController
                     $actualSignData[6]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
                     $actualSignData[6]['Max_approverCount'] = '7';
                 }
-            }
-            else if($request->type_category == "Asset Request Demo" || $request->type_category == "Asset Request POC") {
+            } else if ($request->type_category == "Asset Request Demo" || $request->type_category == "Asset Request POC") {
                 for ($x = 0; $x < 6; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -513,10 +512,9 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            }
-            else if($request->type_category == "Asset Request Internal") {
+            } else if ($request->type_category == "Asset Request Internal") {
                 for ($x = 0; $x < 6; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -576,10 +574,9 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            }
-            else if($request->type_category == "Asset Request Project") {
+            } else if ($request->type_category == "Asset Request Project") {
                 for ($x = 0; $x < 7; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -636,17 +633,16 @@ class ScController extends ApiController
                     $actualSignData[4]['Max_approverCount'] = '7';
                 }
                 if ($actualSignData[5]['ORDERS'] == 5) {
-                    $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement'; 
+                    $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
                     $actualSignData[5]['Max_approverCount'] = '7';
                 }
                 if ($actualSignData[6]['ORDERS'] == 6) {
                     $actualSignData[6]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
                     $actualSignData[6]['Max_approverCount'] = '7';
                 }
-            }
-            else if($request->type_category == "Supplies Request Internal") {
+            } else if ($request->type_category == "Supplies Request Internal") {
                 for ($x = 0; $x < 5; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -702,10 +698,9 @@ class ScController extends ApiController
                     $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
                     $actualSignData[4]['Max_approverCount'] = '5';
                 }
-            }
-            else if($request->type_category == "Supplies Request Project") {
+            } else if ($request->type_category == "Supplies Request Project") {
                 for ($x = 0; $x < 6; $x++) {
-                    $actualSignData[] = 
+                    $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
@@ -767,7 +762,7 @@ class ScController extends ApiController
                 }
             }
 
-            ActualSign:: insert($actualSignData);
+            ActualSign::insert($actualSignData);
 
             // insert in general.attachments
             $request->request->add(['processId' => $m_id]);
@@ -777,22 +772,173 @@ class ScController extends ApiController
             $request->request->add(['form' => $request->type_category]);
 
             $this->addAttachments($request);
-            
+
             DB::commit();
 
-            return response()->json('Your item has been purchased!' , 200);
-
+            return response()->json('Your item has been purchased!', 200);
         } catch (\Exception $e) {
             DB::rollback();
-        
+
             // throw error response
             return response()->json($e, 500);
         }
-
     }
 
-    public function getAttachmentsBySoid($soid) {
-        $res = DB::select("SELECT * FROM general.`attachments` a WHERE a.`REQID` = '".$soid."' AND a.`formName` = (SELECT b.`purpose` FROM sales_order.`sales_orders` b WHERE b.`id` = a.`REQID`)");
+    public function getAttachmentsBySoid($soid)
+    {
+        $res = DB::select("SELECT * FROM general.`attachments` a WHERE a.`REQID` = '" . $soid . "' AND a.`formName` = (SELECT b.`purpose` FROM sales_order.`sales_orders` b WHERE b.`id` = a.`REQID`)");
         return response()->json($res);
+    }
+
+    public function getMrf($req_id, $companyid)
+    {
+        try {
+            // get requisition main
+            $req_main = DB::table('procurement.requisition_main as a')
+                ->join('sales_order.sales_orders as b', 'a.so_id', '=', 'b.id')
+                ->where('a.requisition_id', $req_id)
+                ->where('a.title_id', $companyid)
+                ->select('a.*', 'b.purpose')
+                ->get();
+
+            $soid           = $req_main[0]->so_id;
+            $frmname        = $req_main[0]->purpose;
+            $userid         = $req_main[0]->userid;
+            $rm_id          = $req_main[0]->rmid;
+            $short_text     = $req_main[0]->short_text;
+            $date_requested = $req_main[0]->tstamp;
+            $project_id     = $req_main[0]->costid;
+            $project_name = $req_main[0]->costname;
+            $client_id    = $req_main[0]->clientid;
+            $client_name  = $req_main[0]->clientname;
+            $remarks      = $req_main[0]->remarks;
+            $deadline_date  = $req_main[0]->deadline_date;
+            $requisition_id = $req_main[0]->requisition_id;
+
+            $user          = DB::table('general.users as a')->where('a.id', $userid)->select('a.id', 'a.UserFull_name as fullname')->get();
+            $user_fullname = $user[0]->fullname;
+
+            // get requisition details
+            $req_details = DB::table('procurement.requisition_details as a')->where('a.requisition_id', $req_id)->get();
+
+            // Get general.acutal_sign
+            $general_actualsign = DB::table('general.actual_sign as a')->where('a.PROCESSID', $requisition_id)->where('a.FRM_CLASS', 'SUPPLYCHAINMRF')->get();
+            $reference          = $general_actualsign[0]->REFERENCE;
+            $department         = $general_actualsign[0]->DEPARTMENT;
+            $rm_name            = $general_actualsign[0]->REPORTING_MANAGER;
+            $frm_name           = $general_actualsign[0]->FRM_NAME;
+
+            // Get Attachments of link sales order
+            $attachmentsSOF = DB::table('general.attachments as a')->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')->where('a.REQID', $soid)->where('a.formName', $frmname)->get();
+
+            // Get Attachments of this MRF
+            $attachmentsMRF = DB::table('general.attachments as a')->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')->where('a.REQID', $requisition_id)->where('a.formName', $frm_name)->get();
+            $mrf  = array('Material Request Project', 'Material Request Delivery', 'Material Request Demo', 'Material Request POC',);
+            $arf  = array('Asset Request Project', 'Asset Request Delivery', 'Asset Request Demo', 'Asset Request POC', 'Asset Request Internal',);
+            $surf = array('Supplies Request Project', 'Supplies Request Internal',);
+
+            $main_class = null;
+            if (in_array($frm_name, $mrf, TRUE)) {
+                $main_class = 'Material Request';
+            } else if (in_array($frm_name, $arf, TRUE)) {
+                $main_class = 'Asset Request';
+            } else if (in_array($frm_name, $surf, TRUE)) {
+                $main_class = 'Supplies Request';
+            }
+
+
+
+            $requisition_details = DB::table('procurement.requisition_details AS c')
+                ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
+                ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+                ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+                ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+                ->where('c.requisition_id', $req_id)
+
+                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name')
+                ->get();
+
+
+
+
+            return response()->json([
+                'status' => true,
+                'user'   =>
+                [
+                    'id'         => $userid,
+                    'fullname'   => $user_fullname,
+                    'department' => $department,
+                    'rm_id'      => $rm_id,
+                    'rm_name'    => $rm_name,
+                ],
+
+                'request' => [
+                    'mrf_number'              => $reference,
+                    'mrf_short_text'          => $short_text,
+                    'date_requested'          => $date_requested,
+                    'planned_delivery_date'   => $deadline_date,
+                    'actual_delivery_date'    => $deadline_date,
+                    'project_id'              => $project_id,
+                    'project_name'            => $project_name,
+                    'client_id'               => $client_id,
+                    'client_name'             => $client_name,
+                    'materials_request_class' => $main_class,
+                    'materials_request_type'  => $frm_name,
+                    'remarks'                 => $remarks,
+                    'requisition_details'     => $requisition_details
+                ],
+
+
+                'req_main'       => $req_main,
+                'req_details'    => $req_details,
+                'attachmentsSOF'  => $attachmentsSOF,
+                'attachmentsMRF' => $attachmentsMRF,
+                'gen_actualsign' => $general_actualsign
+
+            ], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+
+            log::debug($th);
+
+            return response()->json([
+                'status'  => false,
+                'error'   => $th,
+                'message' => 'Server error! Please report to administrator!'
+            ], 500);
+        }
+    }
+
+    public function mrfWithdraw(Request $request)
+    {
+
+        log::debug($request);
+        DB::beginTransaction();
+        try {
+
+
+            DB::commit();
+
+            DB::table('procurement.requisition_main')
+                ->where('requisition_id', $request->processId)
+                ->update(['status' => 'Withdrawn']);
+
+            DB::table('procurement.requisition_details')
+                ->where('requisition_id', $request->processId)
+                ->update(['status' => 'Withdrawn']);
+
+            DB::table('general.actual_sign')
+                ->where('STATUS', 'In Progress')
+                ->where('PROCESSID', $request->processId)
+                ->where('FRM_NAME', $request->frmClass)
+                ->where('COMPID', $request->companyId)
+                ->update(['STATUS' => 'Withdrawn', 'SIGNDATETIME' => now(), 'UID_SIGN' => $request->loggedUserId, 'ApprovedRemarks' => $request->withdrawRemarks]);
+
+            return response()->json(['message' => 'Materials request has been withdrawn!'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            log::debug('catch mrfWithdraw ' . $e);
+            return response()->json($e, 500);
+        }
     }
 }

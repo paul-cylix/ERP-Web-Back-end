@@ -300,6 +300,8 @@ Route::post('cart-purchase', [ScController::class, 'purchase']);
 Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmentsBySoid']);
 
 Route::get('get-mrf/{req_id}/{companyid}', [ScController::class, 'getMrf']);
+Route::post('mrf-withdraw', [ScController::class, 'mrfWithdraw']);
+
 
 
 
@@ -326,7 +328,6 @@ Route::post('post-filtered-attendance', [CylixPortalController::class, 'getFilte
 Route::get('get-dtr-logs/{id}', [DtrController::class, 'index']); // get dtr of all users under this manager
 Route::post('post-dtr-logs-approve', [DtrController::class, 'approveSelected']); // approve multiple row
 // Route::post('post-hr-emp', [DtrController::class, 'approve']); // approve only 1 row
-
 
 
 
