@@ -828,6 +828,13 @@ class ScController extends ApiController
             $rm_name            = $general_actualsign[0]->REPORTING_MANAGER;
             $frm_name           = $general_actualsign[0]->FRM_NAME;
 
+            // is Done Approving
+
+            $response = DB::table('general.actual_sign as a')->select('a.STATUS')->where('a.PROCESSID', $requisition_id)->where('a.FRM_CLASS', 'SUPPLYCHAINMRF')->orderBy('a.ID', 'desc')->limit(1)->get();
+            $actual_status = $response[0]->STATUS;
+            $done_approving = ($actual_status === 'In Progress' ? true : false);
+
+
             // Get Attachments of link sales order
             $attachmentsSOF = DB::table('general.attachments as a')->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')->where('a.REQID', $soid)->where('a.formName', $frmname)->get();
 
@@ -885,6 +892,7 @@ class ScController extends ApiController
                     'materials_request_class' => $main_class,
                     'materials_request_type'  => $frm_name,
                     'remarks'                 => $remarks,
+                    'done_approving'          => $done_approving,
                     'requisition_details'     => $requisition_details
                 ],
 
@@ -909,32 +917,88 @@ class ScController extends ApiController
         }
     }
 
-    public function mrfWithdraw(Request $request)
+    public function mrfChangeStatus(Request $request)
     {
 
         log::debug($request);
         DB::beginTransaction();
         try {
 
+            $status = null;
+            if ($request->frmstatus === 'withdrawn') {
+                $status = 'Withdrawn';
+            } else if ($request->frmstatus === 'rejected') {
+                $status = 'Rejected';
+            } else if ($request->frmstatus === 'clarify') {
+                $status = 'For Clarification';
+            } else if ($request->frmstatus === 'approved') {
+                $status = 'Completed';
+            }
+
+            $request_status = array('withdrawn', 'rejected', 'clarify');
+
+
+            // Change Status of withdrawn, Rejected and clarify
+            if (in_array($request->frmstatus, $request_status, TRUE)) {
+
+                DB::table('procurement.requisition_main')
+                    ->where('requisition_id', $request->processId)
+                    ->update(['status' => $status]);
+
+                DB::table('procurement.requisition_details')
+                    ->where('requisition_id', $request->processId)
+                    ->update(['status' => $status]);
+
+                DB::table('general.actual_sign')
+                    ->where('STATUS', 'In Progress')
+                    ->where('PROCESSID', $request->processId)
+                    ->where('FRM_NAME', $request->frmName)
+                    ->where('COMPID', $request->companyId)
+                    ->update(['STATUS' => $status, 'SIGNDATETIME' => now(), 'UID_SIGN' => $request->loggedUserId, 'ApprovedRemarks' => $request->withdrawRemarks, 'webapp' => 1]);
+
+            // Change status of approve
+            } else {
+
+                // Change status to done approving
+                if (filter_var($request->done_approving, FILTER_VALIDATE_BOOLEAN)) {
+
+                    DB::table('procurement.requisition_main')
+                        ->where('requisition_id', $request->processId)
+                        ->update(['status' => $status]);
+
+                    DB::table('procurement.requisition_details')
+                        ->where('requisition_id', $request->processId)
+                        ->update(['status' => $status]);
+
+                    DB::table('general.actual_sign')
+                        ->where('STATUS', 'In Progress')
+                        ->where('PROCESSID', $request->processId)
+                        ->where('FRM_NAME', $request->frmName)
+                        ->where('COMPID', $request->companyId)
+                        ->update(['DoneApproving' => 1, 'STATUS' => $status, 'SIGNDATETIME' => now(), 'UID_SIGN' => $request->loggedUserId, 'ApprovedRemarks' => $request->withdrawRemarks, 'webapp' => 1]);
+
+                    // change to completed
+                } else {
+                    DB::table('general.actual_sign')
+                        ->where('STATUS', 'In Progress')
+                        ->where('PROCESSID', $request->processId)
+                        ->where('FRM_NAME', $request->frmName)
+                        ->where('COMPID', $request->companyId)
+                        ->update(['STATUS' => $status, 'SIGNDATETIME' => now(), 'UID_SIGN' => $request->loggedUserId, 'ApprovedRemarks' => $request->withdrawRemarks, 'webapp' => 1]);
+
+                    DB::table('general.actual_sign')
+                        ->where('STATUS', 'Not Started')
+                        ->where('PROCESSID', $request->processId)
+                        ->where('FRM_NAME', $request->frmName)
+                        ->where('COMPID', $request->companyId)
+                        ->limit(1)
+                        ->update(['STATUS' => 'In Progress']);
+                }
+            }
+
 
             DB::commit();
-
-            DB::table('procurement.requisition_main')
-                ->where('requisition_id', $request->processId)
-                ->update(['status' => 'Withdrawn']);
-
-            DB::table('procurement.requisition_details')
-                ->where('requisition_id', $request->processId)
-                ->update(['status' => 'Withdrawn']);
-
-            DB::table('general.actual_sign')
-                ->where('STATUS', 'In Progress')
-                ->where('PROCESSID', $request->processId)
-                ->where('FRM_NAME', $request->frmClass)
-                ->where('COMPID', $request->companyId)
-                ->update(['STATUS' => 'Withdrawn', 'SIGNDATETIME' => now(), 'UID_SIGN' => $request->loggedUserId, 'ApprovedRemarks' => $request->withdrawRemarks]);
-
-            return response()->json(['message' => 'Materials request has been withdrawn!'], 200);
+            return response()->json(['message' => 'Materials request has been' . ' ' . $status], 200);
         } catch (\Exception $e) {
             DB::rollback();
             log::debug('catch mrfWithdraw ' . $e);

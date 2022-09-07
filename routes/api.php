@@ -300,7 +300,7 @@ Route::post('cart-purchase', [ScController::class, 'purchase']);
 Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmentsBySoid']);
 
 Route::get('get-mrf/{req_id}/{companyid}', [ScController::class, 'getMrf']);
-Route::post('mrf-withdraw', [ScController::class, 'mrfWithdraw']);
+Route::post('mrf-change-status', [ScController::class, 'mrfChangeStatus']);
 
 
 
