@@ -82,6 +82,15 @@ trait ApiResponser
         return $ref;
     }
 
+    protected function getDraftReRef($companyId){
+        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`DRAFT_NUM`,11)) FROM accounting.`reimbursement_request` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`TITLEID` = '".$companyId."'), FALSE) +1 AS 'ref'");
+        $ref = $ref[0]->ref;
+        $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
+        $ref = "REDR-" . date('Y') . "-" . $ref;
+
+        return $ref;
+    }
+
     protected function getPcRef($companyId){
         $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`petty_cash_request` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'REF'");
         $getref = $dataREQREF[0]->REF;
