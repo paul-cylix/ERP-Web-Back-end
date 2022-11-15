@@ -13,14 +13,19 @@ class CylixPortalController extends ApiController
     public function index()
     {
         $employees = DB::select("SELECT 
-        a.`SysPK_Empl` AS 'employee_id', 
-        a.`Name_Empl` AS 'employee_fullname', 
-        (SELECT b.`UserName_User` FROM general.`users` b WHERE b.`Employee_id` = a.`SysPK_Empl` AND b.`status` = 'ACTIVE' AND b.`Employee_id` NOT LIKE '%del@%' LIMIT 1) AS 'employee_email'
+        a.`SysPK_Empl` AS 'employee_id',
+        a.`Name_Empl` AS 'employee_fullname',
+        a.`CompanyID` AS 'company_id',
+        a.`CompanyName` AS 'company_name',
+        a.`PositionID` AS 'position_id',
+        a.`PositionName` AS 'position_name',
+        a.`DepartmentID` AS 'department_id',
+        a.`DepartmentName` AS 'department_name'
       FROM
         humanresource.`employees` a 
-      WHERE a.`CompanyID` = 1 
-        AND a.`Status_Empl` LIKE 'Active%'
-      ORDER BY a.`Name_Empl` 
+      INNER JOIN general.`users` b ON a.`SysPK_Empl` = b.`Employee_id`  
+      WHERE a.`Status_Empl` LIKE 'Active%' AND b.`status` = 'ACTIVE' AND b.`Employee_id` NOT LIKE '%del@%' 
+      GROUP BY a.`Name_Empl` ORDER BY a.`Name_Empl` 
       ");
         $managers = DB::select("SELECT a.`RMID` AS id, b.`UserFull_name` AS manager_name, b.`Employee_id` AS employee_id, b.`UserName_User` AS username  FROM general.`systemreportingmanager` a INNER JOIN general.`users` b ON a.`RMID` = b.`id` GROUP BY a.`RMID` ORDER BY b.`UserFull_name`");
         return response()->json([

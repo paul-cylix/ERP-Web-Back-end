@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\HumanResource\OT\OtMain;
 use DateTime;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OtController extends ApiController
 {
@@ -106,6 +107,8 @@ class OtController extends ApiController
 
     public function saveOT(Request $request)
     {
+
+        log::debug($request);
 
         $guid = $this->getGuid();
         $reqRef = $this->getOtRef($request->companyId);
@@ -246,7 +249,7 @@ class OtController extends ApiController
     public function getOtMain($id){
         // $otData = OtMain::where('main_id',$id)->get();
 
-        $otData = DB::select("SELECT *,(SELECT b.`project_name` FROM general.`setup_project` b WHERE b.`project_id` = a.`PRJID` ) AS 'PRJNAME' FROM humanresource.`overtime_request` a WHERE a.`main_id` = '".$id."'");
+        $otData = DB::select("SELECT *,(SELECT b.`project_name` FROM general.`setup_project` b WHERE b.`project_id` = a.`PRJID` ) AS 'PRJNAME' FROM humanresource.`overtime_request` a WHERE a.`main_id` = '".$id."' AND a.`status` <> 'Removed'");
 
         return response()->json($otData, 200);
     }
@@ -271,10 +274,11 @@ class OtController extends ApiController
         a.`cust_id`,
         (SELECT project_name FROM general.`setup_project` WHERE project_id = a.`PRJID`) AS 'PRJNAME',
         a.`overtime_date`,
-        a.`id`
+        a.`id`,
+        a.`status`
       FROM
         humanresource.`overtime_request` a
-      WHERE a.`main_id` = $id");
+      WHERE a.`main_id` = $id AND a.`status` <> 'Removed'" );
         return response()->json($otData, 200);
     }
 
@@ -282,18 +286,57 @@ class OtController extends ApiController
         $otData = $request->overtimeData;
         $otData = json_decode($otData, true);
 
+        $arrOTId = $request->otId; 
+        $arrOTId = json_decode($arrOTId, true);
+
+
+        if (!empty($arrOTId)) {
+            foreach ($arrOTId as $id){
+                DB::table('humanresource.overtime_request')->where('id', $id)->update(['status' => "Removed"]);
+            }
+        } 
+        
+
         if(!empty($otData)){
 
             for($i = 0; $i <count($otData); $i++) {
-    
+                $ot_in = date_create($otData[$i]['ot_in']);   
+                $ot_out = date_create($otData[$i]['ot_out']);  
                 $ot_in_actual = date_create($otData[$i]['ot_in_actual']);
                 $ot_out_actual = date_create($otData[$i]['ot_out_actual']);   
+ 
+                
+                // DB::update("UPDATE humanresource.`overtime_request` SET `ot_in_actual` = '".date_format($ot_in_actual, 'Y-m-d H:i:s')."', ot_out_actual = '".date_format($ot_out_actual, 'Y-m-d H:i:s')."', ot_totalhrs_actual = '".$otData[$i]['ot_totalhrs_actual']."' WHERE `id` = '".$otData[$i]['id']."' ;");
 
-                DB::update("UPDATE humanresource.`overtime_request` SET `ot_in_actual` = '".date_format($ot_in_actual, 'Y-m-d H:i:s')."', ot_out_actual = '".date_format($ot_out_actual, 'Y-m-d H:i:s')."', ot_totalhrs_actual = '".$otData[$i]['ot_totalhrs_actual']."' WHERE `id` = '".$otData[$i]['id']."' ;");
-            
+                DB::table('humanresource.overtime_request')->where('id', $otData[$i]['id'])
+                ->update(
+                    [
+                        'ot_in' => $ot_in,
+                        'ot_out' => $ot_out,
+                        'ot_totalhrs' => $otData[$i]['ot_totalhrs'],
+                        'purpose' => $otData[$i]['purpose'],
+                        'ot_in_actual' => $ot_in_actual,
+                        'ot_out_actual' => $ot_out_actual,
+                        'ot_totalhrs_actual' => $otData[$i]['ot_totalhrs_actual'],
+                        'remarks' => $otData[$i]['purpose'],
+                        'cust_id' => $otData[$i]['cust_id'],
+                        'cust_name' => $otData[$i]['cust_name'],
+                        'PRJID' => $otData[$i]['PRJID']
+                    ]
+                );
             }
+            // DB::table('general.actual_sign')->where('PROCESSID', $request->processId)->where('FRM_NAME',$request->form)->where('COMPID',$request->companyId)
+            // ->update(
+            //     [
+            //         'PROJECTID'  => $ot_in,
+            //         'PROJECT'    => $ot_in,
+            //         'CLIENTID'   => $ot_in,
+            //         'CLIENTNAME' => $ot_in
+            //     ]
+            // );
+            
 
-            DB::update("UPDATE general.`actual_sign` SET `status` = 'Completed', UID_SIGN = '".$request->loggedUserId."', SIGNDATETIME = NOW(), ApprovedRemarks = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_NAME` = '".$request->form."' AND `COMPID` = '".$request->companyId."'  ;");
+            DB::update("UPDATE general.`actual_sign` SET `webapp` = 1, `status` = 'Completed', UID_SIGN = '".$request->loggedUserId."', SIGNDATETIME = NOW(), ApprovedRemarks = '" .$request->remarks. "' WHERE `status` = 'In Progress' AND PROCESSID = '".$request->processId."' AND `FRM_NAME` = '".$request->form."' AND `COMPID` = '".$request->companyId."'  ;");
             DB::update("UPDATE general.`actual_sign` SET `status` = 'In Progress' WHERE `status` = 'Not Started' AND PROCESSID = '".$request->processId."' AND `FRM_NAME` = '".$request->form."' AND `COMPID` = '".$request->companyId."' LIMIT 1;");
         
             return response()->json(['message' => 'Overtime Request has been Successfully approved'], 200);

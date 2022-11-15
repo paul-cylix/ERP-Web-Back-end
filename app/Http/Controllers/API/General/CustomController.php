@@ -115,7 +115,7 @@ class CustomController extends ApiController
         if ($request->form === 'Overtime Request') {
             $this->withdrawActualSign($request);
 
-            OtMain::where('main_id', $request->reqId)
+            OtMain::where('main_id', $request->reqId)->where('status', '!=', 'Removed')
                 ->update([
                     'status' => 'Withdrawn',
                 ]);
@@ -201,7 +201,7 @@ class CustomController extends ApiController
 
         if ($request->form === 'Overtime Request') {
             $this->rejectedRequest($request);
-            OtMain::where('main_id', $request->processId)
+            OtMain::where('main_id', $request->processId)->where('status', '!=', 'Removed')
                 ->update([
                     'status' => 'Rejected',
                 ]);
@@ -720,7 +720,7 @@ class CustomController extends ApiController
         if ($request->form === 'Overtime Request') {
             $notificationIdClarity = $this->addNotification($request);
             $this->clarifyActualSign($request, $notificationIdClarity);
-            OtMain::where('main_id', $request->processId)->update(['status' => 'For Clarification']);
+            OtMain::where('main_id', $request->processId)->where('status', '!=', 'Removed')->update(['status' => 'For Clarification']);
             return response()->json(['message' => 'Overtime Request is now for clarification'], 200);
         }
 
@@ -902,13 +902,6 @@ class CustomController extends ApiController
 
 
             }
-
-
-
-
-
-
-
 
 
 
@@ -1201,7 +1194,7 @@ class CustomController extends ApiController
 
     public function deleteOtMain($request)
     {
-        $otMain = OtMain::where('main_id', $request->processId);
+        $otMain = OtMain::where('main_id', $request->processId)->where('status', 'For Clarification');
         $otMain->delete();
     }
 
@@ -1581,18 +1574,18 @@ class CustomController extends ApiController
 
 
         $notifIdClarityInp = DB::table('general.notifications')->insertGetId([
-            'ParentID' => '0',
-            'levels' => '0',
-            'FRM_NAME' => $request->form, // form
-            'PROCESSID' => $request->processId, // processid
-            'SENDERID' => $request->loggedUserId, // loggedUserId
-            'RECEIVERID' => $request->recipientId, // recipientId
-            'MESSAGE' => $request->remarks, // remarks
-            'TS' => NOW(),
-            'SETTLED' => 'NO',
-            'ACTUALID' => $request->inprogressId, // inprogressid
+            'ParentID'       => '0',
+            'levels'         => '0',
+            'FRM_NAME'       => $request->form,                 // form
+            'PROCESSID'      => $request->processId,            // processid
+            'SENDERID'       => $request->loggedUserId,         // loggedUserId
+            'RECEIVERID'     => $request->recipientId,          // recipientId
+            'MESSAGE'        => $request->remarks,              // remarks
+            'TS'             => NOW(),
+            'SETTLED'        => 'NO',
+            'ACTUALID'       => $request->inprogressId,         // inprogressid
             'SENDTOACTUALID' => '0',
-            'UserFullName' => $request->loggedUserFullname,
+            'UserFullName'   => $request->loggedUserFullname,
 
         ]);
 
