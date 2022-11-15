@@ -72,6 +72,10 @@ Route::resource('rfp-main-actualsign', RfpMainActualSignController::class,  ['on
 Route::post('saveRe', [ReController::class, 'saveRE']);
 Route::get('getRE/{id}', [ReController::class, 'getRE']);
 
+Route::post('saveDraftRe', [ReController::class, 'saveDraftRe']);
+Route::get('getREbyUserID/{userid}', [ReController::class, 'getREbyUserID']);
+Route::get('getReGeneralAttachmentsByReqid/{reqid}/{loggeduserID}', [ReController::class, 'getReGeneralAttachmentsByReqid']);
+
 route::get('get-ReExpense/{id}', [ReController::class, 'getExpense']);
 route::get('get-ReTranspo/{id}', [ReController::class, 'getTranspo']);
 
@@ -334,7 +338,7 @@ Route::post('post-dtr-logs-approve', [DtrController::class, 'approveSelected']);
 
 
 // for previewing image or pdf
-// Route::get('getFile', [AttachmentController::class, 'getFile']);
+Route::get('getFile', [AttachmentController::class, 'getFile']);
 Route::get('downloadFile', [AttachmentController::class, 'downloadFile']);
 
 // Registration
