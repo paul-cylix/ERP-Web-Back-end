@@ -202,14 +202,14 @@ class ScController extends ApiController
             DB::table('procurement.requisition_details')->insert($arrayCart);
 
             // insert in general.actual_sign 
-            if ($request->type_category == "Material Request Project") {
+            if ($request->type_category == "Material Request - Project") {
                 for ($x = 0; $x < 6; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'FrmMRF',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -264,14 +264,14 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            } else if ($request->type_category == "Material Request Delivery") {
+            } else if ($request->type_category == "Material Request - Delivery") {
                 for ($x = 0; $x < 6; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'FrmMRF',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -326,14 +326,14 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            } else if ($request->type_category == "Material Request Demo" || $request->type_category == "Material Request POC") {
+            } else if ($request->type_category == "Material Request - Demo" || $request->type_category == "Material Request - POC") {
                 for ($x = 0; $x < 5; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'FrmMRF',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -384,14 +384,14 @@ class ScController extends ApiController
                     $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
                     $actualSignData[4]['Max_approverCount'] = '5';
                 }
-            } else if ($request->type_category == "Asset Request Delivery") {
+            } else if ($request->type_category == "Asset Request - Delivery") {
                 for ($x = 0; $x < 7; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'frmARF1',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -415,7 +415,7 @@ class ScController extends ApiController
                             'CLIENTNAME'        => $request->clientname,
                             'Max_approverCount' => '5',
                             'DoneApproving'     => '0',
-                            'WebpageLink'       => 'mrf_approve.php',
+                            'WebpageLink'       => 'arf_approve.php',
                             'ApprovedRemarks'   => '',
                             'Payee'             => '',
                             'Amount'            => '',
@@ -450,14 +450,14 @@ class ScController extends ApiController
                     $actualSignData[6]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
                     $actualSignData[6]['Max_approverCount'] = '7';
                 }
-            } else if ($request->type_category == "Asset Request Demo" || $request->type_category == "Asset Request POC") {
+            } else if ($request->type_category == "Asset Request - Demo" || $request->type_category == "Asset Request - POC") {
                 for ($x = 0; $x < 6; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'frmARF1',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -481,7 +481,7 @@ class ScController extends ApiController
                             'CLIENTNAME'        => $request->clientname,
                             'Max_approverCount' => '5',
                             'DoneApproving'     => '0',
-                            'WebpageLink'       => 'mrf_approve.php',
+                            'WebpageLink'       => 'arf_approve.php',
                             'ApprovedRemarks'   => '',
                             'Payee'             => '',
                             'Amount'            => '',
@@ -512,14 +512,14 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            } else if ($request->type_category == "Asset Request Internal") {
+            } else if ($request->type_category == "Asset Request - Internal") {
                 for ($x = 0; $x < 6; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'frmARF1',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -543,7 +543,7 @@ class ScController extends ApiController
                             'CLIENTNAME'        => $request->clientname,
                             'Max_approverCount' => '5',
                             'DoneApproving'     => '0',
-                            'WebpageLink'       => 'mrf_approve.php',
+                            'WebpageLink'       => 'arf_approve.php',
                             'ApprovedRemarks'   => '',
                             'Payee'             => '',
                             'Amount'            => '',
@@ -574,14 +574,14 @@ class ScController extends ApiController
                     $actualSignData[5]['USER_GRP_IND'] = 'Asset Return Acknowledgement';
                     $actualSignData[5]['Max_approverCount'] = '6';
                 }
-            } else if ($request->type_category == "Asset Request Project") {
+            } else if ($request->type_category == "Asset Request - Project") {
                 for ($x = 0; $x < 7; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'frmARF1',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -605,7 +605,7 @@ class ScController extends ApiController
                             'CLIENTNAME'        => $request->clientname,
                             'Max_approverCount' => '5',
                             'DoneApproving'     => '0',
-                            'WebpageLink'       => 'mrf_approve.php',
+                            'WebpageLink'       => 'arf_approve.php',
                             'ApprovedRemarks'   => '',
                             'Payee'             => '',
                             'Amount'            => '',
@@ -640,14 +640,14 @@ class ScController extends ApiController
                     $actualSignData[6]['USER_GRP_IND'] = 'Acknowledge by Accounting Department';
                     $actualSignData[6]['Max_approverCount'] = '7';
                 }
-            } else if ($request->type_category == "Supplies Request Internal") {
+            } else if ($request->type_category == "Supplies Request - Internal") {
                 for ($x = 0; $x < 5; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'FrmSURF1',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -671,7 +671,7 @@ class ScController extends ApiController
                             'CLIENTNAME'        => $request->clientname,
                             'Max_approverCount' => '5',
                             'DoneApproving'     => '0',
-                            'WebpageLink'       => 'mrf_approve.php',
+                            'WebpageLink'       => 'surf_approve.php',
                             'ApprovedRemarks'   => '',
                             'Payee'             => '',
                             'Amount'            => '',
@@ -698,14 +698,14 @@ class ScController extends ApiController
                     $actualSignData[4]['USER_GRP_IND'] = 'Initiator';
                     $actualSignData[4]['Max_approverCount'] = '5';
                 }
-            } else if ($request->type_category == "Supplies Request Project") {
+            } else if ($request->type_category == "Supplies Request - Project") {
                 for ($x = 0; $x < 6; $x++) {
                     $actualSignData[] =
                         [
                             'PROCESSID'         => $m_id,
                             'USER_GRP_IND'      => 'Reporting Manager',
                             'FRM_NAME'          => $request->type_category,
-                            'FRM_CLASS'         => 'SUPPLYCHAINMRF',
+                            'FRM_CLASS'         => 'FrmSURF1',
                             'REMARKS'           => $request->remarks,
                             'STATUS'            => 'Not Started',
                             'TS'                => now(),
@@ -729,7 +729,7 @@ class ScController extends ApiController
                             'CLIENTNAME'        => $request->clientname,
                             'Max_approverCount' => '5',
                             'DoneApproving'     => '0',
-                            'WebpageLink'       => 'mrf_approve.php',
+                            'WebpageLink'       => 'surf_approve.php',
                             'ApprovedRemarks'   => '',
                             'Payee'             => '',
                             'Amount'            => '',
