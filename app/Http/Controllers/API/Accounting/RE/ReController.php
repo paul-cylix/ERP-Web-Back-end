@@ -18,8 +18,8 @@ class ReController extends ApiController
     public function saveRE(Request $request)
     {
         
-        $data = DB::select(" SELECT COUNT(*) AS countDraftNum FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' ");
-        $getDraftNumID = DB::select(" SELECT id FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' ");
+        $data = DB::select(" SELECT COUNT(*) AS countDraftNum FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' AND DRAFT_IDEN = 1 ");
+        $getDraftNumID = DB::select(" SELECT id FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' AND DRAFT_IDEN = 1 ");
 
         $idArray = $request->idOfAttachmentsToDelete;
         $idArray = json_decode($idArray, true);
@@ -43,6 +43,7 @@ class ReController extends ApiController
             // delete old data then insert new draft
             DB::table('accounting.reimbursement_expense_details')->where('REID', $getDraftNumID[0]->id)->delete();
             DB::table('accounting.reimbursement_request_details')->where('REID', $getDraftNumID[0]->id)->delete();
+            DB::table('general.actual_sign')->where('PROCESSID', $getDraftNumID[0]->id)->where('FRM_NAME', $request->form)->where('FRM_CLASS', 'REIMBURSEMENT_REQUEST')->where('COMPID', $request->companyId)->delete();
 
             // delete selected remove attachment from frontend
             for ($i=0; $i < count($idArray); $i++) { 
@@ -65,7 +66,8 @@ class ReController extends ApiController
 
                     // update accounting.reimbursement_request
                     Remain::where("id", $getDraftNumID[0]->id)->update([
-                        'DRAFT_NUM' => "",
+                        'REQREF' => $reference,
+                        'DRAFT_IDEN' => 0,
                         'UID' => $request->loggedUserId,
                         'LNAME' => $request->loggedUserLastName,
                         'FNAME' => $request->loggedUserFirstName,
@@ -123,6 +125,7 @@ class ReController extends ApiController
                                 'WebpageLink'       => 're_approve.php',
                                 'Payee'             => $request->payeeName,
                                 'Amount'            => floatval(str_replace(',', '', $request->amount)),
+                                'webapp'            => NULL,
                             ];
                     }
 
@@ -301,6 +304,7 @@ class ReController extends ApiController
                                 'WebpageLink'       => 're_approve.php',
                                 'Payee'             => $request->payeeName,
                                 'Amount'            => floatval(str_replace(',', '', $request->amount)),
+                                'webapp'            => NULL,
                             ];
                     }
 
@@ -426,8 +430,8 @@ class ReController extends ApiController
 
     public function saveDraftRE(Request $request)
     {
-        $data = DB::select(" SELECT COUNT(*) AS countDraftNum FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' ");
-        $getDraftNumID = DB::select(" SELECT id FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' ");
+        $data = DB::select(" SELECT COUNT(*) AS countDraftNum FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' AND DRAFT_IDEN = 1 ");
+        $getDraftNumID = DB::select(" SELECT id FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' AND DRAFT_IDEN = 1 ");
 
         $idArray = $request->idOfAttachmentsToDelete;
         $idArray = json_decode($idArray, true);
@@ -450,6 +454,7 @@ class ReController extends ApiController
         if($data[0]->countDraftNum >= 1) {
             DB::table('accounting.reimbursement_expense_details')->where('REID', $getDraftNumID[0]->id)->delete();
             DB::table('accounting.reimbursement_request_details')->where('REID', $getDraftNumID[0]->id)->delete();
+            DB::table('general.actual_sign')->where('PROCESSID', $getDraftNumID[0]->id)->where('FRM_NAME', $request->form)->where('FRM_CLASS', 'REIMBURSEMENT_REQUEST')->where('COMPID', $request->companyId)->delete();
             
             // delete selected remove attachment from frontend
             for ($i=0; $i < count($idArray); $i++) { 
@@ -472,6 +477,8 @@ class ReController extends ApiController
 
                 // update accounting.reimbursement_request
                 Remain::where("id", $getDraftNumID[0]->id)->update([
+                    'REQREF' => "",
+                    'DRAFT_IDEN' => 1,
                     'UID' => $request->loggedUserId,
                     'LNAME' => $request->loggedUserLastName,
                     'FNAME' => $request->loggedUserFirstName,
@@ -484,7 +491,7 @@ class ReController extends ApiController
                     'TOTAL_AMT_SPENT' => floatval(str_replace(',', '', $request->amount)),
                     'DEADLINE' => date_create($request->dateNeeded),
                     'DESCRIPTION' => $request->purpose,
-                    'STATUS' => 'In Progress',
+                    'STATUS' => 'Draft',
                     'GUID' => $guid,
                     'PROJECT' => $request->projectName,
                     'PRJID' => $request->projectId,
@@ -494,6 +501,42 @@ class ReController extends ApiController
                     'CLIENTID' => $request->clientId,
                     'webapp' => 1,
                 ]);
+
+                $actualSignData = array(
+                    'PROCESSID'         => $getDraftNumID[0]->id,
+                    'USER_GRP_IND'      => 'Reporting Manager',
+                    'FRM_NAME'          => 'Reimbursement Request',
+                    'TaskTitle'         => '',
+                    'NS'                => '',
+                    'FRM_CLASS'         => 'REIMBURSEMENT_REQUEST',
+                    'REMARKS'           => $request->purpose,
+                    'STATUS'            => 'Draft',
+                    'DUEDATE'           => date_create($request->dateNeeded),
+                    'ORDERS'            => 0,
+                    'REFERENCE'         => $draftReference,
+                    'PODATE'            => date_create($request->dateNeeded),
+                    'DATE'              => now(),
+                    'INITID'            => $request->loggedUserId,
+                    'FNAME'             => $request->loggedUserFirstName,
+                    'LNAME'             => $request->loggedUserLastName,
+                    'DEPARTMENT'        => $request->loggedUserDepartment,
+                    'RM_ID'             => $request->reportingManagerId,
+                    'REPORTING_MANAGER' => $request->reportingManagerName,
+                    'PROJECTID'         => $request->projectId,
+                    'PROJECT'           => $request->projectName,
+                    'COMPID'            => $request->companyId,
+                    'COMPANY'           => $request->companyName,
+                    'TYPE'              => 'Reimbursement Request',
+                    'CLIENTID'          => $request->clientId,
+                    'CLIENTNAME'        => $request->clientName,
+                    'Max_approverCount' => '6',
+                    'DoneApproving'     => '0',
+                    'WebpageLink'       => 're_approve.php',
+                    'Payee'             => $request->payeeName,
+                    'Amount'            => floatval(str_replace(',', '', $request->amount)),
+                    'webapp'            => 1,
+                );
+                ActualSign::insert($actualSignData);
                 
                 $request->request->add(['processId' => $getDraftNumID[0]->id]);
                 $request->request->add(['referenceNumber' => $reference]);
@@ -515,7 +558,7 @@ class ReController extends ApiController
                             'GUID'         => $guid,
                             'TS'           => now(),
                             'MAINID'       => $request->mainId,
-                            'STATUS'       => 'ACTIVE',
+                            'STATUS'       => 'INACTIVE',
                             'CLIENT_ID'    => $xdArray[$i]['CLIENT_ID'],
                             'EXPENSE_TYPE' => $xdArray[$i]['EXPENSE_TYPE'],
                             'DEPT'         => $request->loggedUserDepartment,
@@ -546,7 +589,7 @@ class ReController extends ApiController
                             'GUID'            => $guid,
                             'TS'              => now(),
                             'MAINID'          => $request->mainId,
-                            'STATUS'          => 'ACTIVE',
+                            'STATUS'          => 'INACTIVE',
                             'CLIENT_ID'       => $tdArray[$i]['CLIENT_ID'],
                             'DEPT'            => $request->loggedUserDepartment,
                             'RELEASEDCASH'    => '0',
@@ -581,7 +624,8 @@ class ReController extends ApiController
                 $guid      = $this->getGuid();
 
                 $reMain                    = new ReMain();
-                $reMain->REQREF            = $reference;
+                $reMain->REQREF            = "";
+                $reMain->DRAFT_IDEN        = 1;
                 $reMain->DRAFT_NUM         = $draftReference;
                 $reMain->UID               = $request->loggedUserId;
                 $reMain->LNAME             = $request->loggedUserLastName;
@@ -595,7 +639,7 @@ class ReController extends ApiController
                 $reMain->TOTAL_AMT_SPENT   = floatval(str_replace(',', '', $request->amount));
                 $reMain->DEADLINE          = date_create($request->dateNeeded);
                 $reMain->DESCRIPTION       = $request->purpose;
-                $reMain->STATUS            = 'In Progress';
+                $reMain->STATUS            = 'Draft';
                 $reMain->GUID              = $guid;
                 $reMain->PROJECT           = $request->projectName;
                 $reMain->PRJID             = $request->projectId;
@@ -605,6 +649,42 @@ class ReController extends ApiController
                 $reMain->CLIENTID          = $request->clientId;
                 $reMain->webapp            = '1';
                 $reMain->save();
+
+                $actualSignData = array(
+                    'PROCESSID'         => $reMain->id,
+                    'USER_GRP_IND'      => 'Reporting Manager',
+                    'FRM_NAME'          => 'Reimbursement Request',
+                    'TaskTitle'         => '',
+                    'NS'                => '',
+                    'FRM_CLASS'         => 'REIMBURSEMENT_REQUEST',
+                    'REMARKS'           => $request->purpose,
+                    'STATUS'            => 'Draft',
+                    'DUEDATE'           => date_create($request->dateNeeded),
+                    'ORDERS'            => 0,
+                    'REFERENCE'         => $draftReference,
+                    'PODATE'            => date_create($request->dateNeeded),
+                    'DATE'              => now(),
+                    'INITID'            => $request->loggedUserId,
+                    'FNAME'             => $request->loggedUserFirstName,
+                    'LNAME'             => $request->loggedUserLastName,
+                    'DEPARTMENT'        => $request->loggedUserDepartment,
+                    'RM_ID'             => $request->reportingManagerId,
+                    'REPORTING_MANAGER' => $request->reportingManagerName,
+                    'PROJECTID'         => $request->projectId,
+                    'PROJECT'           => $request->projectName,
+                    'COMPID'            => $request->companyId,
+                    'COMPANY'           => $request->companyName,
+                    'TYPE'              => 'Reimbursement Request',
+                    'CLIENTID'          => $request->clientId,
+                    'CLIENTNAME'        => $request->clientName,
+                    'Max_approverCount' => '6',
+                    'DoneApproving'     => '0',
+                    'WebpageLink'       => 're_approve.php',
+                    'Payee'             => $request->payeeName,
+                    'Amount'            => floatval(str_replace(',', '', $request->amount)),
+                    'webapp'            => 1,
+                );
+                ActualSign::insert($actualSignData);
                 
                 $request->request->add(['processId' => $reMain->id]);
                 $request->request->add(['referenceNumber' => $reference]);
@@ -626,7 +706,7 @@ class ReController extends ApiController
                             'GUID'         => $guid,
                             'TS'           => now(),
                             'MAINID'       => $request->mainId,
-                            'STATUS'       => 'ACTIVE',
+                            'STATUS'       => 'INACTIVE',
                             'CLIENT_ID'    => $xdArray[$i]['CLIENT_ID'],
                             'EXPENSE_TYPE' => $xdArray[$i]['EXPENSE_TYPE'],
                             'DEPT'         => $request->loggedUserDepartment,
@@ -657,7 +737,7 @@ class ReController extends ApiController
                             'GUID'            => $guid,
                             'TS'              => now(),
                             'MAINID'          => $request->mainId,
-                            'STATUS'          => 'ACTIVE',
+                            'STATUS'          => 'INACTIVE',
                             'CLIENT_ID'       => $tdArray[$i]['CLIENT_ID'],
                             'DEPT'            => $request->loggedUserDepartment,
                             'RELEASEDCASH'    => '0',
@@ -682,6 +762,7 @@ class ReController extends ApiController
         $reMain = DB::table('accounting.reimbursement_request as r')
                 ->join('general.users as g', 'r.REPORTING_MANAGER', '=', 'g.UserFull_name')
                 ->where('r.DRAFT_NUM', '!=', '')
+                ->where('r.DRAFT_IDEN', 1)
                 ->where('r.UID', $userid)
                 ->select('r.*', 'g.id as reportingManagerID')
                 ->get();
