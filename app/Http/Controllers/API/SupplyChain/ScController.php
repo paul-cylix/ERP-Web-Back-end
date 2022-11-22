@@ -810,12 +810,14 @@ class ScController extends ApiController
             $short_text     = $req_main[0]->short_text;
             $date_requested = $req_main[0]->tstamp;
             $project_id     = $req_main[0]->costid;
-            $project_name = $req_main[0]->costname;
-            $client_id    = $req_main[0]->clientid;
-            $client_name  = $req_main[0]->clientname;
-            $remarks      = $req_main[0]->remarks;
+            $project_name   = $req_main[0]->costname;
+            $client_id      = $req_main[0]->clientid;
+            $client_name    = $req_main[0]->clientname;
+            $remarks        = $req_main[0]->remarks;
             $deadline_date  = $req_main[0]->deadline_date;
             $requisition_id = $req_main[0]->requisition_id;
+            $requisition_no = $req_main[0]->requisition_no;
+            $title_id       = $req_main[0]->title_id;
 
             $user          = DB::table('general.users as a')->where('a.id', $userid)->select('a.id', 'a.UserFull_name as fullname')->get();
             $user_fullname = $user[0]->fullname;
@@ -824,7 +826,11 @@ class ScController extends ApiController
             $req_details = DB::table('procurement.requisition_details as a')->where('a.requisition_id', $req_id)->get();
 
             // Get general.acutal_sign
-            $general_actualsign = DB::table('general.actual_sign as a')->where('a.PROCESSID', $requisition_id)->where('a.FRM_CLASS', 'SUPPLYCHAINMRF')->get();
+            $general_actualsign = DB::table('general.actual_sign as a')
+            ->where('a.PROCESSID', $requisition_id)
+            ->where('a.REFERENCE', $requisition_no)
+            ->where('a.COMPID', $title_id)
+            ->get();
             $reference          = $general_actualsign[0]->REFERENCE;
             $department         = $general_actualsign[0]->DEPARTMENT;
             $rm_name            = $general_actualsign[0]->REPORTING_MANAGER;
@@ -832,7 +838,13 @@ class ScController extends ApiController
 
             // is Done Approving
 
-            $response = DB::table('general.actual_sign as a')->select('a.STATUS')->where('a.PROCESSID', $requisition_id)->where('a.FRM_CLASS', 'SUPPLYCHAINMRF')->orderBy('a.ID', 'desc')->limit(1)->get();
+            $response = DB::table('general.actual_sign as a')->select('a.STATUS')
+            ->where('a.PROCESSID', $requisition_id)
+            ->where('a.REFERENCE', $requisition_no)
+            ->where('a.COMPID', $title_id)
+            ->orderBy('a.ID', 'desc')
+            ->limit(1)
+            ->get();
             $actual_status = $response[0]->STATUS;
             $done_approving = ($actual_status === 'In Progress' ? true : false);
 
@@ -842,9 +854,9 @@ class ScController extends ApiController
 
             // Get Attachments of this MRF
             $attachmentsMRF = DB::table('general.attachments as a')->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')->where('a.REQID', $requisition_id)->where('a.formName', $frm_name)->get();
-            $mrf  = array('Material Request Project', 'Material Request Delivery', 'Material Request Demo', 'Material Request POC',);
-            $arf  = array('Asset Request Project', 'Asset Request Delivery', 'Asset Request Demo', 'Asset Request POC', 'Asset Request Internal',);
-            $surf = array('Supplies Request Project', 'Supplies Request Internal',);
+            $mrf  = array('Material Request - Project', 'Material Request - Delivery', 'Material Request - Demo', 'Material Request - POC',);
+            $arf  = array('Asset Request - Project', 'Asset Request - Delivery', 'Asset Request - Demo', 'Asset Request - POC', 'Asset Request - Internal',);
+            $surf = array('Supplies Request - Project', 'Supplies Request - Internal',);
 
             $main_class = null;
             if (in_array($frm_name, $mrf, TRUE)) {
@@ -907,8 +919,9 @@ class ScController extends ApiController
 
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            throw $th;
 
+            log::debug("error throw");
             log::debug($th);
 
             return response()->json([
