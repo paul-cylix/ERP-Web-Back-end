@@ -156,6 +156,7 @@ class ScController extends ApiController
                 "procss_type" => $request->procss_type,
                 "so_id" => $SOID,
                 "so_num" => $SONUM,
+                "webapp" => 1,
             ]);
 
             $cartData = DB::table('procurement.carts AS c')
