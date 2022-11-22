@@ -142,6 +142,7 @@ class ScController extends ApiController
                 "remarks" => $request->remarks,
                 "status" => 'In Progress',
                 "userid" => $request->userid,
+                "project_id" => $request->costid,
                 "costid" => $request->costid,
                 "costname" => $request->costname,
                 "clientid" => $request->clientid,
