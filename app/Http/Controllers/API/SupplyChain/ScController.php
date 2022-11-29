@@ -819,7 +819,11 @@ class ScController extends ApiController
             $requisition_no = $req_main[0]->requisition_no;
             $title_id       = $req_main[0]->title_id;
 
-            $user          = DB::table('general.users as a')->where('a.id', $userid)->select('a.id', 'a.UserFull_name as fullname')->get();
+            $user = DB::table('general.users as a')
+            ->where('a.id', $userid)
+            ->select('a.id', 'a.UserFull_name as fullname')
+            ->get();
+
             $user_fullname = $user[0]->fullname;
 
             // get requisition details
@@ -850,10 +854,19 @@ class ScController extends ApiController
 
 
             // Get Attachments of link sales order
-            $attachmentsSOF = DB::table('general.attachments as a')->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')->where('a.REQID', $soid)->where('a.formName', $frmname)->get();
+            $attachmentsSOF = DB::table('general.attachments as a')
+            ->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')
+            ->where('a.REQID', $soid)
+            ->where('a.formName', $frmname)
+            ->get();
 
             // Get Attachments of this MRF
-            $attachmentsMRF = DB::table('general.attachments as a')->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')->where('a.REQID', $requisition_id)->where('a.formName', $frm_name)->get();
+            $attachmentsMRF = DB::table('general.attachments as a')
+            ->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')
+            ->where('a.REQID', $requisition_id)
+            ->where('a.formName', $frm_name)
+            ->get();
+
             $mrf  = array('Material Request - Project', 'Material Request - Delivery', 'Material Request - Demo', 'Material Request - POC',);
             $arf  = array('Asset Request - Project', 'Asset Request - Delivery', 'Asset Request - Demo', 'Asset Request - POC', 'Asset Request - Internal',);
             $surf = array('Supplies Request - Project', 'Supplies Request - Internal',);
