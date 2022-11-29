@@ -303,7 +303,7 @@ Route::get('get-brand', [ScController::class, 'getBrand']);
 Route::post('cart-purchase', [ScController::class, 'purchase']);
 Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmentsBySoid']);
 
-Route::get('get-mrf/{req_id}/{companyid}', [ScController::class, 'getMrf']);
+Route::get('get-mrf/{req_id}/{companyid}/{frmname}', [ScController::class, 'getMrf']);
 Route::post('mrf-change-status', [ScController::class, 'mrfChangeStatus']);
 
 

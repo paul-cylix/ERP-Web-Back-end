@@ -792,19 +792,19 @@ class ScController extends ApiController
         return response()->json($res);
     }
 
-    public function getMrf($req_id, $companyid)
+    public function getMrf($req_id, $companyid, $frmname)
     {
         try {
             // get requisition main
             $req_main = DB::table('procurement.requisition_main as a')
-                ->join('sales_order.sales_orders as b', 'a.so_id', '=', 'b.id')
+                // ->join('sales_order.sales_orders as b', 'a.so_id', '=', 'b.id')
                 ->where('a.requisition_id', $req_id)
                 ->where('a.title_id', $companyid)
-                ->select('a.*', 'b.purpose')
+                // ->select('a.*', 'b.purpose')
                 ->get();
 
             $soid           = $req_main[0]->so_id;
-            $frmname        = $req_main[0]->purpose;
+            // $frmname        = $req_main[0]->purpose;
             $userid         = $req_main[0]->userid;
             $rm_id          = $req_main[0]->rmid;
             $short_text     = $req_main[0]->short_text;
