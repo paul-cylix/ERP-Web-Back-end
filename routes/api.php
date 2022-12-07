@@ -350,7 +350,7 @@ Route::post('changePassword', [ProfileController::class, 'changePassword']);
 
 
 
-
+Route::get('/get-getRequest', [CustomController::class, 'getRequest']); // get request for purchase request
 
 
 

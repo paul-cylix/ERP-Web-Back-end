@@ -1661,6 +1661,11 @@ class CustomController extends ApiController
             mkdir('C:\Users\Iverson\Desktop\Cylix\test');
         }
 
+        public function getRequest() {
+          $request = DB::select("SELECT *, 0 AS 'selected' FROM humanresource_copy.`dummy` a ");
+          return response()->json($request,200);
+        }
+
 
         
 }
