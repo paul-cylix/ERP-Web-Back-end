@@ -410,6 +410,47 @@ class CustomController extends ApiController
 
                 return response()->json(['message' => 'Done! Overtime Request has been Successfully approved'], 200);
             } else {
+                log::debug($request);
+                $otData = $request->overtimeData;
+                $otData = json_decode($otData, true);
+        
+                $arrOTId = $request->otId; 
+                $arrOTId = json_decode($arrOTId, true);
+        
+        
+                if (!empty($arrOTId)) {
+                    foreach ($arrOTId as $id){
+                        DB::table('humanresource.overtime_request')->where('id', $id)->update(['status' => "Removed"]);
+                    }
+                } 
+
+                if(!empty($otData)){
+
+                    for($i = 0; $i <count($otData); $i++) {
+                        $ot_in = date_create($otData[$i]['ot_in']);   
+                        $ot_out = date_create($otData[$i]['ot_out']);  
+                        $ot_in_actual = date_create($otData[$i]['ot_in_actual']);
+                        $ot_out_actual = date_create($otData[$i]['ot_out_actual']);                   
+        
+                        DB::table('humanresource.overtime_request')->where('id', $otData[$i]['id'])
+                        ->update(
+                            [
+                                'ot_in' => $ot_in,
+                                'ot_out' => $ot_out,
+                                'ot_totalhrs' => $otData[$i]['ot_totalhrs'],
+                                'purpose' => $otData[$i]['purpose'],
+                                'ot_in_actual' => $ot_in_actual,
+                                'ot_out_actual' => $ot_out_actual,
+                                'ot_totalhrs_actual' => $otData[$i]['ot_totalhrs_actual'],
+                                'remarks' => $otData[$i]['purpose'],
+                                'cust_id' => $otData[$i]['cust_id'],
+                                'cust_name' => $otData[$i]['cust_name'],
+                                'PRJID' => $otData[$i]['PRJID']
+                            ]
+                        );
+                    }
+                }
+
                 $this->approveActualSIgn($request);
                 return response()->json(['message' => 'Overtime Request has been Successfully approved'], 200);
             }
@@ -1659,6 +1700,11 @@ class CustomController extends ApiController
 
         public function createFolder() {
             mkdir('C:\Users\Iverson\Desktop\Cylix\test');
+        }
+
+        public function getRequest() {
+          $request = DB::select("SELECT *, 0 AS 'selected' FROM humanresource_copy.`dummy` a ");
+          return response()->json($request,200);
         }
 
 

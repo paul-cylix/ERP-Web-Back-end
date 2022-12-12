@@ -30,6 +30,7 @@ class SetupProjectController extends ApiController
         ->where('project_type','!=','MAIN OFFICE')
         ->where('status','=','Active')
         ->where('title_id','=',$companyId)
+        ->where('Main_office_id', $companyId)
         ->orderBy('project_name')
         ->get();
         return $this->showAll($data);
