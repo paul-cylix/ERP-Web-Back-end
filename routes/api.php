@@ -46,6 +46,9 @@ use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Illuminate\Support\Facades\Storage;
 
 
+use App\Http\Controllers\API\Master\Vendor\VendorController;
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -350,7 +353,17 @@ Route::post('changePassword', [ProfileController::class, 'changePassword']);
 
 
 
-
+Route::get('getBusinessTerms', [VendorController::class, 'getBusinessTerms']);
+Route::get('getCurrencies', [VendorController::class, 'getCurrencies']);
+Route::get('getBusinessTaxStatus', [VendorController::class, 'getBusinessTaxStatus']);
+Route::get('getBusinessType', [VendorController::class, 'getBusinessType']);
+Route::get('getBusinessNature', [VendorController::class, 'getBusinessNature']);
+Route::get('getPrefixes', [VendorController::class, 'getPrefixes']);
+Route::get('getCountries', [VendorController::class, 'getCountries']);
+Route::get('getATC', [VendorController::class, 'getATC']);
+Route::get('getRelationship', [VendorController::class, 'getRelationship']);
+Route::get('getRelatedSupplier', [VendorController::class, 'getRelatedSupplier']);
+Route::get('getRelatedCustomer', [VendorController::class, 'getRelatedCustomer']);
 
 
 
