@@ -64,7 +64,7 @@ class CustomController extends ApiController
 
             // nag edit ako sa frm_class to frm_name
             DB::update("UPDATE general.`actual_sign` AS a SET  a.`webapp` = '1', a.`STATUS` = 'Withdrawn', a.`SIGNDATETIME` = NOW(), a.`ApprovedRemarks` = '" . $request->withdrawRemarks . "' 
-        WHERE a.`PROCESSID` = '" . $request->reqId . "' AND a.`FRM_CLASS` = 'REQUESTFORPAYMENT' AND a.`COMPID` = '1' ;");
+        WHERE a.`PROCESSID` = '" . $request->reqId . "' AND a.`FRM_CLASS` = 'REQUESTFORPAYMENT';");
             DB::update("UPDATE accounting.`request_for_payment` a SET a.`STATUS` = 'Withdrawn'  WHERE a.`ID` = '" . $request->reqId . "';");
 
             return response()->json(['message' => 'Request has been Successfully withdrawn'], 200);
