@@ -344,6 +344,14 @@ class OtController extends ApiController
         };
     }
 
+    public function isRmApproval($id, $companyId){
+       $isRmApproval = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`actual_sign` a WHERE a.`FRM_NAME` = 'Overtime Request' AND a.`PROCESSID` = '".$id."' AND a.`COMPID` = '".$companyId."' AND a.`ORDERS` = 2 AND a.`STATUS` = 'In Progress'), FALSE) AS 'isRmApproval'");
+       return response()->json(
+        ['message' => 'Request has been success',
+         'data' => $isRmApproval,
+         'status' => true
+        ], 200);
 
+    }
     
 }

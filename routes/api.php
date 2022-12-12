@@ -237,6 +237,7 @@ Route::post('save-ot', [OtController::class, 'saveOT']);
 Route::get('ot-main/{id}', [OtController::class, 'getOtMain']);
 Route::get('actual-ot-main/{id}', [OtController::class, 'getActualOtMain']);
 Route::post('approve-npu-init', [OtController::class, 'approveOTbyInit']);
+Route::get('get-isRmApproval-ot/{id}/{companyId}', [OtController::class, 'isRmApproval']);
 
 Route::post('save-itf', [ItfController::class, 'saveItf']);
 Route::get('itf-main/{id}', [ItfController::class, 'getItfMain']);
