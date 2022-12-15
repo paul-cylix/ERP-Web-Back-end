@@ -216,21 +216,19 @@ trait ApiResponser
                 $fileNameOnly     = preg_replace('/[^A-Za-z0-9\-]/', '', $fileNameOnly);                                      // Removes special chars.
                 $extension        = $file->getClientOriginalExtension();
                 $randomized       = rand(1000,9999);
-                $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
+                $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4); 
                 $reqRef           = str_replace('-', '_', $request->referenceNumber);
-                $reqRef           = str_replace('/', '_', $request->referenceNumber);
+                $reqRef           = str_replace('/', '_', $reqRef);
                 $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter. $randomized.'.' . $extension;
                 $mimeType         = $file->getMimeType();
-
-
 
                 // $date = date()
                 // $myPath = "C:/Users/Iverson/Desktop/Attachments/".session('LoggedUser_CompanyID')."/RFP/".$rfpCode;
 
-                
                 $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;   // For moving the file
                 $storagePath     = "storage/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;  // For preview
                 $file->storeAs($destinationPath, $newFileName);
+                
                 // $symPath = "public/Attachments/{$request->class}";
                 // $fileDestination = $storagePath . '/' . $completeFileName;
                 // $image = base64_encode(file_get_contents($file));
