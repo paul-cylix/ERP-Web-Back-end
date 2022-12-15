@@ -414,10 +414,11 @@ class CustomController extends ApiController
                 $otData = $request->overtimeData;
                 $otData = json_decode($otData, true);
         
+                // check if the manager pass an id to delete
                 $arrOTId = $request->otId; 
                 $arrOTId = json_decode($arrOTId, true);
         
-        
+                // update the ot data to status removed
                 if (!empty($arrOTId)) {
                     foreach ($arrOTId as $id){
                         DB::table('humanresource.overtime_request')->where('id', $id)->update(['status' => "Removed"]);
@@ -428,9 +429,13 @@ class CustomController extends ApiController
 
                     for($i = 0; $i <count($otData); $i++) {
                         $ot_in = date_create($otData[$i]['ot_in']);   
-                        $ot_out = date_create($otData[$i]['ot_out']);  
-                        $ot_in_actual = date_create($otData[$i]['ot_in_actual']);
-                        $ot_out_actual = date_create($otData[$i]['ot_out_actual']);                   
+                        $ot_out = date_create($otData[$i]['ot_out']);
+
+                        $ot_in_actual = ($otData[$i]['ot_in_actual']) ? date_create($otData[$i]['ot_in_actual']) : null;
+                        $ot_out_actual = ($otData[$i]['ot_out_actual']) ? date_create($otData[$i]['ot_out_actual']) : null;
+                        $ot_totalhrs_actual = ($otData[$i]['ot_totalhrs_actual']) ? $otData[$i]['ot_totalhrs_actual'] : null;
+                        // $ot_in_actual = date_create($otData[$i]['ot_in_actual']);
+                        // $ot_out_actual = date_create($otData[$i]['ot_out_actual']);                   
         
                         DB::table('humanresource.overtime_request')->where('id', $otData[$i]['id'])
                         ->update(
@@ -441,7 +446,7 @@ class CustomController extends ApiController
                                 'purpose' => $otData[$i]['purpose'],
                                 'ot_in_actual' => $ot_in_actual,
                                 'ot_out_actual' => $ot_out_actual,
-                                'ot_totalhrs_actual' => $otData[$i]['ot_totalhrs_actual'],
+                                'ot_totalhrs_actual' => $ot_totalhrs_actual,
                                 'remarks' => $otData[$i]['purpose'],
                                 'cust_id' => $otData[$i]['cust_id'],
                                 'cust_name' => $otData[$i]['cust_name'],

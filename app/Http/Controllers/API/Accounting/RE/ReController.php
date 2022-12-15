@@ -17,14 +17,17 @@ class ReController extends ApiController
 {
     public function saveRE(Request $request)
     {
-        
+        // true
+        // check re if user has draft num return first
         $data = DB::select(" SELECT COUNT(*) AS countDraftNum FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' AND DRAFT_IDEN = 1 ");
+        // return the pk of acc.re  base on above query
         $getDraftNumID = DB::select(" SELECT id FROM accounting.`reimbursement_request` WHERE UID = '".$request->loggedUserId."' AND draft_num != '' AND DRAFT_IDEN = 1 ");
 
+        // idOfAttachmentsToDelete - array of id that needs to be delete
         $idArray = $request->idOfAttachmentsToDelete;
         $idArray = json_decode($idArray, true);
 
-        // remove attachment from the project folder
+        // if idOfAttachmentsToDelete exist / true = buragin sa laravel actual file
         if(count($idArray) >= 1) {
             if(count($getDraftNumID) >= 1) {
                 $getAllAttachments = Attachments::whereIn('id', $idArray)->get(); 
@@ -39,13 +42,21 @@ class ReController extends ApiController
             }
         }
 
+        // populate data from acc.re
         if($data[0]->countDraftNum >= 1) {
+
             // delete old data then insert new draft
             DB::table('accounting.reimbursement_expense_details')->where('REID', $getDraftNumID[0]->id)->delete();
             DB::table('accounting.reimbursement_request_details')->where('REID', $getDraftNumID[0]->id)->delete();
-            DB::table('general.actual_sign')->where('PROCESSID', $getDraftNumID[0]->id)->where('FRM_NAME', $request->form)->where('FRM_CLASS', 'REIMBURSEMENT_REQUEST')->where('COMPID', $request->companyId)->delete();
 
-            // delete selected remove attachment from frontend
+            // delete kasi meron insert na status draft
+            DB::table('general.actual_sign')
+            ->where('PROCESSID', $getDraftNumID[0]->id)
+            ->where('FRM_NAME', $request->form)
+            ->where('FRM_CLASS', 'REIMBURSEMENT_REQUEST')
+            ->where('COMPID', $request->companyId)->delete();
+
+            // delete file data gen.at 
             for ($i=0; $i < count($idArray); $i++) { 
                 DB::table('general.attachments')->where('id', $idArray[$i])->delete();
             }

@@ -310,6 +310,8 @@ Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmen
 Route::get('get-mrf/{req_id}/{companyid}/{frmname}', [ScController::class, 'getMrf']);
 Route::post('mrf-change-status', [ScController::class, 'mrfChangeStatus']);
 
+Route::get('get-isAcnowledgeByMM/{companyid}/{req_id}/{frmname}', [ScController::class, 'isAcnowledgeByMM']);
+
 
 
 
@@ -365,7 +367,13 @@ Route::get('getATC', [VendorController::class, 'getATC']);
 Route::get('getRelationship', [VendorController::class, 'getRelationship']);
 Route::get('getRelatedSupplier', [VendorController::class, 'getRelatedSupplier']);
 Route::get('getRelatedCustomer', [VendorController::class, 'getRelatedCustomer']);
+
+
+
+
+
 Route::get('/get-getRequest', [CustomController::class, 'getRequest']); // get request for purchase request
+
 
 
 

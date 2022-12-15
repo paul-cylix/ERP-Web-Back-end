@@ -893,6 +893,16 @@ class ScController extends ApiController
                 ->get();
 
 
+            $isAcknowledgeByMM = DB::table('general.actual_sign as a')
+                ->where('a.USER_GRP_IND', 'Acknowledge by Material Management')
+                ->where('a.STATUS', 'In Progress')
+                ->where('a.COMPID', $companyid)
+                ->where('a.PROCESSID', $req_id)
+                ->where('a.FRM_NAME', $frmname)
+                ->select('a.ID')
+                ->exists() ? true : false;
+
+
 
 
             return response()->json([
@@ -919,6 +929,7 @@ class ScController extends ApiController
                     'materials_request_class' => $main_class,
                     'materials_request_type'  => $frm_name,
                     'remarks'                 => $remarks,
+                    'isAcknowledgeByMM'       => $isAcknowledgeByMM,
                     'done_approving'          => $done_approving,
                     'requisition_details'     => $requisition_details
                 ],
@@ -943,6 +954,42 @@ class ScController extends ApiController
                 'message' => 'Server error! Please report to administrator!'
             ], 500);
         }
+    }
+
+    public function isAcnowledgeByMM($companyid, $req_id, $frmname) {
+
+    // if (DB::table('general.actual_sign as a')
+    // ->where('a.USER_GRP_IND', 'Acknowledge by Material Management')
+    // ->where('a.STATUS', 'In Progress')
+    // ->where('a.COMPID', $companyid)
+    // ->where('a.PROCESSID', $req_id)
+    // ->where('a.FRM_NAME', $frmname)
+    // ->select('a.ID')
+    // ->exists()
+    // ) 
+    // {
+    //     $isAcknowledgeByMM = true;
+    // } 
+    // else {
+    //     $isAcknowledgeByMM = false;
+    // }
+
+
+    $isAcknowledgeByMM = DB::table('general.actual_sign as a')
+    ->where('a.USER_GRP_IND', 'Acknowledge by Material Management')
+    ->where('a.STATUS', 'In Progress')
+    ->where('a.COMPID', $companyid)
+    ->where('a.PROCESSID', $req_id)
+    ->where('a.FRM_NAME', $frmname)
+    ->select('a.ID')
+    ->exists() ? true : false;
+
+    return response()->json([
+        'status'  => true,
+        'data'   => $isAcknowledgeByMM,
+        'message' => 'Query Success'
+    ], 200);
+
     }
 
     public function mrfChangeStatus(Request $request)
@@ -1007,6 +1054,14 @@ class ScController extends ApiController
 
                     // change to completed
                 } else {
+                    
+                    // acknowledgement of MM true if status in general.actual_sign is in progress
+                    if(filter_var($request->isAcknowledgeByMM, FILTER_VALIDATE_BOOLEAN)){
+                        DB::table('procurement.requisition_main')
+                            ->where('requisition_id',$request->processId)
+                            ->update(['acknowledge', 1]);
+                    }
+
                     DB::table('general.actual_sign')
                         ->where('STATUS', 'In Progress')
                         ->where('PROCESSID', $request->processId)
