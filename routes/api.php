@@ -364,6 +364,12 @@ Route::get('getATC', [VendorController::class, 'getATC']);
 Route::get('getRelationship', [VendorController::class, 'getRelationship']);
 Route::get('getRelatedSupplier', [VendorController::class, 'getRelatedSupplier']);
 Route::get('getRelatedCustomer', [VendorController::class, 'getRelatedCustomer']);
+Route::get('getDraftVendorByUserID/{userid}', [VendorController::class, 'getDraftVendorByUserID']);
+Route::post('saveBusinessListDetail', [VendorController::class, 'saveBusinessListDetail']);
+Route::get('getAddressByBusinessNumber/{draftID}', [VendorController::class, 'getAddressByBusinessNumber']);
+Route::post('deleteAddressByID', [VendorController::class, 'deleteAddressByID']);
+Route::post('updateBusinessListDetail', [VendorController::class, 'updateBusinessListDetail']);
+Route::get('getAddressWorkFromByBusinessNumber/{draftID}', [VendorController::class, 'getAddressWorkFromByBusinessNumber']);
 
 
 
