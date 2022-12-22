@@ -1064,8 +1064,8 @@ class ScController extends ApiController
                     // acknowledgement of MM true if status in general.actual_sign is in progress
                     if(filter_var($request->isAcknowledgeByMM, FILTER_VALIDATE_BOOLEAN)){
                         DB::table('procurement.requisition_main')
-                            ->where('requisition_id',$request->processId)
-                            ->update(['acknowledge', 1]);
+                            ->where('requisition_id', $request->processId)
+                            ->update(['acknowledge' => 1]);
                     }
 
                     DB::table('general.actual_sign')
