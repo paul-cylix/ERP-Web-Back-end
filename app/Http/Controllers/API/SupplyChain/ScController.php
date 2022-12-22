@@ -852,13 +852,18 @@ class ScController extends ApiController
             $actual_status = $response[0]->STATUS;
             $done_approving = ($actual_status === 'In Progress' ? true : false);
 
+            // Get sales order form name
+            $res = DB::table('sales_order.sales_orders')->where('id', $soid)->select('purpose')->limit(1)->get();
+            $frmnme = empty($res[0]->purpose)? null : $res[0]->purpose;
+            
 
             // Get Attachments of link sales order
             $attachmentsSOF = DB::table('general.attachments as a')
             ->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')
             ->where('a.REQID', $soid)
-            ->where('a.formName', $frmname)
+            ->where('a.formName', $frmnme)
             ->get();
+            // log::debug($frmnme);
 
             // Get Attachments of this MRF
             $attachmentsMRF = DB::table('general.attachments as a')
@@ -866,6 +871,7 @@ class ScController extends ApiController
             ->where('a.REQID', $requisition_id)
             ->where('a.formName', $frm_name)
             ->get();
+            
 
             $mrf  = array('Material Request - Project', 'Material Request - Delivery', 'Material Request - Demo', 'Material Request - POC',);
             $arf  = array('Asset Request - Project', 'Asset Request - Delivery', 'Asset Request - Demo', 'Asset Request - POC', 'Asset Request - Internal',);
