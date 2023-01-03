@@ -8,6 +8,7 @@ use App\Models\HumanResource\OT\OtMain;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class OtController extends ApiController
 {
@@ -353,5 +354,99 @@ class OtController extends ApiController
         ], 200);
 
     }
-    
+
+    // TRANSFER overtime_request to 10.0.9.10 (server) from Alibaba Cloud
+    public function cloneCloudHROT(){
+        // GET OT data from Alibaba
+        $response = Http::get('http://portal.cylix.ph/ctiportal/public/api/get-getHROT');
+
+        // CHECK if there is OT data to transfer
+        if ($response['status']) {
+
+        $overtime_request = $response['overtime_request'];
+
+        // INSERT RESPONSE OT DATA to 10.0.9.10 / server
+        DB::beginTransaction();
+        try { 
+        for ($i = 0; $i < count($overtime_request); $i++) {
+            $request_date  = date_create($overtime_request[$i]['request_date']);
+            $overtime_date = date_create($overtime_request[$i]['overtime_date']);
+            $ot_in         = date_create($overtime_request[$i]['ot_in']);
+            $ot_out        = date_create($overtime_request[$i]['ot_out']);
+            $ts            = date_create($overtime_request[$i]['ts']);
+
+            $setOTData[] = [
+                'reference'         => '',
+                'request_date'      => date_format($request_date, 'Y-m-d'),      // meron
+                'overtime_date'     => date_format($overtime_date, 'Y-m-d'),     // meron
+                'ot_in'             => date_format($ot_in, 'Y-m-d H:i:s'),       // meron
+                'ot_out'            => date_format($ot_out, 'Y-m-d H:i:s'),      // meron
+                'ot_totalhrs'       => $overtime_request[$i]['ot_totalhrs'],     // meron ot_hours
+                'employee_id'       => $overtime_request[$i]['employee_id'],     // meron employee_id
+                'employee_name'     => $overtime_request[$i]['employee_name'],   // meron emplyee_name
+                'purpose'           => $overtime_request[$i]['purpose'],         // meron purpose
+                'status'            => 'In Progress',                            // static
+                'UID'               => $overtime_request[$i]['UID'],             // meron user_id
+                'fname'             => '',                                       // for query
+                'lname'             => '',                                       // for query
+                'department'        => '',                                       // for query
+                'reporting_manager' => '',                                       // for query
+                'position'          => '',                                       // for query
+                'ts'                => date_format($ts, 'Y-m-d H:i:s'),
+                'GUID'              => '',                                       // generate
+                'main_id'           => 0,                                        // wala pa ito yung primary key nila
+                'remarks'           => $overtime_request[$i]['purpose'],         // meron purpose
+                'cust_id'           => $overtime_request[$i]['cust_id'],         // meron project_id
+                'cust_name'         => $overtime_request[$i]['cust_name'],       // meron project_name
+                'TITLEID'           => $overtime_request[$i]['TITLEID'],         // meron companyId
+                'PRJID'             => $overtime_request[$i]['PRJID']            // wala pa
+            ];
+        }
+
+        
+            $insert_response = DB::table('humanresource.overtime_request_temp')->insert($setOTData);
+            DB::commit();
+            log::debug($insert_response);
+        } catch (\Exception $e){
+            DB:: rollback();
+            $insert_response = 0;
+            log:: debug($insert_response);
+        }
+
+        // AFTER you INSERT OT Data from alibaba server UPDATE OT cloud data to transferred = 1
+        if ($insert_response) {
+            $resp = Http::get('http://portal.cylix.ph/ctiportal/public/api/get-transferredHROT');
+        }
+
+        // RETURN a response if success or failed
+        if ($resp['status']) {
+            return response()->json([
+                'status'  => true,
+                'message' => 'Transfer Successfully.'
+            ], 200);
+        } else {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Transfer Failed.'
+            ], 200);
+        }
+
+        // RESPONSE if nothing to transfer
+        } else {
+            return response()->json([
+                'status'  => true,
+                'message' => 'No overtime data to transfer.'
+            ], 200);
+        }
+    }
+
+    // TRANSFER Data from overtime_request_temp to overtime_request
+    public function createOTfromOTTemp() {
+        $result = DB::table('humanresource.overtime_request_temp')->where('transferred', 0)->get();
+        $result = count($result) ? $result : null;
+
+        $guid = $this->getGuid();
+        // $reqRef = $this->getOtRef($request->companyId); // problem paano kapag iba ng company
+    }
+
 }

@@ -57,20 +57,27 @@ trait ApiResponser
     }
     
     protected function getRfpRef(){
-        $now = Carbon::now();
-        $data = RfpMain::whereYear('TS',$now->year)->get('REQREF');
-        foreach($data as $entries){
-            $entries->REQREF = substr($entries->REQREF, 9);
-        }
-        $maxData = $data->max();
-        $rfpRef = $maxData['REQREF'];
-        $rfpRef = $rfpRef+1;
+        // $now = Carbon::now();
+        // $data = RfpMain::whereYear('TS',$now->year)->get('REQREF');
+        // foreach($data as $entries){
+        //     $entries->REQREF = substr($entries->REQREF, 9);
+        // }
+        // $maxData = $data->max();
+        // $rfpRef = $maxData['REQREF'];
+        // $rfpRef = $rfpRef+1;
 
-        $length = 4;
-        $string = $rfpRef;
-        $rfpRef = str_pad($string,$length,"0", STR_PAD_LEFT);
+        // $length = 4;
+        // $string = $rfpRef;
+        // $rfpRef = str_pad($string,$length,"0", STR_PAD_LEFT);
         
-        return 'RFP'.'-'.$now->year.'-'.$rfpRef;
+        // return 'RFP'.'-'.$now->year.'-'.$rfpRef;
+
+        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`request_for_payment` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '".session('LoggedUser_CompanyID')."'),0) + 1 'REF'");
+        $getref = $dataREQREF[0]->REF;
+        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
+        $ref = "RFP-" . date('Y') . "-" . $ref;
+
+        return $ref;
     }
 
     protected function getReRef($companyId){

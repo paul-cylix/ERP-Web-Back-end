@@ -11,6 +11,7 @@ use App\Models\Accounting\RFP\RfpDetail;
 use Illuminate\Support\Carbon;
 use App\Models\General\Attachments;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RfpController extends ApiController
 {
@@ -238,6 +239,7 @@ class RfpController extends ApiController
 
     }catch(\Exception $e){
         DB::rollback();
+        Log::debug($e);
     
         // throw error response
         return response()->json($e, 500);
