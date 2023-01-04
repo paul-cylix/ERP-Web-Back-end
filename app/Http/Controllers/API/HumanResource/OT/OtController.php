@@ -446,7 +446,7 @@ class OtController extends ApiController
         $result = count($result) ? $result : null;
 
         $guid = $this->getGuid();
-        // $reqRef = $this->getOtRef($request->companyId); // problem paano kapag iba ng company
+        $reqRef = $this->getOtRef(1); // problem paano kapag iba ng company // for the meantime lagi muna naka set sa 1 ito
     }
 
 }

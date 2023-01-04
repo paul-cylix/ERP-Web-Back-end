@@ -385,7 +385,7 @@ Route::get('/get-getRequest', [CustomController::class, 'getRequest']); // get r
 
 
 
-Route::get('/get-getRfpRef', [CustomController::class, 'getRfpRef']); // get request for purchase request
+
 
 
 
