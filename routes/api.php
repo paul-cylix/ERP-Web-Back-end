@@ -383,6 +383,9 @@ Route::get('getAddressWorkFromByBusinessNumber/{draftID}', [VendorController::cl
 
 Route::get('/get-getRequest', [CustomController::class, 'getRequest']); // get request for purchase request
 
+Route::get('/get-getLeaveBalance/{id}', [CustomController::class, 'getLeaveBalance']); // get request for purchase request
+
+
 
 
 
