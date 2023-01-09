@@ -1712,6 +1712,14 @@ class CustomController extends ApiController
           return response()->json($request,200);
         }
 
+        public function getREF2(){
+            $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`request_for_payment` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '".session('LoggedUser_CompanyID')."'),0) + 1 'REF'");
+            $getref = $dataREQREF[0]->REF;
+            $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
+            $ref = "RFP-" . date('Y') . "-" . $ref;
+            return $ref;
+        }
+
 
         
 }

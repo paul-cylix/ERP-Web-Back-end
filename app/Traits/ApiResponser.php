@@ -514,13 +514,13 @@ trait ApiResponser
             return ['Sales Order - Delivery', 6];
         }
         if($sof === 'PRJ'){
-            return ['Sales Order - Project', 8];
+            return ['Sales Order - Project', 7];
         }
         if($sof === 'DMO'){
-            return ['Sales Order - Demo', 5];
+            return ['Sales Order - Demo', 4];
         }
         if($sof === 'POC'){
-            return ['Sales Order - POC', 5];
+            return ['Sales Order - POC', 4];
         }
     }
 }

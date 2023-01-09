@@ -351,7 +351,7 @@ class SofController extends ApiController
                 }
         
                 if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Account Manager';
+                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head'; // Approval of Account Manager (old)
                 }
         
                 if ($array[2]['ORDERS'] == 2){
@@ -359,7 +359,7 @@ class SofController extends ApiController
                 }
         
                 if ($array[3]['ORDERS'] == 3){
-                    $array[3]['USER_GRP_IND'] = 'MM Acknowledgement';
+                    $array[3]['USER_GRP_IND'] = 'Approval of Project Head'; // MM Acknowledgement (old)
                 }
         
                 if ($array[4]['ORDERS'] == 4){
@@ -376,7 +376,7 @@ class SofController extends ApiController
                 }
         
                 if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Account Manager';
+                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head'; // Approval of Account Manager (old)
                 }
         
                 if ($array[2]['ORDERS'] == 2){
@@ -392,16 +392,13 @@ class SofController extends ApiController
                 }
         
                 if ($array[5]['ORDERS'] == 5){
-                    $array[5]['USER_GRP_IND'] = 'MM Acknowledgement';
+                    $array[5]['USER_GRP_IND'] = 'Initiator';
                 }
         
                 if ($array[6]['ORDERS'] == 6){
-                    $array[6]['USER_GRP_IND'] = 'Initiator';
+                    $array[6]['USER_GRP_IND'] = 'SI Confirmation';
                 }
         
-                if ($array[7]['ORDERS'] == 7){
-                    $array[7]['USER_GRP_IND'] = 'SI Confirmation';
-                }
             } else if ($request->softype === 'DMO'){
                 if ($array[0]['ORDERS'] == 0){
                     $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
@@ -409,20 +406,17 @@ class SofController extends ApiController
                 }
         
                 if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Account Manager';
+                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head';
                 }
         
                 if ($array[2]['ORDERS'] == 2){
                     $array[2]['USER_GRP_IND'] = 'Accounting Acknowledgement';
                 }
-        
+
                 if ($array[3]['ORDERS'] == 3){
-                    $array[3]['USER_GRP_IND'] = 'MM Acknowledgement';
+                    $array[3]['USER_GRP_IND'] = 'Initiator';
                 }
         
-                if ($array[4]['ORDERS'] == 4){
-                    $array[4]['USER_GRP_IND'] = 'Initiator';
-                }
 
             } else if ($request->softype === 'POC'){
                 if ($array[0]['ORDERS'] == 0){
@@ -431,20 +425,17 @@ class SofController extends ApiController
                 }
         
                 if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Project Head';
+                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head';
                 }
         
                 if ($array[2]['ORDERS'] == 2){
                     $array[2]['USER_GRP_IND'] = 'Accounting Acknowledgement';
                 }
-        
+
                 if ($array[3]['ORDERS'] == 3){
-                    $array[3]['USER_GRP_IND'] = 'MM Acknowledgement';
+                    $array[3]['USER_GRP_IND'] = 'Initiator';
                 }
         
-                if ($array[4]['ORDERS'] == 4){
-                    $array[4]['USER_GRP_IND'] = 'Initiator';
-                }
             }
 
             $request->request->add(['processId' => $salesOrders_ID]);
