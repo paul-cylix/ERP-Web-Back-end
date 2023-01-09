@@ -56,7 +56,7 @@ trait ApiResponser
         return $ref;
     }
     
-    protected function getRfpRef(){
+    protected function getRfpRef($companyId){
         // $now = Carbon::now();
         // $data = RfpMain::whereYear('TS',$now->year)->get('REQREF');
         // foreach($data as $entries){
@@ -72,7 +72,7 @@ trait ApiResponser
         
         // return 'RFP'.'-'.$now->year.'-'.$rfpRef;
 
-        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`request_for_payment` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '".session('LoggedUser_CompanyID')."'),0) + 1 'REF'");
+        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`request_for_payment` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'REF'");
         $getref = $dataREQREF[0]->REF;
         $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
         $ref = "RFP-" . date('Y') . "-" . $ref;

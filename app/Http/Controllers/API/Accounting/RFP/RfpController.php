@@ -57,7 +57,7 @@ class RfpController extends ApiController
         try{  
 
         $guid   = $this->getGuid();
-        $reqRef = $this->getRfpRef();
+        $reqRef = $this->getRfpRef($request->companyId);
 
         $rfpMain                    = new RfpMain();
         $rfpMain->DRAFT_IDEN        = 0;
