@@ -77,7 +77,7 @@ class RfpController extends ApiController
         $rfpMain->GUID              = $guid;
         $rfpMain->COMMENTS          = null;
         $rfpMain->ISRELEASED        = '0';
-        $rfpMain->TITLEID           = '1';
+        $rfpMain->TITLEID           = $request->companyId;
         $rfpMain->webapp            = '1';
         $rfpDetail                  = new RfpDetail();
         $rfpDetail->PROJECTID       = $request->projectId;
