@@ -1712,6 +1712,11 @@ class CustomController extends ApiController
           return response()->json($request,200);
         }
 
+        public function getLeaveBalance($id){
+            $result = DB::select("call humanresource.Display_LeaveCredits_Per_Employee($id)");
+            return response()->json(['data'=>$result],200);
+        }
+
 
         
 }
