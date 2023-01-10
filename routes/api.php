@@ -386,6 +386,7 @@ Route::get('/get-getRequest', [CustomController::class, 'getRequest']); // get r
 Route::get('/get-getLeaveBalance/{id}', [CustomController::class, 'getLeaveBalance']); // get request for purchase request
 
 
+Route::get('/get-getREF2', [CustomController::class, 'getREF2']); // get request for purchase request
 
 
 
