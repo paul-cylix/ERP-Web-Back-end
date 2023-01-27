@@ -895,7 +895,7 @@ class ScController extends ApiController
                 ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
                 ->where('c.requisition_id', $req_id)
 
-                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name')
+                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id')
                 ->get();
 
 
@@ -1004,6 +1004,7 @@ class ScController extends ApiController
         log::debug($request);
         DB::beginTransaction();
         try {
+            log::debug('try');
 
             $status = null;
             if ($request->frmstatus === 'withdrawn') {
@@ -1021,7 +1022,7 @@ class ScController extends ApiController
 
             // Change Status of withdrawn, Rejected and clarify
             if (in_array($request->frmstatus, $request_status, TRUE)) {
-
+                log::debug('if');
                 DB::table('procurement.requisition_main')
                     ->where('requisition_id', $request->processId)
                     ->update(['status' => $status]);
@@ -1039,9 +1040,28 @@ class ScController extends ApiController
 
             // Change status of approve
             } else {
+                log::debug('else');
 
                 // Change status to done approving
                 if (filter_var($request->done_approving, FILTER_VALIDATE_BOOLEAN)) {
+                    // Update delivery date and notes of requested item when in - For Input of Material Management
+                    if(filter_var($request->input, FILTER_VALIDATE_BOOLEAN)){
+                        log::debug('else if- Done Approving');
+
+                        $requested_items = json_decode($request->requested_items, true);
+                        foreach($requested_items as $item){
+
+                            if(empty($item['date_delivered']) || is_null($item['date_delivered'])){
+                                $date_delivered = null;
+                            } else {
+                                $date_delivered = date_create($item['date_delivered']);
+                                $date_delivered = date_format($date_delivered, 'Y-m-d');
+                            }
+                            DB:: table('procurement.requisition_details')
+                                ->where('req_dtls_id', $item['req_dtls_id'])
+                                ->update(['date_delivered' => $date_delivered,'notes' => $item['notes']]);
+                        }
+                    }
 
                     DB::table('procurement.requisition_main')
                         ->where('requisition_id', $request->processId)
@@ -1060,12 +1080,31 @@ class ScController extends ApiController
 
                     // change to completed
                 } else {
-                    
+                    log::debug('else else- Done Approving');
+
+
                     // acknowledgement of MM true if status in general.actual_sign is in progress
                     if(filter_var($request->isAcknowledgeByMM, FILTER_VALIDATE_BOOLEAN)){
                         DB::table('procurement.requisition_main')
                             ->where('requisition_id', $request->processId)
                             ->update(['acknowledge' => 1]);
+                    }
+
+                    // Update delivery date and notes of requested item when in - For Input of Material Management
+                    if(filter_var($request->input, FILTER_VALIDATE_BOOLEAN)){
+                        $requested_items = json_decode($request->requested_items, true);
+                        foreach($requested_items as $item){
+
+                            if(empty($item['date_delivered']) || is_null($item['date_delivered'])){
+                                $date_delivered = null;
+                            } else {
+                                $date_delivered = date_create($item['date_delivered']);
+                                $date_delivered = date_format($date_delivered, 'Y-m-d');
+                            }
+                            DB:: table('procurement.requisition_details')
+                                ->where('req_dtls_id', $item['req_dtls_id'])
+                                ->update(['date_delivered' => $date_delivered,'notes' => $item['notes']]);
+                        }
                     }
 
                     DB::table('general.actual_sign')
