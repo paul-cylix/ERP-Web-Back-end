@@ -355,7 +355,7 @@ Route::get('show-user', [RegisterController::class, 'showUsers']);
 Route::post('changePassword', [ProfileController::class, 'changePassword']);
 
 
-
+//Master Vendor/Supplier
 Route::get('getBusinessTerms', [VendorController::class, 'getBusinessTerms']);
 Route::get('getCurrencies', [VendorController::class, 'getCurrencies']);
 Route::get('getBusinessTaxStatus', [VendorController::class, 'getBusinessTaxStatus']);
@@ -373,7 +373,12 @@ Route::get('getAddressByBusinessNumber/{draftID}', [VendorController::class, 'ge
 Route::post('deleteAddressByID', [VendorController::class, 'deleteAddressByID']);
 Route::post('updateBusinessListDetail', [VendorController::class, 'updateBusinessListDetail']);
 Route::get('getAddressWorkFromByBusinessNumber/{draftID}', [VendorController::class, 'getAddressWorkFromByBusinessNumber']);
-
+Route::post('saveBusinessContacts', [VendorController::class, 'saveBusinessContacts']);
+Route::get('getContactsByBusinessNumber/{draftID}', [VendorController::class, 'getContactsByBusinessNumber']);
+Route::post('deleteContactByID', [VendorController::class, 'deleteContactByID']);
+Route::post('updateContact', [VendorController::class, 'updateContact']);
+Route::post('saveBusinessList', [VendorController::class, 'saveBusinessList']);
+Route::post('saveVendorAttachment', [VendorController::class, 'saveVendorAttachment']);
 
 
 

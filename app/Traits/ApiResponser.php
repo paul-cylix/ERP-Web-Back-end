@@ -304,6 +304,41 @@ trait ApiResponser
         }
     }
 
+    // insert attachment in master vendor
+    protected function insertVendorAttachments($request){
+        if ($request->hasFile('file')) {
+            foreach ($request->file as $file) {
+                $completeFileName = $file->getClientOriginalName();
+                $fileNameOnly     = pathinfo($completeFileName, PATHINFO_FILENAME);
+                $fileNameOnly     = preg_replace('/[^A-Za-z0-9\-]/', '', $fileNameOnly);                                      // Removes special chars.
+                $extension        = $file->getClientOriginalExtension();
+                $randomized       = rand(1000,9999);
+                $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4); 
+                $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter. $randomized.'.' . $extension;
+                $mimeType         = $file->getMimeType();
+
+                $destinationPath = "public/Attachments/{$request->companyId}/vendor/{$request->draftID}/{$request->category}";   // For moving the file
+                $storagePath     = "storage/Attachments/{$request->companyId}/vendor/{$request->draftID}/{$request->category}";  // For preview
+                $file->storeAs($destinationPath, $newFileName);
+                
+                $attachmentsData = [
+                    'INITID'           => $request->loggedUserId,
+                    'REQID'            => $request->draftID, //business number from business list
+                    'filename'         => $newFileName,
+                    'filepath'         => $storagePath,
+                    'fileExtension'    => $extension,
+                    'originalFilename' => $completeFileName,
+                    'newFilename'      => $newFileName,
+                    'fileDestination'  => $destinationPath,
+                    'mimeType'         => $mimeType,
+                    'formName'         => $request->formName,
+                    'created_at'       => date('Y-m-d H:i:s')
+                ];
+                Attachments:: insert($attachmentsData);
+            }
+        }
+    }
+
     protected function deleteItfDetails($request){
         ItfDetail::where('main_id', $request->processId)->delete();
     }
