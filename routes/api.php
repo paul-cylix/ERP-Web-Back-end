@@ -251,6 +251,12 @@ Route::get('get-isRmApproval-ot/{id}/{companyId}', [OtController::class, 'isRmAp
 Route::get('cloneCloudHROT', [OtController::class, 'cloneCloudHROT']); // copy HROT
 Route::get('createOTfromOTTemp', [OtController::class, 'createOTfromOTTemp']); // copy HROT
 
+
+Route::post('saveNewOTDrafts', [OtController::class, 'saveNewOTDrafts']); // save new ot draft
+Route::post('saveOTDrafts', [OtController::class, 'saveOTDrafts']); // append new ot drafts
+Route::post('saveOTF', [OtController::class, 'saveOTF']); // append new ot drafts
+
+
 Route::post('save-itf', [ItfController::class, 'saveItf']);
 Route::get('itf-main/{id}', [ItfController::class, 'getItfMain']);
 Route::get('itf-details/{id}', [ItfController::class, 'getItfDetails']);

@@ -116,6 +116,16 @@ trait ApiResponser
         return $ref;
     }
 
+    protected function getDraftOtRef($companyId){
+        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`draft_reference`,11)) FROM humanresource.`overtime_request` a WHERE YEAR(ts) = YEAR(NOW()) AND a.`TITLEID` = '".$companyId."'), FALSE) +1 AS 'ref'");
+        $ref = $ref[0]->ref;
+        $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
+        $ref = "OTDR-" . date('Y') . "-" . $ref;
+
+        return $ref;
+    }
+
+
     protected function getItfRef($companyId){
         $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(reference ,10)) FROM humanresource.`itinerary_main` WHERE YEAR(request_date)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'ITF'");
         $getref = $dataREQREF[0]->ITF;

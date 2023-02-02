@@ -9,6 +9,7 @@ use DateTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use App\Models\General\ActualSign;
 
 class OtController extends ApiController
 {
@@ -249,9 +250,8 @@ class OtController extends ApiController
 
     public function getOtMain($id){
         // $otData = OtMain::where('main_id',$id)->get();
-
-        $otData = DB::select("SELECT *,(SELECT b.`project_name` FROM general.`setup_project` b WHERE b.`project_id` = a.`PRJID` ) AS 'PRJNAME' FROM humanresource.`overtime_request` a WHERE a.`main_id` = '".$id."' AND a.`status` <> 'Removed'");
-
+        // $otData = DB::select("SELECT *,(SELECT b.`project_name` FROM general.`setup_project` b WHERE b.`project_id` = a.`PRJID` ) AS 'PRJNAME' FROM humanresource.`overtime_request` a WHERE a.`main_id` = '".$id."' AND a.`status` <> 'Removed'");
+        $otData = DB::select("SELECT *,(SELECT b.`project_name` FROM general.`setup_project` b WHERE b.`project_id` = a.`PRJID` ) AS 'PRJNAME', (SELECT c.`id` FROM general.`users` c WHERE c.`UserFull_name` = a.`reporting_manager` LIMIT 1) AS 'IDOFRM' FROM humanresource.`overtime_request` a WHERE a.`main_id` = '".$id."' AND a.`status` <> 'Removed'");
         return response()->json($otData, 200);
     }
 
@@ -447,6 +447,293 @@ class OtController extends ApiController
 
         $guid = $this->getGuid();
         $reqRef = $this->getOtRef(1); // problem paano kapag iba ng company // for the meantime lagi muna naka set sa 1 ito
+    }
+
+    public function saveNewOTDrafts(Request $request){
+
+        DB::beginTransaction();
+        try {
+
+        // log::debug($request->);
+        $draftReference = $this->getDraftOtRef($request->companyId);
+        $guid = $this->getGuid();
+
+        $otData = $request->overtimeData;
+        $otData = json_decode($otData, true);
+
+        $mainID = DB::select("SELECT IFNULL(MAX(main_id),0) + 1 AS main FROM humanresource.`overtime_request`");
+
+        // insert to hr.ot main table
+        if(count($otData)){
+        for ($i = 0; $i < count($otData); $i++) {
+
+            $ot_date = date_create($otData[$i]['overtime_date']);
+            $ot_in   = date_create($otData[$i]['ot_in']);
+            $ot_out  = date_create($otData[$i]['ot_out']);
+
+            $setOTData[] = [
+                'draft_iden'        => 1,
+                'draft_reference'   => $draftReference,
+                'request_date'      => now(),
+                'overtime_date'     => date_format($ot_date, 'Y-m-d'),
+                'ot_in'             => date_format($ot_in, 'Y-m-d H:i:s'),
+                'ot_out'            => date_format($ot_out, 'Y-m-d H:i:s'),
+                'ot_totalhrs'       => $otData[$i]['ot_totalhrs'],
+                'employee_id'       => $otData[$i]['employee_id'],
+                'employee_name'     => $otData[$i]['employee_name'],
+                'purpose'           => $otData[$i]['purpose'],
+                'status'            => 'Draft',
+                'UID'               => $request->loggedUserId,
+                'fname'             => $request->loggedUserFirstName,
+                'lname'             => $request->loggedUserLastName,
+                'department'        => $request->loggedUserDepartment,
+                'reporting_manager' => $request->reportingManagerName,
+                'position'          => $request->loggedUserPosition,
+                'ts'                => now(),
+                'GUID'              => $guid,
+                'main_id'           => $mainID[0]->main,
+                'remarks'           => $otData[$i]['purpose'],
+                'cust_id'           => $otData[$i]['cust_id'],
+                'cust_name'         => $otData[$i]['cust_name'],
+                'TITLEID'           => $request->companyId,
+                'PRJID'             => $otData[$i]['PRJID'],
+                'webapp'            => 1
+            ];
+        }
+        DB::table('humanresource.overtime_request')->insert($setOTData);
+        }
+
+
+        $actualSign                    = new ActualSign;
+        $actualSign->PROCESSID         = $mainID[0]->main;
+        $actualSign->USER_GRP_IND      = 'Acknowledgement of Reporting Manager';
+        $actualSign->FRM_NAME          = 'Overtime Request';
+        $actualSign->FRM_CLASS         = 'frmOvertimeRequest';
+        $actualSign->REMARKS           = '';
+        $actualSign->STATUS            = 'Draft';
+        $actualSign->TS                = now();
+        $actualSign->DUEDATE           = now();
+        $actualSign->ORDERS            = 0;
+        $actualSign->REFERENCE         = $draftReference;
+        $actualSign->PODATE            = now();
+        $actualSign->DATE              = now();
+        $actualSign->INITID            = $request->loggedUserId;
+        $actualSign->FNAME             = $request->loggedUserFirstName;
+        $actualSign->LNAME             = $request->loggedUserLastName;
+        $actualSign->DEPARTMENT        = $request->loggedUserDepartment;
+        $actualSign->RM_ID             = $request->reportingManagerId;
+        $actualSign->REPORTING_MANAGER = $request->reportingManagerName;
+        $actualSign->PROJECTID         = '0';
+        $actualSign->PROJECT           = $request->loggedUserDepartment;
+        $actualSign->COMPID            = $request->companyId;
+        $actualSign->COMPANY           = $request->companyName;
+        $actualSign->TYPE              = $request->form;
+        $actualSign->CLIENTID          = '0';
+        $actualSign->CLIENTNAME        = $request->companyName;
+        $actualSign->Max_approverCount = '4';
+        $actualSign->DoneApproving     = '0';
+        $actualSign->Payee             = 'N/A';
+        $actualSign->Amount            = 0;
+        $actualSign->save();
+
+        DB::commit();
+        return response()->json(['message' => 'Draft saved successfully!'], 200);
+    
+        } catch (\Exception $e) {
+            DB::rollback();
+            // throw error response
+            return response()->json($e, 500);
+        }
+    }
+
+    public function saveOTDrafts(Request $request){
+        DB::beginTransaction();
+        try {
+
+        DB::table('humanresource.overtime_request')
+            ->where('main_id',$request->processId)
+            ->where('status', 'Draft')
+            ->where('TITLEID', $request->companyId)
+            ->delete();
+
+        $otData = $request->overtimeData;
+        $otData = json_decode($otData, true);
+
+
+        // insert to hr.ot main table
+        if(count($otData)){
+        for ($i = 0; $i < count($otData); $i++) {
+
+            $ot_date = date_create($otData[$i]['overtime_date']);
+            $ot_in   = date_create($otData[$i]['ot_in']);
+            $ot_out  = date_create($otData[$i]['ot_out']);
+
+            $setOTData[] = [
+                'draft_iden'        => 1,
+                'draft_reference'   => $request->referenceNumber,
+                'request_date'      => now(),
+                'overtime_date'     => date_format($ot_date, 'Y-m-d'),
+                'ot_in'             => date_format($ot_in, 'Y-m-d H:i:s'),
+                'ot_out'            => date_format($ot_out, 'Y-m-d H:i:s'),
+                'ot_totalhrs'       => $otData[$i]['ot_totalhrs'],
+                'employee_id'       => $otData[$i]['employee_id'],
+                'employee_name'     => $otData[$i]['employee_name'],
+                'purpose'           => $otData[$i]['purpose'],
+                'status'            => 'Draft',
+                'UID'               => $request->loggedUserId,
+                'fname'             => $request->loggedUserFirstName,
+                'lname'             => $request->loggedUserLastName,
+                'department'        => $request->loggedUserDepartment,
+                'reporting_manager' => $request->reportingManagerName,
+                'position'          => $request->loggedUserPosition,
+                'ts'                => now(),
+                'GUID'              => $request->guid,
+                'main_id'           => $request->processId,
+                'remarks'           => $otData[$i]['purpose'],
+                'cust_id'           => $otData[$i]['cust_id'],
+                'cust_name'         => $otData[$i]['cust_name'],
+                'TITLEID'           => $request->companyId,
+                'PRJID'             => $otData[$i]['PRJID'],
+                'webapp'            => 1
+            ];
+        }
+        DB::table('humanresource.overtime_request')->insert($setOTData);
+        }
+
+        ActualSign::where('PROCESSID', $request->processId)
+            ->where('COMPID', $request->companyId)
+            ->where('FRM_NAME', 'Overtime Request')
+            ->update(['RM_ID' => $request->reportingManagerId,'REPORTING_MANAGER' => $request->reportingManagerName]);
+
+        DB::commit();
+        return response()->json(['message' => 'Draft saved successfully!'], 200);
+    
+        } catch (\Exception $e) {
+            DB::rollback();
+            // throw error response
+            return response()->json($e, 500);
+        }
+    }
+
+    public function saveOTF(Request $request) {
+        DB::beginTransaction();
+        try {
+            $reqRef = $this->getOtRef($request->companyId);
+            $otData = $request->overtimeData;
+            $otData = json_decode($otData, true);
+
+            DB:: table('humanresource.overtime_request')
+            ->where('main_id',$request->processId)
+            ->where('status', 'Draft')
+            ->where('TITLEID', $request->companyId)
+            ->delete();
+
+            if(count($otData)){
+                // insert to hr.ot main table
+                for ($i = 0; $i < count($otData); $i++) {
+
+                    $ot_date = date_create($otData[$i]['overtime_date']);
+                    $ot_in   = date_create($otData[$i]['ot_in']);
+                    $ot_out  = date_create($otData[$i]['ot_out']);
+
+                    $setOTData[] = [
+                        'reference'         => $reqRef,
+                        'draft_reference'   => $request->referenceNumber,
+                        'request_date'      => now(),
+                        'overtime_date'     => date_format($ot_date, 'Y-m-d'),
+                        'ot_in'             => date_format($ot_in, 'Y-m-d H:i:s'),
+                        'ot_out'            => date_format($ot_out, 'Y-m-d H:i:s'),
+                        'ot_totalhrs'       => $otData[$i]['ot_totalhrs'],
+                        'employee_id'       => $otData[$i]['employee_id'],
+                        'employee_name'     => $otData[$i]['employee_name'],
+                        'purpose'           => $otData[$i]['purpose'],
+                        'status'            => 'In Progress',
+                        'UID'               => $request->loggedUserId,
+                        'fname'             => $request->loggedUserFirstName,
+                        'lname'             => $request->loggedUserLastName,
+                        'department'        => $request->loggedUserDepartment,
+                        'reporting_manager' => $request->reportingManagerName,
+                        'position'          => $request->loggedUserPosition,
+                        'ts'                => now(),
+                        'GUID'              => $request->guid,
+                        'main_id'           => $request->processId,
+                        'remarks'           => $otData[$i]['purpose'],
+                        'cust_id'           => $otData[$i]['cust_id'],
+                        'cust_name'         => $otData[$i]['cust_name'],
+                        'TITLEID'           => $request->companyId,
+                        'PRJID'             => $otData[$i]['PRJID']
+                    ];
+                }
+
+                DB::table('humanresource.overtime_request')->insert($setOTData);
+            }
+
+            ActualSign::where('PROCESSID', $request->processId)
+                ->where('FRM_NAME', 'Overtime Request')
+                ->where('COMPID', $request->companyId)
+                ->where('STATUS', 'Draft')
+                ->delete();
+
+                    //Insert general.actual_sign
+        for ($x = 0; $x < 4; $x++) {
+            $array[] = array(
+                'PROCESSID'         => $request->processId,
+                'USER_GRP_IND'      => '0',
+                'FRM_NAME'          => $request->form,
+                'FRM_CLASS'         => 'frmOvertimeRequest',             //Hold
+                'REMARKS'           => '',
+                'STATUS'            => 'Not Started',
+                'DUEDATE'           => now(),
+                'ORDERS'            => $x,
+                'REFERENCE'         => $reqRef,
+                'PODATE'            => now(),
+                'DATE'              => now(),
+                'INITID'            => $request->loggedUserId,
+                'FNAME'             => $request->loggedUserFirstName,
+                'LNAME'             => $request->loggedUserLastName,
+                'DEPARTMENT'        => $request->loggedUserDepartment,
+                'RM_ID'             => $request->reportingManagerId,
+                'REPORTING_MANAGER' => $request->reportingManagerName,
+                'PROJECTID'         => '0',
+                'PROJECT'           => $request->loggedUserDepartment,
+                'COMPID'            => $request->companyId,
+                'COMPANY'           => $request->companyName,
+                'TYPE'              => $request->form,
+                'CLIENTID'          => '0',
+                'CLIENTNAME'        => $request->companyName,
+                'Max_approverCount' => '4',
+                'DoneApproving'     => '0',
+                'Payee'             => 'N/A',
+                'Amount'            => 0,
+            );
+        }
+
+        if ($array[0]['ORDERS'] == 0) {
+            $array[0]['USER_GRP_IND'] = 'Acknowledgement of Reporting Manager';
+            $array[0]['STATUS']       = 'In Progress';
+        }
+
+        if ($array[1]['ORDERS'] == 1) {
+            $array[1]['USER_GRP_IND'] = 'Input of Actual Overtime (Initiator)';
+        }
+
+        if ($array[2]['ORDERS'] == 2) {
+            $array[2]['USER_GRP_IND'] = 'Approval of Reporting Manager';
+        }
+
+        if ($array[3]['ORDERS'] == 3) {
+            $array[3]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
+        }
+
+        DB:: table('general.actual_sign')->insert($array);
+
+            DB:: commit();
+            return response()->json(['message' => 'Your Overtime Request was successfully submitted.'], 200);
+        } catch (\Exception $e) {
+            DB:: rollback();
+            // throw error response
+            return response()->json($e, 500);
+        }
     }
 
 }

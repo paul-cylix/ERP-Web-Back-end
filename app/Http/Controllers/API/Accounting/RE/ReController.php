@@ -596,7 +596,7 @@ class ReController extends ApiController
                 }
 
                 DB:: commit();
-                return response()->json(['message' => 'Your data has been draft'], 200);
+                return response()->json(['message' => 'Draft saved successfully!'], 200);
 
         }
         catch(\Exception $e)
