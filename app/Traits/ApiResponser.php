@@ -13,50 +13,55 @@ use App\Models\General\Attachments;
 use App\Models\HumanResource\ITF\ItfDetail;
 use App\Models\HumanResource\LAF\LafMain;
 use Illuminate\Support\Facades\Log;
+use App\Models\General\ActualSign;
+
 
 trait ApiResponser
 {
-    private function successResponse($data, $code){
+    private function successResponse($data, $code)
+    {
         return response()->json($data, $code);
     }
 
-    protected function errorResponse($message, $code){
+    protected function errorResponse($message, $code)
+    {
         return response()->json(['error' => $message, 'code' => $code], $code);
     }
 
-    protected function getGuid(){
-        mt_srand((double)microtime()*10000);
+    protected function getGuid()
+    {
+        mt_srand((float)microtime() * 10000);
         $charid = strtoupper(md5(uniqid(rand(), true)));
         $hyphen = chr(45);
         $GUID = '';
         $GUID = chr(123)
-            .substr($charid, 0, 8).$hyphen
-            .substr($charid, 8, 4).$hyphen
-            .substr($charid,12, 4).$hyphen
-            .substr($charid,16, 4).$hyphen
-            .substr($charid,20,12)
-            .chr(125);
+            . substr($charid, 0, 8) . $hyphen
+            . substr($charid, 8, 4) . $hyphen
+            . substr($charid, 12, 4) . $hyphen
+            . substr($charid, 16, 4) . $hyphen
+            . substr($charid, 20, 12)
+            . chr(125);
         $GUID = trim($GUID, '{');
         $GUID = trim($GUID, '}');
         return $GUID;
-
     }
 
-    protected function getMainRef($type){
-        if($type == "SURF") {
-            $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`requisition_no`,11)) FROM procurement.`requisition_main` a WHERE YEAR(tstamp) = YEAR(NOW()) AND a.`trans_type` = '".$type."' ), FALSE) +1 AS 'ref'");
-        }
-        else {
-            $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`requisition_no`,10)) FROM procurement.`requisition_main` a WHERE YEAR(tstamp) = YEAR(NOW()) AND a.`trans_type` = '".$type."' ), FALSE) +1 AS 'ref'");
+    protected function getMainRef($type)
+    {
+        if ($type == "SURF") {
+            $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`requisition_no`,11)) FROM procurement.`requisition_main` a WHERE YEAR(tstamp) = YEAR(NOW()) AND a.`trans_type` = '" . $type . "' ), FALSE) +1 AS 'ref'");
+        } else {
+            $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`requisition_no`,10)) FROM procurement.`requisition_main` a WHERE YEAR(tstamp) = YEAR(NOW()) AND a.`trans_type` = '" . $type . "' ), FALSE) +1 AS 'ref'");
         }
         $ref = $ref[0]->ref;
         $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
-        $ref = $type."/" . date('Y') . "/" . $ref;
+        $ref = $type . "/" . date('Y') . "/" . $ref;
 
         return $ref;
     }
-    
-    protected function getRfpRef($companyId){
+
+    protected function getRfpRef($companyId)
+    {
         // $now = Carbon::now();
         // $data = RfpMain::whereYear('TS',$now->year)->get('REQREF');
         // foreach($data as $entries){
@@ -69,19 +74,20 @@ trait ApiResponser
         // $length = 4;
         // $string = $rfpRef;
         // $rfpRef = str_pad($string,$length,"0", STR_PAD_LEFT);
-        
+
         // return 'RFP'.'-'.$now->year.'-'.$rfpRef;
 
-        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`request_for_payment` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'REF'");
+        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`request_for_payment` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '" . $companyId . "'),0) + 1 'REF'");
         $getref = $dataREQREF[0]->REF;
-        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
+        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT);
         $ref = "RFP-" . date('Y') . "-" . $ref;
 
         return $ref;
     }
 
-    protected function getReRef($companyId){
-        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`REQREF`,9)) FROM accounting.`reimbursement_request` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`TITLEID` = '".$companyId."'), FALSE) +1 AS 'ref'");
+    protected function getReRef($companyId)
+    {
+        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`REQREF`,9)) FROM accounting.`reimbursement_request` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`TITLEID` = '" . $companyId . "'), FALSE) +1 AS 'ref'");
         $ref = $ref[0]->ref;
         $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
         $ref = "RE-" . date('Y') . "-" . $ref;
@@ -89,8 +95,9 @@ trait ApiResponser
         return $ref;
     }
 
-    protected function getDraftReRef($companyId){
-        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`DRAFT_NUM`,11)) FROM accounting.`reimbursement_request` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`TITLEID` = '".$companyId."'), FALSE) +1 AS 'ref'");
+    protected function getDraftReRef($companyId)
+    {
+        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`DRAFT_NUM`,11)) FROM accounting.`reimbursement_request` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`TITLEID` = '" . $companyId . "'), FALSE) +1 AS 'ref'");
         $ref = $ref[0]->ref;
         $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
         $ref = "REDR-" . date('Y') . "-" . $ref;
@@ -98,26 +105,29 @@ trait ApiResponser
         return $ref;
     }
 
-    protected function getPcRef($companyId){
-        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`petty_cash_request` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'REF'");
+    protected function getPcRef($companyId)
+    {
+        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(REQREF ,10)) FROM accounting.`petty_cash_request` WHERE YEAR(TS)=YEAR(NOW()) AND TITLEID = '" . $companyId . "'),0) + 1 'REF'");
         $getref = $dataREQREF[0]->REF;
-        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
+        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT);
         $ref = "PC-" . date('Y') . "-" . $ref;
 
         return $ref;
     }
 
-    protected function getOtRef($companyId){
-        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(reference ,10)) FROM humanresource.`overtime_request` WHERE YEAR(request_date)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'OTR'");
+    protected function getOtRef($companyId)
+    {
+        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(reference ,10)) FROM humanresource.`overtime_request` WHERE YEAR(request_date)=YEAR(NOW()) AND TITLEID = '" . $companyId . "'),0) + 1 'OTR'");
         $getref = $dataREQREF[0]->OTR;
-        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
+        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT);
         $ref = "OTR-" . date('Y') . "-" . $ref;
 
         return $ref;
     }
 
-    protected function getDraftOtRef($companyId){
-        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`draft_reference`,11)) FROM humanresource.`overtime_request` a WHERE YEAR(ts) = YEAR(NOW()) AND a.`TITLEID` = '".$companyId."'), FALSE) +1 AS 'ref'");
+    protected function getDraftOtRef($companyId)
+    {
+        $ref = DB::select("SELECT IFNULL((SELECT MAX(SUBSTR(a.`draft_reference`,11)) FROM humanresource.`overtime_request` a WHERE YEAR(ts) = YEAR(NOW()) AND a.`TITLEID` = '" . $companyId . "'), FALSE) +1 AS 'ref'");
         $ref = $ref[0]->ref;
         $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
         $ref = "OTDR-" . date('Y') . "-" . $ref;
@@ -126,34 +136,38 @@ trait ApiResponser
     }
 
 
-    protected function getItfRef($companyId){
-        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(reference ,10)) FROM humanresource.`itinerary_main` WHERE YEAR(request_date)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'ITF'");
+    protected function getItfRef($companyId)
+    {
+        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(reference ,10)) FROM humanresource.`itinerary_main` WHERE YEAR(request_date)=YEAR(NOW()) AND TITLEID = '" . $companyId . "'),0) + 1 'ITF'");
         $getref = $dataREQREF[0]->ITF;
-        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
+        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT);
         $ref = "ITF-" . date('Y') . "-" . $ref;
 
         return $ref;
     }
 
-    protected function getLafRef($companyId){
-        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(reference ,10)) FROM humanresource.`leave_request` WHERE YEAR(request_date)=YEAR(NOW()) AND TITLEID = '".$companyId."'),0) + 1 'LAF'");
+    protected function getLafRef($companyId)
+    {
+        $dataREQREF = DB::select("SELECT IFNULL((SELECT MAX(SUBSTRING(reference ,10)) FROM humanresource.`leave_request` WHERE YEAR(request_date)=YEAR(NOW()) AND TITLEID = '" . $companyId . "'),0) + 1 'LAF'");
         $getref = $dataREQREF[0]->LAF;
-        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT); 
+        $ref = str_pad($getref, 4, "0", STR_PAD_LEFT);
         $ref = "LAF-" . date('Y') . "-" . $ref;
 
         return $ref;
     }
 
-    protected function getSofRef($companyId){
-        $ref = DB::select("SELECT IFNULL ((SELECT MAX(SUBSTR(a.`soNum`,10)) FROM sales_order.`sales_orders` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`titleid` = '".$companyId."'), FALSE) +1 AS 'ref'");
+    protected function getSofRef($companyId)
+    {
+        $ref = DB::select("SELECT IFNULL ((SELECT MAX(SUBSTR(a.`soNum`,10)) FROM sales_order.`sales_orders` a WHERE YEAR(TS) = YEAR(NOW()) AND a.`titleid` = '" . $companyId . "'), FALSE) +1 AS 'ref'");
         $ref = $ref[0]->ref;
-        $ref = str_pad($ref, 4, "0", STR_PAD_LEFT); 
+        $ref = str_pad($ref, 4, "0", STR_PAD_LEFT);
         $ref = "SOF-" . date('Y') . "-" . $ref;
 
         return $ref;
     }
 
-    protected function getCafRef($companyId) {
+    protected function getCafRef($companyId)
+    {
         $ref = DB::select("SELECT 
         IFNULL(
           (SELECT 
@@ -161,32 +175,36 @@ trait ApiResponser
           FROM
             accounting.`cash_advance_request` 
           WHERE YEAR(ts) = YEAR(NOW()) 
-            AND TITLEID = '".$companyId."'),
+            AND TITLEID = '" . $companyId . "'),
           0
         ) + 1 'ref' ");
         $ref = $ref[0]->ref;
-        $ref = str_pad($ref, 5, "0", STR_PAD_LEFT); 
+        $ref = str_pad($ref, 5, "0", STR_PAD_LEFT);
         $ref = "CAF-" . date('Y') . "-" . $ref;
 
         return $ref;
     }
 
 
-    protected function showAll(Collection $collection, $code = 200){
-        
+    protected function showAll(Collection $collection, $code = 200)
+    {
+
         if ($collection->isEmpty()) {
-            return response()->json(['error'=>'Does not exist, no result found any model with the specified identificator'
-            ,'code' => 404], status:404);
-		} 
+            return response()->json([
+                'error' => 'Does not exist, no result found any model with the specified identificator', 'code' => 404
+            ], status: 404);
+        }
         return $this->successResponse($collection, $code);
     }
 
-    protected function showOne(Model $model, $code = 200){
+    protected function showOne(Model $model, $code = 200)
+    {
         return response()->json(['data' => $model, 'code' => $code]);
     }
 
 
-    protected function removeAttachments($request){
+    protected function removeAttachments($request)
+    {
         // remove existing attachments
         $removedFiles = $request->removedFiles;
         $removedFiles = json_decode($removedFiles, true);
@@ -195,14 +213,14 @@ trait ApiResponser
         Log::alert($removedFiles);
 
         log::debug($removedFiles);
-        
+
 
         if (count($removedFiles) > 0) {
 
             // DB::beginTransaction();
             // try{
             Log::alert($removedFiles);
-            
+
 
             for ($i = 0; $i < count($removedFiles); $i++) {
                 DB::table('general.attachments')->where('id', $removedFiles[$i]['id'])->delete();
@@ -222,7 +240,8 @@ trait ApiResponser
         }
     }
 
-    protected function addAttachments($request){
+    protected function addAttachments($request)
+    {
         // Additional attachments
 
         if ($request->hasFile('file')) {
@@ -232,11 +251,11 @@ trait ApiResponser
                 $fileNameOnly     = pathinfo($completeFileName, PATHINFO_FILENAME);
                 $fileNameOnly     = preg_replace('/[^A-Za-z0-9\-]/', '', $fileNameOnly);                                      // Removes special chars.
                 $extension        = $file->getClientOriginalExtension();
-                $randomized       = rand(1000,9999);
-                $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4); 
+                $randomized       = rand(1000, 9999);
+                $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
                 $reqRef           = str_replace('-', '_', $request->referenceNumber);
                 $reqRef           = str_replace('/', '_', $reqRef);
-                $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter. $randomized.'.' . $extension;
+                $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter . $randomized . '.' . $extension;
                 $mimeType         = $file->getMimeType();
 
                 // $date = date()
@@ -245,7 +264,7 @@ trait ApiResponser
                 $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;   // For moving the file
                 $storagePath     = "storage/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;  // For preview
                 $file->storeAs($destinationPath, $newFileName);
-                
+
                 // $symPath = "public/Attachments/{$request->class}";
                 // $fileDestination = $storagePath . '/' . $completeFileName;
                 // $image = base64_encode(file_get_contents($file));
@@ -271,13 +290,14 @@ trait ApiResponser
                     'formName'         => $request->form,
                     'created_at'       => date('Y-m-d H:i:s')
                 ];
-                Attachments:: insert($attachmentsData);
+                Attachments::insert($attachmentsData);
             }
         }
     }
 
     // Upon Createion
-    protected function insertAttachments($request,$processId,$reference){
+    protected function insertAttachments($request, $processId, $reference)
+    {
         // Additional attachments
         if ($request->hasFile('file')) {
 
@@ -286,14 +306,14 @@ trait ApiResponser
                 $fileNameOnly     = pathinfo($completeFileName, PATHINFO_FILENAME);
                 $fileNameOnly     = preg_replace('/[^A-Za-z0-9\-]/', '', $fileNameOnly);                                      // Removes special chars.
                 $extension        = $file->getClientOriginalExtension();
-                $randomized       = rand(1000,9999);
+                $randomized       = rand(1000, 9999);
                 $randomletter     = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
                 $reqRef           = str_replace('-', '_', $reference);
-                $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter. $randomized.'.' . $extension;
+                $newFileName      = str_replace(' ', '', $fileNameOnly) . '-' . $randomletter . $randomized . '.' . $extension;
                 $mimeType         = $file->getMimeType();
                 // $myPath = "C:/Users/Iverson/Desktop/Attachments/".session('LoggedUser_CompanyID')."/RFP/".$rfpCode;
 
-                
+
                 $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;   // For moving the file
                 $storagePath     = "storage/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;  // For preview
                 $file->storeAs($destinationPath, $newFileName);
@@ -316,16 +336,18 @@ trait ApiResponser
                     'created_at'       => date('Y-m-d H:i:s')
                 ];
 
-                Attachments:: insert($attachmentsData);
+                Attachments::insert($attachmentsData);
             }
         }
     }
 
-    protected function deleteItfDetails($request){
+    protected function deleteItfDetails($request)
+    {
         ItfDetail::where('main_id', $request->processId)->delete();
     }
 
-    protected function insertItfDetails($request){
+    protected function insertItfDetails($request)
+    {
         $itfData = $request->itineraryData;
         $itfData = json_decode($itfData, true);
 
@@ -344,7 +366,6 @@ trait ApiResponser
 
                 $actual_start = date_format($actual_start, 'Y-m-d H:i:s');
                 $actual_end = date_format($actual_end, 'Y-m-d H:i:s');
-
             }
 
             $itfArray[] = [
@@ -368,11 +389,12 @@ trait ApiResponser
         DB::update("UPDATE general.`actual_sign` a SET a.`status` = 'In Progress' WHERE a.`status` = 'Not Started' AND a.`PROCESSID` = '" . $request->processId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`COMPID` = '" . $request->companyId . "' LIMIT 1;");
     }
 
-    protected function insertPcExpense($request ,$department, $guid){
+    protected function insertPcExpense($request, $department, $guid)
+    {
         $xpData = $request->expenseData;
         $xpData = json_decode($xpData, true);
-   
-        if(count($xpData)){
+
+        if (count($xpData)) {
             for ($i = 0; $i < count($xpData); $i++) {
 
                 $date = date_create($xpData[$i]['date_']);
@@ -394,55 +416,56 @@ trait ApiResponser
             }
             PcExpenseSetup::insert($array);
         }
-
-
-
     }
 
-    protected function insertPcTranspo($request, $department, $guid){
+    protected function insertPcTranspo($request, $department, $guid)
+    {
         $trData = $request->transpoData;
         $trData = json_decode($trData, true);
 
-        if(count($trData)){
-        for ($i = 0; $i < count($trData); $i++) {
+        if (count($trData)) {
+            for ($i = 0; $i < count($trData); $i++) {
 
-            $date = date_create($trData[$i]['date_']);
+                $date = date_create($trData[$i]['date_']);
 
-            $array[] = [
-                'PCID' => $request->processId,
-                'PAYEE' => $request->payeeName,
-                'CLIENT_NAME' => $trData[$i]['CLIENT_NAME'],
-                'DESTINATION_FRM' => $trData[$i]['DESTINATION_FRM'],
-                'DESTINATION_TO' => $trData[$i]['DESTINATION_TO'],
-                'DESCRIPTION' => $trData[$i]['DESCRIPTION'],
-                'AMT_SPENT' => floatval(str_replace(',', '', $trData[$i]['AMT_SPENT'])),
-                'TITLEID' => $request->companyId,
-                'MOT' => $trData[$i]['MOT'],
-                'GUID' => $guid,
-                'TS' => now(),
-                'MAINID' => 1,
-                'CLIENT_ID' => $trData[$i]['CLIENT_ID'],
-                'DEPT' => $department,
-                'date_' => date_format($date, 'Y-m-d H:i:s'),
-            ];
-        }
-        PcTranspoSetup::insert($array);
+                $array[] = [
+                    'PCID' => $request->processId,
+                    'PAYEE' => $request->payeeName,
+                    'CLIENT_NAME' => $trData[$i]['CLIENT_NAME'],
+                    'DESTINATION_FRM' => $trData[$i]['DESTINATION_FRM'],
+                    'DESTINATION_TO' => $trData[$i]['DESTINATION_TO'],
+                    'DESCRIPTION' => $trData[$i]['DESCRIPTION'],
+                    'AMT_SPENT' => floatval(str_replace(',', '', $trData[$i]['AMT_SPENT'])),
+                    'TITLEID' => $request->companyId,
+                    'MOT' => $trData[$i]['MOT'],
+                    'GUID' => $guid,
+                    'TS' => now(),
+                    'MAINID' => 1,
+                    'CLIENT_ID' => $trData[$i]['CLIENT_ID'],
+                    'DEPT' => $department,
+                    'date_' => date_format($date, 'Y-m-d H:i:s'),
+                ];
+            }
+            PcTranspoSetup::insert($array);
         }
     }
 
 
 
 
-    protected function deletePcExpense($request){
+    protected function deletePcExpense($request)
+    {
         PcExpenseSetup::where('PCID', $request->processId)->delete();
     }
 
 
-    protected function deletePcTranspo($request){
+    protected function deletePcTranspo($request)
+    {
         PcTranspoSetup::where('PCID', $request->processId)->delete();
     }
 
-    protected function insertLafMain($request,$mainID,$reqRef,$guid){
+    protected function insertLafMain($request, $mainID, $reqRef, $guid)
+    {
         $leaveData = $request->leaveData;
         $leaveData = json_decode($leaveData, true);
 
@@ -480,57 +503,111 @@ trait ApiResponser
         LafMain::insert($leaveArray);
     }
 
-    protected function deleteLafMain($request){
+    protected function deleteLafMain($request)
+    {
         LafMain::where('main_id', $request->processId)->delete();
     }
 
-// SOF
+    // SOF
 
     // get duration days
     // Date Accepted
     // $projectStart = date_create($request->projectStart); 
     // $projectStart = date_format($projectStart, 'Y-m-d');
-    protected function dateDifference($projectStart, $projectEnd){
+    protected function dateDifference($projectStart, $projectEnd)
+    {
         $projectStartConverted = strtotime($projectStart);
         $projectEndConverted = strtotime($projectEnd);
 
-        $projectDuation = ($projectEndConverted - $projectStartConverted)/60/60/24;
+        $projectDuation = ($projectEndConverted - $projectStartConverted) / 60 / 60 / 24;
         return $projectDuation;
     }
 
-    protected function dateFormatter($date){
+    protected function dateFormatter($date)
+    {
 
 
         if ($date === 'null') {
             return null;
-
         } else {
             $date = date_create($date);
             $date = date_format($date, 'Y-m-d');
             return $date;
-
         }
-        
-
     }
 
-    protected function amountFormatter($amount){
+    protected function amountFormatter($amount)
+    {
         $amount = floatval(str_replace(',', '', $amount));
         return $amount;
     }
 
-    protected function sofTypeConvert($sof){
-        if($sof === 'DLV'){
+    protected function sofTypeConvert($sof)
+    {
+        if ($sof === 'DLV') {
             return ['Sales Order - Delivery', 6];
         }
-        if($sof === 'PRJ'){
+        if ($sof === 'PRJ') {
             return ['Sales Order - Project', 7];
         }
-        if($sof === 'DMO'){
+        if ($sof === 'DMO') {
             return ['Sales Order - Demo', 4];
         }
-        if($sof === 'POC'){
+        if ($sof === 'POC') {
             return ['Sales Order - POC', 4];
+        }
+    }
+
+    protected function insertActualSign($request, $processId, $frmName, $reference)
+    {
+        $result = DB::table('general.systemprofileorders')
+            ->select('FrmName as FRM_NAME', 'FrmClass as FRM_CLASS', 'GroupName as USER_GRP_IND', 'ORDERED as ORDERS')
+            ->where('FrmName', $frmName)
+            ->orderBy('ORDERED', 'asc')
+            ->get();
+
+        if (count($result)) {
+            for ($x = 0; $x < 5; $x++) {
+                $actualSignData[] = 
+                    [
+                        'PROCESSID'         => $processId,
+                        'USER_GRP_IND'      => $result[$x]->USER_GRP_IND,
+                        'FRM_NAME'          => $result[$x]->FRM_NAME,
+                        'FRM_CLASS'         => $result[$x]->FRM_CLASS,
+                        'REMARKS'           => $request->purpose,
+                        'STATUS'            => 'Not Started',
+                        'TS'                => now(),
+                        'DUEDATE'           => date_create($request->dateNeeded),
+                        'ORDERS'            => $x,
+                        'REFERENCE'         => $reference,
+                        'PODATE'            => date_create($request->dateNeeded),
+                        'DATE'              => date_create($request->dateNeeded),
+                        'INITID'            => $request->loggedUserId,
+                        'FNAME'             => $request->loggedUserFirstName,
+                        'LNAME'             => $request->loggedUserLastName,
+                        'DEPARTMENT'        => $request->loggedUserDepartment,
+                        'RM_ID'             => $request->reportingManagerId,
+                        'REPORTING_MANAGER' => $request->reportingManagerName,
+                        'PROJECTID'         => $request->projectId,
+                        'PROJECT'           => $request->projectName,
+                        'COMPID'            => $request->companyId,
+                        'COMPANY'           => $request->companyName,
+                        'TYPE'              => 'Request for Payment',
+                        'CLIENTID'          => $request->clientId,
+                        'CLIENTNAME'        => $request->clientName,
+                        'Max_approverCount' => count($result),
+                        'DoneApproving'     => '0',
+                        'WebpageLink'       => 'rfp_approve.php',
+                        'ApprovedRemarks'   => '',
+                        'Payee'             => $request->payeeName,
+                        'Amount'            => floatval(str_replace(',', '', $request->amount)),
+                    ];
+            }
+            $actualSignData[0]['STATUS'] = 'In Progress';
+            ActualSign:: insert($actualSignData);
+            return true;
+        } else {
+            return false;
         }
     }
 }

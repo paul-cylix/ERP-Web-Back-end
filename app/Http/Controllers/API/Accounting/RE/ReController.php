@@ -119,7 +119,7 @@ class ReController extends ApiController
                     if ($actualSignData[5]['ORDERS'] == 5) {
                         $actualSignData[5]['USER_GRP_IND'] = 'Initiator';
                     }
-                    
+            
                     ActualSign::insert($actualSignData);
                     $request->request->add(['processId' => $reMain->id]);
                     $request->request->add(['referenceNumber' => $reference]);
