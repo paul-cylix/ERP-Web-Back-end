@@ -567,45 +567,90 @@ trait ApiResponser
             ->get();
 
         if (count($result)) {
-            
+            $type = $frmName;
+
+            $projectId = $request->projectId;
+            $projectName = $request->projectName;
+            $clientId = $request->clientId;
+            $clientName = $request->clientName;
+            $payee = $request->payeeName;
+            $remarks = $request->purpose;
+
             if ($frmName === 'Request for Payment') {
                 $webPageLink = 'rfp_approve.php';
             } else if ($frmName === 'Reimbursement Request'){
                 $webPageLink = 're_approve.php';
+            } else if ($frmName === 'Petty Cash Request') {
+                $webPageLink = 'pc_approve.php';
+                $type = 'Request for Pettycash';
+            } else if ($frmName === 'Cash Advance Request') {
+                $webPageLink = 'ca_approve.php';
+                $projectId = '0';
+                $projectName = $request->loggedUserDepartment;
+                $clientId = '0';
+                $clientName = $request->companyName;
+                $request->request->add(['amount' => $request->requestedAmount]);
+            } else if ($frmName === 'Overtime Request') {
+                $webPageLink = '';
+                $projectId = '0';
+                $projectName = $request->loggedUserDepartment;
+                $clientId = '0';
+                $clientName = $request->companyName;
+                $request->request->add(['amount' => '0.00']);
+                $payee = 'N/A';
+                $remarks = '';
+            } else if ($frmName === 'Leave Request') {
+                $webPageLink = '';
+                $projectId = '0';
+                $projectName = $request->loggedUserDepartment;
+                $clientId = '0';
+                $clientName = $request->companyName;
+                $request->request->add(['amount' => '0.00']);
+                $payee = 'N/A';
+            } else if ($frmName === 'Itinerary Request') {
+                $webPageLink = '';
+                $projectId = '1';
+                $projectName = $request->loggedUserDepartment;
+                $clientId = '1';
+                $clientName = $request->companyName;
+                $request->request->add(['amount' => '0.00']);
+                $payee = 'N/A';
+                $remarks = '';
             }
+
 
             for ($x = 0; $x < count($result); $x++) {
                 $actualSignData[] = 
                     [
-                        'PROCESSID'         => $processId,
-                        'USER_GRP_IND'      => $result[$x]->USER_GRP_IND,
-                        'FRM_NAME'          => $result[$x]->FRM_NAME,
-                        'FRM_CLASS'         => $result[$x]->FRM_CLASS,
-                        'REMARKS'           => $request->purpose,
-                        'STATUS'            => 'Not Started',
-                        'DUEDATE'           => date_create($request->dateNeeded),
-                        'ORDERS'            => $x,
-                        'REFERENCE'         => $reference,
-                        'PODATE'            => date_create($request->dateNeeded),
-                        'DATE'              => date_create($request->dateNeeded),
-                        'INITID'            => $request->loggedUserId,
-                        'FNAME'             => $request->loggedUserFirstName,
-                        'LNAME'             => $request->loggedUserLastName,
-                        'DEPARTMENT'        => $request->loggedUserDepartment,
-                        'RM_ID'             => $request->reportingManagerId,
-                        'REPORTING_MANAGER' => $request->reportingManagerName,
-                        'PROJECTID'         => $request->projectId,
-                        'PROJECT'           => $request->projectName,
-                        'COMPID'            => $request->companyId,
-                        'COMPANY'           => $request->companyName,
-                        'TYPE'              => $result[$x]->FRM_NAME,
-                        'CLIENTID'          => $request->clientId,
-                        'CLIENTNAME'        => $request->clientName,
-                        'Max_approverCount' => count($result),
-                        'DoneApproving'     => '0',
-                        'WebpageLink'       => $webPageLink,
-                        'Payee'             => $request->payeeName,
-                        'Amount'            => floatval(str_replace(',', '', $request->amount)),
+'PROCESSID'         => $processId,
+'USER_GRP_IND'      => $result[$x]->USER_GRP_IND,
+'FRM_NAME'          => $result[$x]->FRM_NAME,
+'FRM_CLASS'         => $result[$x]->FRM_CLASS,
+'REMARKS'           => $remarks,
+'STATUS'            => 'Not Started',
+'DUEDATE'           => date_create($request->dateNeeded),
+'ORDERS'            => $x,
+'REFERENCE'         => $reference,
+'PODATE'            => date_create($request->dateNeeded),
+'DATE'              => date_create($request->dateNeeded),
+'INITID'            => $request->loggedUserId,
+'FNAME'             => $request->loggedUserFirstName,
+'LNAME'             => $request->loggedUserLastName,
+'DEPARTMENT'        => $request->loggedUserDepartment,
+'RM_ID'             => $request->reportingManagerId,
+'REPORTING_MANAGER' => $request->reportingManagerName,
+'PROJECTID'         => $projectId,
+'PROJECT'           => $projectName,
+'COMPID'            => $request->companyId,
+'COMPANY'           => $request->companyName,
+'TYPE'              => $type,
+'CLIENTID'          => $clientId,
+'CLIENTNAME'        => $clientName,
+'Max_approverCount' => count($result),
+'DoneApproving'     => '0',
+'WebpageLink'       => $webPageLink,
+'Payee'             => $payee,
+'Amount'            => floatval(str_replace(',', '', $request->amount)),
                     ];
             }
             $actualSignData[0]['STATUS'] = 'In Progress';

@@ -109,8 +109,10 @@ class OtController extends ApiController
 
     public function saveOT(Request $request)
     {
+        DB::beginTransaction();
+        try
+        {  
 
-        log::debug($request);
 
         $guid = $this->getGuid();
         $reqRef = $this->getOtRef($request->companyId);
@@ -158,7 +160,8 @@ class OtController extends ApiController
                 'cust_id' => $otData[$i]['cust_id'],
                 'cust_name' => $otData[$i]['cust_name'],
                 'TITLEID' => $request->companyId,
-                'PRJID' => $otData[$i]['PRJID']
+                'PRJID' => $otData[$i]['PRJID'],
+                'webapp' => 1
             ];
         }
 
@@ -167,84 +170,74 @@ class OtController extends ApiController
         $this->insertAttachments($request,$mainID[0]->main,$reqRef);
 
 
-        //Insert general.actual_sign
-        for ($x = 0; $x < 4; $x++) {
-            $array[] = array(
-                'PROCESSID' => $mainID[0]->main,
-                'USER_GRP_IND' => '0',
-                'FRM_NAME' => $request->form,
-                // 'TaskTitle'=>'',
-                // 'NS'=>'',
-                'FRM_CLASS' => 'frmOvertimeRequest', //Hold
-                'REMARKS' => '',
-                'STATUS' => 'Not Started',
-                // 'UID_SIGN'=>'0',
-                // 'TS'=>'',
-                'DUEDATE' => now(),
-                // 'SIGNDATETIME'=>'',
-                'ORDERS' => $x,
-                'REFERENCE' => $reqRef,
-                'PODATE' => now(),
-                // 'PONUM'=>'',
-                'DATE' => now(),
-                'INITID' => $request->loggedUserId,
-                'FNAME' => $request->loggedUserFirstName,
-                'LNAME' => $request->loggedUserLastName,
-                // 'MI'=>'',
-                'DEPARTMENT' => $request->loggedUserDepartment,
-                'RM_ID' => $request->reportingManagerId,
-                'REPORTING_MANAGER' => $request->reportingManagerName,
-                'PROJECTID' => '0',
-                'PROJECT' => $request->loggedUserDepartment,
-                'COMPID' => $request->companyId,
-                'COMPANY' => $request->companyName,
-                'TYPE' => $request->form,
-                'CLIENTID' => '0',
-                'CLIENTNAME' => $request->companyName,
-                // 'VENDORID'=>'0',
-                // 'VENDORNAME'=>'',
-                'Max_approverCount' => '4',
-                // 'GUID_GROUPS'=>'',
-                'DoneApproving' => '0',
-                // 'WebpageLink'=>'pc_approve.php',
-                // 'ApprovedRemarks'=>'',
-                'Payee' => 'N/A',
-                // 'CurrentSender'=>'0',
-                // 'CurrentReceiver'=>'0',
-                // 'NOTIFICATIONID'=>'0',
-                // 'SENDTOID'=>'0',
-                // 'NRN'=>'imported',
-                // 'imported_from_excel'=>'0',
-                'Amount'=>0,
+//         //Insert general.actual_sign
+//         for ($x = 0; $x < 4; $x++) {
+//             $array[] = array(
+// 'PROCESSID'         => $mainID[0]->main,
+// 'USER_GRP_IND'      => '0',
+// 'FRM_NAME'          => $request->form,
+// 'FRM_CLASS'         => 'frmOvertimeRequest',             //Hold
+// 'REMARKS'           => '',
+// 'STATUS'            => 'Not Started',
+// 'DUEDATE'           => now(),
+// 'ORDERS'            => $x,
+// 'REFERENCE'         => $reqRef,
+// 'PODATE'            => now(),
+// 'DATE'              => now(),
+// 'INITID'            => $request->loggedUserId,
+// 'FNAME'             => $request->loggedUserFirstName,
+// 'LNAME'             => $request->loggedUserLastName,
+// 'DEPARTMENT'        => $request->loggedUserDepartment,
+// 'RM_ID'             => $request->reportingManagerId,
+// 'REPORTING_MANAGER' => $request->reportingManagerName,
+// 'PROJECTID'         => '0',
+// 'PROJECT'           => $request->loggedUserDepartment,
+// 'COMPID'            => $request->companyId,
+// 'COMPANY'           => $request->companyName,
+// 'TYPE'              => $request->form,
+// 'CLIENTID'          => '0',
+// 'CLIENTNAME'        => $request->companyName,
+// 'Max_approverCount' => '4',
+// 'DoneApproving'     => '0',
+// 'Payee'             => 'N/A',
+// 'Amount'            => 0,
+//             );
+//         }
 
-                // to follow
-                // 'user_grp_info' => '1', // 0 = Reporting Manager, 1 = For Approval of Management, 2 = Releasing of Cash, 3 = Initiator, 4 = Acknowledgement of Accountung
-                // 'orders'=>$x, //01234
-                // 'status' => 'Not Started' //in-progress & not started
-            );
-        }
+//         if ($array[0]['ORDERS'] == 0) {
+//             $array[0]['USER_GRP_IND'] = 'Acknowledgement of Reporting Manager';
+//             $array[0]['STATUS'] = 'In Progress';
+//         }
 
-        if ($array[0]['ORDERS'] == 0) {
-            $array[0]['USER_GRP_IND'] = 'Acknowledgement of Reporting Manager';
-            $array[0]['STATUS'] = 'In Progress';
-        }
+//         if ($array[1]['ORDERS'] == 1) {
+//             $array[1]['USER_GRP_IND'] = 'Input of Actual Overtime (Initiator)';
+//         }
 
-        if ($array[1]['ORDERS'] == 1) {
-            $array[1]['USER_GRP_IND'] = 'Input of Actual Overtime (Initiator)';
-        }
+//         if ($array[2]['ORDERS'] == 2) {
+//             $array[2]['USER_GRP_IND'] = 'Approval of Reporting Manager';
+//         }
 
-        if ($array[2]['ORDERS'] == 2) {
-            $array[2]['USER_GRP_IND'] = 'Approval of Reporting Manager';
-        }
+//         if ($array[3]['ORDERS'] == 3) {
+//             $array[3]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
+//         }
 
-        if ($array[3]['ORDERS'] == 3) {
-            $array[3]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
-        }
-
-        DB::table('general.actual_sign')->insert($array);
+//         DB::table('general.actual_sign')->insert($array);
     
+
+        $isInserted = $this->insertActualSign($request, $mainID[0]->main, 'Overtime Request', $reqRef);
+        if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
+
+
         
         return response()->json(['message' => 'Your Overtime Request was successfully submitted.'], 200);
+        DB:: commit();
+
+        }
+        catch(\Exception $e)
+        {
+            DB:: rollback();
+            return response()->json($e, 500);
+        }
         
     }
 
@@ -661,7 +654,8 @@ class OtController extends ApiController
                         'cust_id'           => $otData[$i]['cust_id'],
                         'cust_name'         => $otData[$i]['cust_name'],
                         'TITLEID'           => $request->companyId,
-                        'PRJID'             => $otData[$i]['PRJID']
+                        'PRJID'             => $otData[$i]['PRJID'],
+                        'webapp'            => 1
                     ];
                 }
 
@@ -675,57 +669,60 @@ class OtController extends ApiController
                 ->delete();
 
                     //Insert general.actual_sign
-        for ($x = 0; $x < 4; $x++) {
-            $array[] = array(
-                'PROCESSID'         => $request->processId,
-                'USER_GRP_IND'      => '0',
-                'FRM_NAME'          => $request->form,
-                'FRM_CLASS'         => 'frmOvertimeRequest',             //Hold
-                'REMARKS'           => '',
-                'STATUS'            => 'Not Started',
-                'DUEDATE'           => now(),
-                'ORDERS'            => $x,
-                'REFERENCE'         => $reqRef,
-                'PODATE'            => now(),
-                'DATE'              => now(),
-                'INITID'            => $request->loggedUserId,
-                'FNAME'             => $request->loggedUserFirstName,
-                'LNAME'             => $request->loggedUserLastName,
-                'DEPARTMENT'        => $request->loggedUserDepartment,
-                'RM_ID'             => $request->reportingManagerId,
-                'REPORTING_MANAGER' => $request->reportingManagerName,
-                'PROJECTID'         => '0',
-                'PROJECT'           => $request->loggedUserDepartment,
-                'COMPID'            => $request->companyId,
-                'COMPANY'           => $request->companyName,
-                'TYPE'              => $request->form,
-                'CLIENTID'          => '0',
-                'CLIENTNAME'        => $request->companyName,
-                'Max_approverCount' => '4',
-                'DoneApproving'     => '0',
-                'Payee'             => 'N/A',
-                'Amount'            => 0,
-            );
-        }
+//         for ($x = 0; $x < 4; $x++) {
+//             $array[] = array(
+// 'PROCESSID'         => $request->processId,
+// 'USER_GRP_IND'      => '0',
+// 'FRM_NAME'          => $request->form,
+// 'FRM_CLASS'         => 'frmOvertimeRequest',             //Hold
+// 'REMARKS'           => '',
+// 'STATUS'            => 'Not Started',
+// 'DUEDATE'           => now(),
+// 'ORDERS'            => $x,
+// 'REFERENCE'         => $reqRef,
+// 'PODATE'            => now(),
+// 'DATE'              => now(),
+// 'INITID'            => $request->loggedUserId,
+// 'FNAME'             => $request->loggedUserFirstName,
+// 'LNAME'             => $request->loggedUserLastName,
+// 'DEPARTMENT'        => $request->loggedUserDepartment,
+// 'RM_ID'             => $request->reportingManagerId,
+// 'REPORTING_MANAGER' => $request->reportingManagerName,
+// 'PROJECTID'         => '0',
+// 'PROJECT'           => $request->loggedUserDepartment,
+// 'COMPID'            => $request->companyId,
+// 'COMPANY'           => $request->companyName,
+// 'TYPE'              => $request->form,
+// 'CLIENTID'          => '0',
+// 'CLIENTNAME'        => $request->companyName,
+// 'Max_approverCount' => '4',
+// 'DoneApproving'     => '0',
+// 'Payee'             => 'N/A',
+// 'Amount'            => 0,
+//             );
+//         }
 
-        if ($array[0]['ORDERS'] == 0) {
-            $array[0]['USER_GRP_IND'] = 'Acknowledgement of Reporting Manager';
-            $array[0]['STATUS']       = 'In Progress';
-        }
+//         if ($array[0]['ORDERS'] == 0) {
+//             $array[0]['USER_GRP_IND'] = 'Acknowledgement of Reporting Manager';
+//             $array[0]['STATUS']       = 'In Progress';
+//         }
 
-        if ($array[1]['ORDERS'] == 1) {
-            $array[1]['USER_GRP_IND'] = 'Input of Actual Overtime (Initiator)';
-        }
+//         if ($array[1]['ORDERS'] == 1) {
+//             $array[1]['USER_GRP_IND'] = 'Input of Actual Overtime (Initiator)';
+//         }
 
-        if ($array[2]['ORDERS'] == 2) {
-            $array[2]['USER_GRP_IND'] = 'Approval of Reporting Manager';
-        }
+//         if ($array[2]['ORDERS'] == 2) {
+//             $array[2]['USER_GRP_IND'] = 'Approval of Reporting Manager';
+//         }
 
-        if ($array[3]['ORDERS'] == 3) {
-            $array[3]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
-        }
+//         if ($array[3]['ORDERS'] == 3) {
+//             $array[3]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
+//         }
 
-        DB:: table('general.actual_sign')->insert($array);
+        // DB:: table('general.actual_sign')->insert($array);
+
+        $isInserted = $this->insertActualSign($request, $request->processId, 'Overtime Request', $reqRef);
+        if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
 
             DB:: commit();
             return response()->json(['message' => 'Your Overtime Request was successfully submitted.'], 200);

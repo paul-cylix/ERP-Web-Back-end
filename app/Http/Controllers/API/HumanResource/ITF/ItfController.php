@@ -59,85 +59,64 @@ class ItfController extends ApiController
         }
         ItfDetail::insert($itfArray);
 
-        //Insert general.actual_sign
-        for ($x = 0; $x < 5; $x++) {
-            $array[] = array(
-                'PROCESSID' => $itfMain->id,
-                'USER_GRP_IND' => '0',
-                'FRM_NAME' => 'Itinerary Request',
-                // 'TaskTitle'=>'',
-                // 'NS'=>'',
-                'FRM_CLASS' => 'frmItinerary', //Hold
-                // 'REMARKS'=>$request->purpose,
-                'STATUS' => 'Not Started',
-                // 'UID_SIGN'=>'0',
-                'TS' => now(),
-                'DUEDATE' => now(),
-                // 'SIGNDATETIME'=>'',
-                'ORDERS' => $x,
-                'REFERENCE' => $reqRef,
-                'PODATE' => now(),
-                // 'PONUM'=>'',
-                'DATE' => now(),
-                'INITID' => $request->loggedUserId,
-                'FNAME' => $request->loggedUserFirstName,
-                'LNAME' => $request->loggedUserLastName,
-                // 'MI'=>'',
-                'DEPARTMENT' => $request->loggedUserDepartment,
-                'RM_ID' => $request->reportingManagerId,
-                'REPORTING_MANAGER' => $request->reportingManagerName,
-                'PROJECTID' => '1',
-                'PROJECT' => $request->loggedUserDepartment,
-                'COMPID' => $request->companyId,
-                'COMPANY' => $request->companyName,
-                'TYPE' => 'Itinerary Request',
-                'CLIENTID' => '1',
-                'CLIENTNAME' => $request->companyName,
-                // 'VENDORID'=>'0',
-                // 'VENDORNAME'=>'',
-                'Max_approverCount' => '5',
-                // 'GUID_GROUPS'=>'',
-                'DoneApproving' => '0',
-                // 'WebpageLink'=>'pc_approve.php',
-                // 'ApprovedRemarks'=>'',
-                'Payee' => 'N/A',
-                // 'CurrentSender'=>'0',
-                // 'CurrentReceiver'=>'0',
-                // 'NOTIFICATIONID'=>'0',
-                // 'SENDTOID'=>'0',
-                // 'NRN'=>'imported',
-                // 'imported_from_excel'=>'0',
-                // 'Amount'=>$request->amount,
+//         //Insert general.actual_sign
+//         for ($x = 0; $x < 5; $x++) {
+//             $array[] = array(
+// 'PROCESSID'         => $itfMain->id,
+// 'USER_GRP_IND'      => '0',
+// 'FRM_NAME'          => 'Itinerary Request',
+// 'FRM_CLASS'         => 'frmItinerary',
+// 'STATUS'            => 'Not Started',
+// 'TS'                => now(),
+// 'DUEDATE'           => now(),
+// 'ORDERS'            => $x,
+// 'REFERENCE'         => $reqRef,
+// 'PODATE'            => now(),
+// 'DATE'              => now(),
+// 'INITID'            => $request->loggedUserId,
+// 'FNAME'             => $request->loggedUserFirstName,
+// 'LNAME'             => $request->loggedUserLastName,
+// 'DEPARTMENT'        => $request->loggedUserDepartment,
+// 'RM_ID'             => $request->reportingManagerId,
+// 'REPORTING_MANAGER' => $request->reportingManagerName,
+// 'PROJECTID'         => '1',
+// 'PROJECT'           => $request->loggedUserDepartment,
+// 'COMPID'            => $request->companyId,
+// 'COMPANY'           => $request->companyName,
+// 'TYPE'              => 'Itinerary Request',
+// 'CLIENTID'          => '1',
+// 'CLIENTNAME'        => $request->companyName,
+// 'Max_approverCount' => '5',
+// 'DoneApproving'     => '0',
+// 'Payee'             => 'N/A',
+//             );
+//         }
 
-                // to follow
-                // 'user_grp_info' => '1', // 0 = Reporting Manager, 1 = For Approval of Management, 2 = Releasing of Cash, 3 = Initiator, 4 = Acknowledgement of Accountung
-                // 'orders'=>$x, //01234
-                // 'status' => 'Not Started' //in-progress & not started
-            );
-        }
+//         if ($array[0]['ORDERS'] == 0) {
+//             $array[0]['USER_GRP_IND'] = 'Approval of Reporting Manager';
+//             $array[0]['STATUS'] = 'In Progress';
+//         }
 
-        if ($array[0]['ORDERS'] == 0) {
-            $array[0]['USER_GRP_IND'] = 'Approval of Reporting Manager';
-            $array[0]['STATUS'] = 'In Progress';
-        }
+//         if ($array[1]['ORDERS'] == 1) {
+//             $array[1]['USER_GRP_IND'] = 'Input of Actual Time (Initiator)';
+//         }
 
-        if ($array[1]['ORDERS'] == 1) {
-            $array[1]['USER_GRP_IND'] = 'Input of Actual Time (Initiator)';
-        }
+//         if ($array[2]['ORDERS'] == 2) {
+//             $array[2]['USER_GRP_IND'] = 'Approval of Reporting Manager';
+//         }
 
-        if ($array[2]['ORDERS'] == 2) {
-            $array[2]['USER_GRP_IND'] = 'Approval of Reporting Manager';
-        }
+//         if ($array[3]['ORDERS'] == 3) {
+//             $array[3]['USER_GRP_IND'] = 'Acknowledgement of Human Resource';
+//         }
 
-        if ($array[3]['ORDERS'] == 3) {
-            $array[3]['USER_GRP_IND'] = 'Acknowledgement of Human Resource';
-        }
+//         if ($array[4]['ORDERS'] == 4) {
+//             $array[4]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
+//         }
 
-        if ($array[4]['ORDERS'] == 4) {
-            $array[4]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
-        }
+//         ActualSign::insert($array);
 
-        ActualSign::insert($array);
+        $isInserted = $this->insertActualSign($request, $itfMain->id, 'Itinerary Request', $reqRef);
+        if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
 
         DB::commit();
         return response()->json(['message' => 'Your Itinerary request was successfully submitted.'], 200);
