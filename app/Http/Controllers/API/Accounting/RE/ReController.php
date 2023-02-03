@@ -57,70 +57,73 @@ class ReController extends ApiController
                     $reMain->webapp            = '1';
                     $reMain->save();
 
-                    for ($x = 0; $x < 6; $x++) {
-                        $actualSignData[] =
-                            [
-                                'PROCESSID'         => $reMain->id,
-                                'USER_GRP_IND'      => '0',
-                                'FRM_NAME'          => 'Reimbursement Request',
-                                'TaskTitle'         => '',
-                                'NS'                => '',
-                                'FRM_CLASS'         => 'REIMBURSEMENT_REQUEST',
-                                'REMARKS'           => $request->purpose,
-                                'STATUS'            => 'Not Started',
-                                'DUEDATE'           => date_create($request->dateNeeded),
-                                'ORDERS'            => $x,
-                                'REFERENCE'         => $reference,
-                                'PODATE'            => date_create($request->dateNeeded),
-                                'DATE'              => now(),
-                                'INITID'            => $request->loggedUserId,
-                                'FNAME'             => $request->loggedUserFirstName,
-                                'LNAME'             => $request->loggedUserLastName,
-                                'DEPARTMENT'        => $request->loggedUserDepartment,
-                                'RM_ID'             => $request->reportingManagerId,
-                                'REPORTING_MANAGER' => $request->reportingManagerName,
-                                'PROJECTID'         => $request->projectId,
-                                'PROJECT'           => $request->projectName,
-                                'COMPID'            => $request->companyId,
-                                'COMPANY'           => $request->companyName,
-                                'TYPE'              => 'Reimbursement Request',
-                                'CLIENTID'          => $request->clientId,
-                                'CLIENTNAME'        => $request->clientName,
-                                'Max_approverCount' => '6',
-                                'DoneApproving'     => '0',
-                                'WebpageLink'       => 're_approve.php',
-                                'Payee'             => $request->payeeName,
-                                'Amount'            => floatval(str_replace(',', '', $request->amount)),
-                                'webapp'            => NULL,
-                            ];
-                    }
+                    // for ($x = 0; $x < 6; $x++) {
+                    //     $actualSignData[] =
+                    //         [
+                    //             'PROCESSID'         => $reMain->id,
+                    //             'USER_GRP_IND'      => '0',
+                    //             'FRM_NAME'          => 'Reimbursement Request',
+                    //             'FRM_CLASS'         => 'REIMBURSEMENT_REQUEST',
+                    //             'REMARKS'           => $request->purpose,
+                    //             'STATUS'            => 'Not Started',
+                    //             'DUEDATE'           => date_create($request->dateNeeded),
+                    //             'ORDERS'            => $x,
+                    //             'REFERENCE'         => $reference,
+                    //             'PODATE'            => date_create($request->dateNeeded),
+                    //             'DATE'              => now(),
+                    //             'INITID'            => $request->loggedUserId,
+                    //             'FNAME'             => $request->loggedUserFirstName,
+                    //             'LNAME'             => $request->loggedUserLastName,
+                    //             'DEPARTMENT'        => $request->loggedUserDepartment,
+                    //             'RM_ID'             => $request->reportingManagerId,
+                    //             'REPORTING_MANAGER' => $request->reportingManagerName,
+                    //             'PROJECTID'         => $request->projectId,
+                    //             'PROJECT'           => $request->projectName,
+                    //             'COMPID'            => $request->companyId,
+                    //             'COMPANY'           => $request->companyName,
+                    //             'TYPE'              => 'Reimbursement Request',
+                    //             'CLIENTID'          => $request->clientId,
+                    //             'CLIENTNAME'        => $request->clientName,
+                    //             'Max_approverCount' => '6',
+                    //             'DoneApproving'     => '0',
+                    //             'WebpageLink'       => 're_approve.php',
+                    //             'Payee'             => $request->payeeName,
+                    //             'Amount'            => floatval(str_replace(',', '', $request->amount)),
+                    //             'webapp'            => NULL,
+                    //         ];
+                    // }
 
-                    if ($actualSignData[0]['ORDERS'] == 0) {
-                        $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
-                        $actualSignData[0]['STATUS']       = 'In Progress';
-                    }
+                    // if ($actualSignData[0]['ORDERS'] == 0) {
+                    //     $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
+                    //     $actualSignData[0]['STATUS']       = 'In Progress';
+                    // }
 
-                    if ($actualSignData[1]['ORDERS'] == 1) {
-                        $actualSignData[1]['USER_GRP_IND'] = 'For Approval of Accounting';
-                    }
+                    // if ($actualSignData[1]['ORDERS'] == 1) {
+                    //     $actualSignData[1]['USER_GRP_IND'] = 'For Approval of Accounting';
+                    // }
 
-                    if ($actualSignData[2]['ORDERS'] == 2) {
-                        $actualSignData[2]['USER_GRP_IND'] = 'For Approval of Management';
-                    }
+                    // if ($actualSignData[2]['ORDERS'] == 2) {
+                    //     $actualSignData[2]['USER_GRP_IND'] = 'For Approval of Management';
+                    // }
 
-                    if ($actualSignData[3]['ORDERS'] == 3) {
-                        $actualSignData[3]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
-                    }
+                    // if ($actualSignData[3]['ORDERS'] == 3) {
+                    //     $actualSignData[3]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
+                    // }
 
-                    if ($actualSignData[4]['ORDERS'] == 4) {
-                        $actualSignData[4]['USER_GRP_IND'] = 'Releasing of Cash';
-                    }
+                    // if ($actualSignData[4]['ORDERS'] == 4) {
+                    //     $actualSignData[4]['USER_GRP_IND'] = 'Releasing of Cash';
+                    // }
 
-                    if ($actualSignData[5]['ORDERS'] == 5) {
-                        $actualSignData[5]['USER_GRP_IND'] = 'Initiator';
-                    }
+                    // if ($actualSignData[5]['ORDERS'] == 5) {
+                    //     $actualSignData[5]['USER_GRP_IND'] = 'Initiator';
+                    // }
             
-                    ActualSign::insert($actualSignData);
+                    // ActualSign::insert($actualSignData);
+
+                    $isInserted = $this->insertActualSign($request, $reMain->id, 'Reimbursement Request', $reference);
+                    if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
+
+
                     $request->request->add(['processId' => $reMain->id]);
                     $request->request->add(['referenceNumber' => $reference]);
 

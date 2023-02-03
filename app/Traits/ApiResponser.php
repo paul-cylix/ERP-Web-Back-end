@@ -567,7 +567,14 @@ trait ApiResponser
             ->get();
 
         if (count($result)) {
-            for ($x = 0; $x < 5; $x++) {
+            
+            if ($frmName === 'Request for Payment') {
+                $webPageLink = 'rfp_approve.php';
+            } else if ($frmName === 'Reimbursement Request'){
+                $webPageLink = 're_approve.php';
+            }
+
+            for ($x = 0; $x < count($result); $x++) {
                 $actualSignData[] = 
                     [
                         'PROCESSID'         => $processId,
@@ -576,7 +583,6 @@ trait ApiResponser
                         'FRM_CLASS'         => $result[$x]->FRM_CLASS,
                         'REMARKS'           => $request->purpose,
                         'STATUS'            => 'Not Started',
-                        'TS'                => now(),
                         'DUEDATE'           => date_create($request->dateNeeded),
                         'ORDERS'            => $x,
                         'REFERENCE'         => $reference,
@@ -592,13 +598,12 @@ trait ApiResponser
                         'PROJECT'           => $request->projectName,
                         'COMPID'            => $request->companyId,
                         'COMPANY'           => $request->companyName,
-                        'TYPE'              => 'Request for Payment',
+                        'TYPE'              => $result[$x]->FRM_NAME,
                         'CLIENTID'          => $request->clientId,
                         'CLIENTNAME'        => $request->clientName,
                         'Max_approverCount' => count($result),
                         'DoneApproving'     => '0',
-                        'WebpageLink'       => 'rfp_approve.php',
-                        'ApprovedRemarks'   => '',
+                        'WebpageLink'       => $webPageLink,
                         'Payee'             => $request->payeeName,
                         'Amount'            => floatval(str_replace(',', '', $request->amount)),
                     ];
