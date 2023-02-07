@@ -567,14 +567,17 @@ trait ApiResponser
             ->get();
 
         if (count($result)) {
-            $type = $frmName;
-
-            $projectId = $request->projectId;
+            $type        = $frmName;
+            $projectId   = $request->projectId;
             $projectName = $request->projectName;
-            $clientId = $request->clientId;
-            $clientName = $request->clientName;
-            $payee = $request->payeeName;
-            $remarks = $request->purpose;
+            $clientId    = $request->clientId;
+            $clientName  = $request->clientName;
+            $payee       = $request->payeeName;
+            $remarks     = $request->purpose;
+            $poNum       = '';
+            $poDate      = $request->dateNeeded;
+            $rmId        = $request->reportingManagerId;
+            $rmName      = $request->reportingManagerName;
 
             if ($frmName === 'Request for Payment') {
                 $webPageLink = 'rfp_approve.php';
@@ -616,7 +619,16 @@ trait ApiResponser
                 $request->request->add(['amount' => '0.00']);
                 $payee = 'N/A';
                 $remarks = '';
+            } else if (strpos($frmName, 'Sales Order') !== false) {
+                $webPageLink = 'so_approve.php';
+                $poNum = $request->poNumber;
+                $poDate = $request->poDate;
+                $rmId        = '0';
+                $rmName      = 'Chua, Konrad A.';
+                $payee = 'N/A';
             }
+
+
 
 
             for ($x = 0; $x < count($result); $x++) {
@@ -631,14 +643,15 @@ trait ApiResponser
 'DUEDATE'           => date_create($request->dateNeeded),
 'ORDERS'            => $x,
 'REFERENCE'         => $reference,
-'PODATE'            => date_create($request->dateNeeded),
+'PODATE'            => date_create($poDate),
+'PONUM'             => $poNum,
 'DATE'              => date_create($request->dateNeeded),
 'INITID'            => $request->loggedUserId,
 'FNAME'             => $request->loggedUserFirstName,
 'LNAME'             => $request->loggedUserLastName,
 'DEPARTMENT'        => $request->loggedUserDepartment,
-'RM_ID'             => $request->reportingManagerId,
-'REPORTING_MANAGER' => $request->reportingManagerName,
+'RM_ID'             => $rmId,
+'REPORTING_MANAGER' => $rmName,
 'PROJECTID'         => $projectId,
 'PROJECT'           => $projectName,
 'COMPID'            => $request->companyId,

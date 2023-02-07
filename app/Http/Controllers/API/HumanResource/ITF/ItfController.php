@@ -40,6 +40,7 @@ class ItfController extends ApiController
         $itfMain->position = $request->loggedUserPosition;
         $itfMain->GUID = $guid;
         $itfMain->TITLEID = $request->companyId;
+        $itfMain->webapp = 1;
 
         $itfMain->save();
 
