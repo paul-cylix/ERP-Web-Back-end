@@ -578,6 +578,7 @@ trait ApiResponser
             $poDate      = $request->dateNeeded;
             $rmId        = $request->reportingManagerId;
             $rmName      = $request->reportingManagerName;
+            $date_f      = $request->dateNeeded;
 
             if ($frmName === 'Request for Payment') {
                 $webPageLink = 'rfp_approve.php';
@@ -626,6 +627,21 @@ trait ApiResponser
                 $rmId        = '0';
                 $rmName      = 'Chua, Konrad A.';
                 $payee = 'N/A';
+            } else if (strpos($frmName,'Material Request') !== false) {
+                $poDate = $request->requested_date;
+                $date_f = $request->requested_date;
+                $webPageLink = 'mrf_approve.php';
+                $payee = '';
+            } else if (strpos($frmName,'Asset Request') !== false) {
+                $poDate = $request->requested_date;
+                $date_f = $request->requested_date;
+                $webPageLink = 'arf_approve.php';
+                $payee = '';
+            } else if (strpos($frmName,'Supplies Request') !== false) {
+                $poDate = $request->requested_date;
+                $date_f = $request->requested_date;
+                $webPageLink = 'surf_approve.php';
+                $payee = '';
             }
 
 
@@ -645,7 +661,7 @@ trait ApiResponser
 'REFERENCE'         => $reference,
 'PODATE'            => date_create($poDate),
 'PONUM'             => $poNum,
-'DATE'              => date_create($request->dateNeeded),
+'DATE'              => date_create($date_f),
 'INITID'            => $request->loggedUserId,
 'FNAME'             => $request->loggedUserFirstName,
 'LNAME'             => $request->loggedUserLastName,
