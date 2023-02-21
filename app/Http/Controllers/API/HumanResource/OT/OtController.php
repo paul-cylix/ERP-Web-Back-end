@@ -113,6 +113,7 @@ class OtController extends ApiController
         try
         {  
 
+        log::debug($request);
 
         $guid = $this->getGuid();
         $reqRef = $this->getOtRef($request->companyId);
@@ -127,6 +128,8 @@ class OtController extends ApiController
 
         // insert to hr.ot main table
         for ($i = 0; $i < count($otData); $i++) {
+
+            log::debug($otData);
 
             $ot_date = date_create($otData[$i]['overtime_date']);
             $ot_in = date_create($otData[$i]['ot_in']);
@@ -229,8 +232,8 @@ class OtController extends ApiController
 
 
         
-        return response()->json(['message' => 'Your Overtime Request was successfully submitted.'], 200);
         DB:: commit();
+        return response()->json(['message' => 'Your Overtime Request was successfully submitted.'], 200);
 
         }
         catch(\Exception $e)
