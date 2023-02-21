@@ -101,138 +101,17 @@ class RfpController extends ApiController
         $rfpDetail->TS              = now();
         $rfpMain->save();
 
-
-        // $actualSign = new ActualSign();
-        // $actualSign->PROCESSID = '213700';
-        // $request = new Request();
-        // $request->headers->set('New-Set','1');
-        // $value = $request->header('New-Set', 'defaultIfNull');
-
-
         $rfpMain->rfpDetail()->save($rfpDetail);
 
-        // $user = User::findOrFail($value);
-
-
-        for ($x = 0; $x < 5; $x++) {
-            $actualSignData[] = 
-                [
-                    'PROCESSID'         => $rfpMain->ID,
-                    'USER_GRP_IND'      => 'Acknowledgement of Accounting',
-                    'FRM_NAME'          => 'Request for Payment',
-                    'FRM_CLASS'         => 'REQUESTFORPAYMENT',
-                    'REMARKS'           => $request->purpose,
-                    'STATUS'            => 'Not Started',
-                    'TS'                => now(),
-                    'DUEDATE'           => date_create($request->dateNeeded),
-                    'ORDERS'            => $x,
-                    'REFERENCE'         => $reqRef,
-                    'PODATE'            => date_create($request->dateNeeded),
-                    'DATE'              => date_create($request->dateNeeded),
-                    'INITID'            => $request->loggedUserId,
-                    'FNAME'             => $request->loggedUserFirstName,
-                    'LNAME'             => $request->loggedUserLastName,
-                    'DEPARTMENT'        => $request->loggedUserDepartment,
-                    'RM_ID'             => $request->reportingManagerId,
-                    'REPORTING_MANAGER' => $request->reportingManagerName,
-                    'PROJECTID'         => $request->projectId,
-                    'PROJECT'           => $request->projectName,
-                    'COMPID'            => $request->companyId,
-                    'COMPANY'           => $request->companyName,
-                    'TYPE'              => 'Request for Payment',
-                    'CLIENTID'          => $request->clientId,
-                    'CLIENTNAME'        => $request->clientName,
-                    'Max_approverCount' => '5',
-                    'DoneApproving'     => '0',
-                    'WebpageLink'       => 'rfp_approve.php',
-                    'ApprovedRemarks'   => '',
-                    'Payee'             => $request->payeeName,
-                    'Amount'            => floatval(str_replace(',', '', $request->amount)),
-                ];
-        }
-        if ($actualSignData[0]['ORDERS'] == 0) {
-            $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
-            $actualSignData[0]['STATUS']       = 'In Progress';
-        }
-
-        if ($actualSignData[1]['ORDERS'] == 1) {
-            $actualSignData[1]['USER_GRP_IND'] = 'For Approval of Management';
-        }
-
-        if ($actualSignData[2]['ORDERS'] == 2) {
-            $actualSignData[2]['USER_GRP_IND'] = 'Releasing of Cash';
-        }
-
-        if ($actualSignData[3]['ORDERS'] == 3) {
-            $actualSignData[3]['USER_GRP_IND'] = 'Initiator';
-        }
-
-        if ($actualSignData[4]['ORDERS'] == 4) {
-            $actualSignData[4]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
-        }
-
-
-
-        ActualSign:: insert($actualSignData);
-        
+        $isInserted = $this->insertActualSign($request, $rfpMain->ID, 'Request for Payment', $reqRef);
+        if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
+            
         $request->request->add(['processId' => $rfpMain->ID]);
         $request->request->add(['referenceNumber' => $reqRef]);
 
         $this->addAttachments($request);
 
-        // if ($request->hasFile('file')) {
-
-        //     foreach ($request->file as $file) {
-        //         $completeFileName = $file->getClientOriginalName();
-        //         $fileNameOnly = pathinfo($completeFileName, PATHINFO_FILENAME);
-        //         $extension = $file->getClientOriginalExtension();
-        //         $randomized = rand();
-        //         $newFileName = str_replace(' ', '', $fileNameOnly) . '-' . $randomized . '' . time() . '.' . $extension;
-        //         $reqRef = str_replace('-', '_', $reqRef);
-        //         $mimeType = $file->getMimeType();
-        //         // $myPath = "C:/Users/Iverson/Desktop/Attachments/".session('LoggedUser_CompanyID')."/RFP/".$rfpCode;
-
-        //         // For moving the file
-        //         $destinationPath = "public/Attachments/{$request->companyId}/RFP/" . $reqRef;
-        //         // For preview
-        //         $storagePath = "storage/Attachments/{$request->companyId}/RFP/" . $reqRef;
-        //         $symPath = "public/Attachments/RFP";
-        //         $file->storeAs($destinationPath, $completeFileName);
-        //         $fileDestination = $storagePath . '/' . $completeFileName;
-
-        //         // $image = base64_encode(file_get_contents($file));
-
-        //         // DB::table('repository.rfp')->insert([
-        //         //     'REFID' => $rfpMain->ID,
-        //         //     'FileName' => $completeFileName,
-        //         //     'IMG' => $image,
-        //         //     'UID' => $request->loggedUserId,
-        //         //     'Ext' => $extension
-        //         // ]);
-
-        //         $attachmentsData = [
-        //             'INITID' => $request->loggedUserId,
-        //             'REQID' => $rfpMain->ID,
-        //             'filename' => $completeFileName,
-        //             'filepath' => $storagePath,
-        //             'fileExtension' => $extension,
-        //             'newFilename' => $newFileName,
-        //             'fileDestination' => $destinationPath,
-        //             'mimeType' => $mimeType,
-        //             // 'imageBytes' => $image,
-        //             'formName' => 'Request for Payment',
-        //             'created_at' => date('Y-m-d H:i:s')
-        //         ];
-
-
-
-        //         Attachments::insert($attachmentsData);
-        //     }
-        // }
-
-
         DB::commit();
-        // return response()->json($request, 201);
         return response()->json([
             'message' => 'Request for Payment has been successfully submitted', 'code' => 200
         ]);

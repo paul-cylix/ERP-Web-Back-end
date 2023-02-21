@@ -47,7 +47,7 @@ use Illuminate\Support\Facades\Storage;
 
 
 use App\Http\Controllers\API\Master\Vendor\VendorController;
-
+use App\Http\Controllers\API\Workflow\DraftController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,10 +73,15 @@ Route::resource('rfp-main-actualsign', RfpMainActualSignController::class,  ['on
 
 // Accounting - RE
 Route::post('saveRe', [ReController::class, 'saveRE']);
+Route::post('saveRef', [ReController::class, 'saveREF']);
+
 Route::get('getRE/{id}', [ReController::class, 'getRE']);
 
-Route::post('saveDraftRe', [ReController::class, 'saveDraftRe']);
-Route::get('getREbyUserID/{userid}', [ReController::class, 'getREbyUserID']);
+Route::post('saveREDrafts', [ReController::class, 'saveREDrafts']);
+Route::post('saveNewREDrafts', [ReController::class, 'saveNewREDrafts']);
+
+
+Route::get('getReDrafts/{id}/{frmName}/{companyId}/{loggedUserId}', [ReController::class, 'getReDrafts']);
 Route::get('getReGeneralAttachmentsByReqid/{reqid}/{loggeduserID}', [ReController::class, 'getReGeneralAttachmentsByReqid']);
 
 route::get('get-ReExpense/{id}', [ReController::class, 'getExpense']);
@@ -203,6 +208,7 @@ Route::get('getRejected/{loggedUserId}/{companyId}', [RejectedController::class,
 Route::get('getApproved/{loggedUserId}/{companyId}', [ApprovedController::class, 'getApproved']);
 Route::get('getInputs/{loggedUserId}/{companyId}', [InputController::class, 'getInputs']);
 Route::get('getClarification/{loggedUserId}/{companyId}', [ClarificationController::class, 'getClarification']);
+Route::get('getDrafts/{loggedUserId}/{companyId}', [DraftController::class, 'getDrafts']);
 Route::get('getLists/{companyId}', [ListController::class, 'getLists']);
 
 
@@ -244,6 +250,12 @@ Route::get('get-isRmApproval-ot/{id}/{companyId}', [OtController::class, 'isRmAp
 
 Route::get('cloneCloudHROT', [OtController::class, 'cloneCloudHROT']); // copy HROT
 Route::get('createOTfromOTTemp', [OtController::class, 'createOTfromOTTemp']); // copy HROT
+
+
+Route::post('saveNewOTDrafts', [OtController::class, 'saveNewOTDrafts']); // save new ot draft
+Route::post('saveOTDrafts', [OtController::class, 'saveOTDrafts']); // append new ot drafts
+Route::post('saveOTF', [OtController::class, 'saveOTF']); // append new ot drafts
+
 
 Route::post('save-itf', [ItfController::class, 'saveItf']);
 Route::get('itf-main/{id}', [ItfController::class, 'getItfMain']);

@@ -32,6 +32,7 @@ class ItfMain extends Model
         'GUID',
         'comments',
         'TITLEID',
+        'webapp'
     ];
 
 

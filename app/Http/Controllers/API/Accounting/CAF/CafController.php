@@ -42,82 +42,67 @@ class CafController extends ApiController
             $cafMain->save();
 
 
-            log::debug($request);
+            // log::debug($request);
             
-            for ($x = 0; $x < 5; $x++) {
-                $actualSignData[] =
-                    [
-                        'PROCESSID' => $cafMain->id,
-                        'USER_GRP_IND' => 'Approval of Management',
-                        'FRM_NAME' => 'Cash Advance Request',
-                        // 'TaskTitle' => '',
-                        // 'NS' => '',
-                        'FRM_CLASS' => 'frmCashAdvance_Request',
-                        'REMARKS' => $request->purpose,
-                        'STATUS' => 'Not Started',
-                        // 'UID_SIGN' => '0',
-                        'TS' => now(),
-                        'DUEDATE' => date_create($request->dateNeeded),
-                        // 'SIGNDATETIME' => '',
-                        'ORDERS' => $x,
-                        'REFERENCE' => $reqRef,
-                        'PODATE' => date_create($request->dateNeeded),
-                        // 'PONUM' => '',
-                        'DATE' => date_create($request->dateNeeded),
-                        'INITID' => $request->loggedUserId,
-                        'FNAME' => $request->loggedUserFirstName,
-                        'LNAME' => $request->loggedUserLastName,
-                        // 'MI' => '',
-                        'DEPARTMENT' => $request->loggedUserDepartment,
-                        'RM_ID' => $request->reportingManagerId,
-                        'REPORTING_MANAGER' => $request->reportingManagerName,
-                        'PROJECTID' => '0',
-                        'PROJECT' => $request->loggedUserDepartment,
-                        'COMPID' => $request->companyId,
-                        'COMPANY' => $request->companyName,
-                        'TYPE' => 'Cash Advance Request',
-                        'CLIENTID' => '0',
-                        'CLIENTNAME' => $request->companyName,
-                        // 'VENDORID' => '0',
-                        // 'VENDORNAME' => '',
-                        'Max_approverCount' => '5',
-                        // 'GUID_GROUPS' => '',
-                        'DoneApproving' => '0',
-                        'WebpageLink' => 'ca_approve.php',
-                        'ApprovedRemarks' => '',
-                        // 'Payee' => $request->payeeName,
-                        // 'CurrentSender' => '0',
-                        // 'CurrentReceiver' => '0',
-                        // 'NOTIFICATIONID' => '0',
-                        // 'SENDTOID' => '0',
-                        // 'NRN' => 'Imported',
-                        // 'imported_from_excel' => '0',
-                        'Amount' => floatval(str_replace(',', '', $request->requestedAmount)),
-                        // 'webapp' => '1'
-                    ];
-            }
-            if ($actualSignData[0]['ORDERS'] == 0) {
-                $actualSignData[0]['USER_GRP_IND'] = 'Approval of Management';
-                $actualSignData[0]['STATUS'] = 'In Progress';
-            }
+//             for ($x = 0; $x < 5; $x++) {
+//                 $actualSignData[] =
+//                     [
+// 'PROCESSID'         => $cafMain->id,
+// 'USER_GRP_IND'      => 'Approval of Management',
+// 'FRM_NAME'          => 'Cash Advance Request',
+// 'FRM_CLASS'         => 'frmCashAdvance_Request',
+// 'REMARKS'           => $request->purpose,
+// 'STATUS'            => 'Not Started',
+// 'DUEDATE'           => date_create($request->dateNeeded),
+// 'ORDERS'            => $x,
+// 'REFERENCE'         => $reqRef,
+// 'PODATE'            => date_create($request->dateNeeded),
+// 'DATE'              => date_create($request->dateNeeded),
+// 'INITID'            => $request->loggedUserId,
+// 'FNAME'             => $request->loggedUserFirstName,
+// 'LNAME'             => $request->loggedUserLastName,
+// 'DEPARTMENT'        => $request->loggedUserDepartment,
+// 'RM_ID'             => $request->reportingManagerId,
+// 'REPORTING_MANAGER' => $request->reportingManagerName,
+// 'PROJECTID'         => '0',
+// 'PROJECT'           => $request->loggedUserDepartment,
+// 'COMPID'            => $request->companyId,
+// 'COMPANY'           => $request->companyName,
+// 'TYPE'              => 'Cash Advance Request',
+// 'CLIENTID'          => '0',
+// 'CLIENTNAME'        => $request->companyName,
+// 'Max_approverCount' => '5',
+// 'DoneApproving'     => '0',
+// 'WebpageLink'       => 'ca_approve.php',
+// 'ApprovedRemarks'   => '',
+// 'Amount'            => floatval(str_replace(',', '', $request->requestedAmount)),
+//                     ];
+//             }
+//             if ($actualSignData[0]['ORDERS'] == 0) {
+//                 $actualSignData[0]['USER_GRP_IND'] = 'Approval of Management';
+//                 $actualSignData[0]['STATUS'] = 'In Progress';
+//             }
     
-            if ($actualSignData[1]['ORDERS'] == 1) {
-                $actualSignData[1]['USER_GRP_IND'] = 'Acknowledgement of Human Resource';
-            }
+//             if ($actualSignData[1]['ORDERS'] == 1) {
+//                 $actualSignData[1]['USER_GRP_IND'] = 'Acknowledgement of Human Resource';
+//             }
     
-            if ($actualSignData[2]['ORDERS'] == 2) {
-                $actualSignData[2]['USER_GRP_IND'] = 'Approval of Accounting';
-            }
+//             if ($actualSignData[2]['ORDERS'] == 2) {
+//                 $actualSignData[2]['USER_GRP_IND'] = 'Approval of Accounting';
+//             }
     
-            if ($actualSignData[3]['ORDERS'] == 3) {
-                $actualSignData[3]['USER_GRP_IND'] = 'Releasing of Cash';
-            }
+//             if ($actualSignData[3]['ORDERS'] == 3) {
+//                 $actualSignData[3]['USER_GRP_IND'] = 'Releasing of Cash';
+//             }
     
-            if ($actualSignData[4]['ORDERS'] == 4) {
-                $actualSignData[4]['USER_GRP_IND'] = 'Acknowledgement of Initiator';
-            }
+//             if ($actualSignData[4]['ORDERS'] == 4) {
+//                 $actualSignData[4]['USER_GRP_IND'] = 'Acknowledgement of Initiator';
+//             }
+            // ActualSign::insert($actualSignData);
     
-            ActualSign::insert($actualSignData);
+            $isInserted = $this->insertActualSign($request, $cafMain->id, 'Cash Advance Request', $reqRef);
+            if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
+
         
 
         DB::commit();

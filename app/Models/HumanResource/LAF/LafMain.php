@@ -41,6 +41,7 @@ class LafMain extends Model
         'GUID',
         'comments',
         'TITLEID',
+        'webapp'
 
     ];
 

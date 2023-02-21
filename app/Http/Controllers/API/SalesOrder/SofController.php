@@ -145,6 +145,8 @@ class SofController extends ApiController
 
         DB::beginTransaction();
         try{  
+
+        log::debug($request);
                 
         $guid   = $this->getGuid();
         $reqRef = $this->getSofRef($request->companyId);
@@ -304,149 +306,64 @@ class SofController extends ApiController
         }
         // insert iterated array to sales_order_docs
         DB:: table('sales_order.sales_order_docs')->insert($documentnameArray);
+        
+        
+//         // Actual Sign
+//         for ($x = 0; $x < $sofCount; $x++) {
+//             $array[] = array(
+// 'PROCESSID'         => $salesOrders_ID,
+// 'USER_GRP_IND'      => '0',
+// 'FRM_NAME'          => $softypeName,
+// 'FRM_CLASS'         => 'SALES_ORDER_FRM',
+// 'REMARKS'           => $request->scopeOfWork,
+// 'STATUS'            => 'Not Started',
+// 'DUEDATE'           => $projectEnd,
+// 'ORDERS'            => $x,
+// 'REFERENCE'         => $reqRef,
+// 'PODATE'            => $poDate,
+// 'PONUM'             => $request->poNumber,
+// 'DATE'              => $projectEnd,
+// 'INITID'            => $request->loggedUserId,
+// 'FNAME'             => $request->loggedUserFirstName,
+// 'LNAME'             => $request->loggedUserLastName,
+// 'DEPARTMENT'        => $request->loggedUserDepartment,
+// 'RM_ID'             => '0',
+// 'REPORTING_MANAGER' => 'Chua, Konrad A.',
+// 'PROJECTID'         => $setupProject_ID,
+// 'PROJECT'           => $request->projectName,
+// 'COMPID'            => $request->companyId,
+// 'COMPANY'           => $request->companyName,
+// 'TYPE'              => $softypeName,
+// 'CLIENTID'          => $request->clientID,
+// 'CLIENTNAME'        => $request->client,
+// 'Max_approverCount' => $sofCount,
+// 'DoneApproving'     => '0',
+// 'WebpageLink'       => 'so_approve.php',
+// 'Payee'             => 'N/A',
+// 'Amount'            => $projectCost,
+//             );
+//             }
 
-        // Actual Sign
-        for ($x = 0; $x < $sofCount; $x++) {
-            $array[] = array(
-                'PROCESSID'         => $salesOrders_ID,
-                'USER_GRP_IND'      => '0',
-                'FRM_NAME'          => $softypeName,
-                'TaskTitle'         => '',
-                'NS'                => '',
-                'FRM_CLASS'         => 'SALES_ORDER_FRM',
-                'REMARKS'           => $request->scopeOfWork,
-                'STATUS'            => 'Not Started',
-                'TS'                => now(),
-                'DUEDATE'           => $projectEnd,
-                'ORDERS'            => $x,
-                'REFERENCE'         => $reqRef,
-                'PODATE'            => $poDate,
-                'PONUM'             => $request->poNumber,
-                'DATE'              => $projectEnd,
-                'INITID'            => $request->loggedUserId,
-                'FNAME'             => $request->loggedUserFirstName,
-                'LNAME'             => $request->loggedUserLastName,
-                'DEPARTMENT'        => $request->loggedUserDepartment,
-                'RM_ID'             => '0',
-                'REPORTING_MANAGER' => 'Chua, Konrad A.',
-                'PROJECTID'         => $setupProject_ID,
-                'PROJECT'           => $request->projectName,
-                'COMPID'            => $request->companyId,
-                'COMPANY'           => $request->companyName,
-                'TYPE'              => $softypeName,
-                'CLIENTID'          => $request->clientID,
-                'CLIENTNAME'        => $request->client,
-                'Max_approverCount' => $sofCount,
-                'DoneApproving'     => '0',
-                'WebpageLink'       => 'so_approve.php',
-                'Payee'             => 'N/A',
-                'Amount'            => $projectCost,
-            );
-            }
+            $request->request->add(['purpose' => $request->scopeOfWork]);
+            $request->request->add(['dateNeeded' => $request->projectEnd]);
+            $request->request->add(['projectId' => $setupProject_ID]);
+            $request->request->add(['clientId' => $request->clientID]);
+            $request->request->add(['clientName' => $request->client]);
+            $request->request->add(['amount' => $request->projectCost]);
 
-            if($request->softype === 'DLV'){
-                if ($array[0]['ORDERS'] == 0){
-                    $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS']       = 'In Progress';
-                }
-        
-                if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head'; // Approval of Account Manager (old)
-                }
-        
-                if ($array[2]['ORDERS'] == 2){
-                    $array[2]['USER_GRP_IND'] = 'Accounting Acknowledgement';
-                }
-        
-                if ($array[3]['ORDERS'] == 3){
-                    $array[3]['USER_GRP_IND'] = 'Approval of Project Head'; // MM Acknowledgement (old)
-                }
-        
-                if ($array[4]['ORDERS'] == 4){
-                    $array[4]['USER_GRP_IND'] = 'Initiator';
-                }
-        
-                if ($array[5]['ORDERS'] == 5){
-                    $array[5]['USER_GRP_IND'] = 'SI Confirmation';
-                }
-            } else if ($request->softype === 'PRJ'){
-                if ($array[0]['ORDERS'] == 0){
-                    $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS']       = 'In Progress';
-                }
-        
-                if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head'; // Approval of Account Manager (old)
-                }
-        
-                if ($array[2]['ORDERS'] == 2){
-                    $array[2]['USER_GRP_IND'] = 'Accounting Acknowledgement';
-                }
-        
-                if ($array[3]['ORDERS'] == 3){
-                    $array[3]['USER_GRP_IND'] = 'Approval of Project Head';
-                }
-        
-                if ($array[4]['ORDERS'] == 4){
-                    $array[4]['USER_GRP_IND'] = 'PC Acknowledgement';
-                }
-        
-                if ($array[5]['ORDERS'] == 5){
-                    $array[5]['USER_GRP_IND'] = 'Initiator';
-                }
-        
-                if ($array[6]['ORDERS'] == 6){
-                    $array[6]['USER_GRP_IND'] = 'SI Confirmation';
-                }
-        
-            } else if ($request->softype === 'DMO'){
-                if ($array[0]['ORDERS'] == 0){
-                    $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS']       = 'In Progress';
-                }
-        
-                if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head';
-                }
-        
-                if ($array[2]['ORDERS'] == 2){
-                    $array[2]['USER_GRP_IND'] = 'Accounting Acknowledgement';
-                }
 
-                if ($array[3]['ORDERS'] == 3){
-                    $array[3]['USER_GRP_IND'] = 'Initiator';
-                }
-        
-
-            } else if ($request->softype === 'POC'){
-                if ($array[0]['ORDERS'] == 0){
-                    $array[0]['USER_GRP_IND'] = 'Sales Reviewer';
-                    $array[0]['STATUS']       = 'In Progress';
-                }
-        
-                if ($array[1]['ORDERS'] == 1){
-                    $array[1]['USER_GRP_IND'] = 'Approval of Sales Head';
-                }
-        
-                if ($array[2]['ORDERS'] == 2){
-                    $array[2]['USER_GRP_IND'] = 'Accounting Acknowledgement';
-                }
-
-                if ($array[3]['ORDERS'] == 3){
-                    $array[3]['USER_GRP_IND'] = 'Initiator';
-                }
-        
-            }
+            $isInserted = $this->insertActualSign($request, $salesOrders_ID, $softypeName, $reqRef);
+            if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
 
             $request->request->add(['processId' => $salesOrders_ID]);
             $request->request->add(['referenceNumber' => $reqRef]);
-            DB::table('general.actual_sign')->insert($array);
             $this->addAttachments($request);
 
             DB::commit();
             return response()->json($request, 201);
         }catch(\Exception $e){
             DB::rollback();
+            log::debug($e);
         
             // throw error response
             return response()->json($e, 500);

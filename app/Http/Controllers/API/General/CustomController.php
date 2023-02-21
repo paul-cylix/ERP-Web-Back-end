@@ -1724,6 +1724,4 @@ class CustomController extends ApiController
             return $ref;
         }
 
-
-        
 }
