@@ -785,7 +785,7 @@ class ScController extends ApiController
 
 
             $isInserted = $this->insertActualSign($request, $m_id, $request->type_category, $mainRef);
-            if(!$isInserted) throw new \Exception('Actual Sign data Failed to save');
+            if (!$isInserted) throw new \Exception('Actual Sign data Failed to save');
 
             // insert in general.attachments
             $request->request->add(['processId' => $m_id]);
@@ -842,9 +842,9 @@ class ScController extends ApiController
             $title_id       = $req_main[0]->title_id;
 
             $user = DB::table('general.users as a')
-            ->where('a.id', $userid)
-            ->select('a.id', 'a.UserFull_name as fullname')
-            ->get();
+                ->where('a.id', $userid)
+                ->select('a.id', 'a.UserFull_name as fullname')
+                ->get();
 
             $user_fullname = $user[0]->fullname;
 
@@ -853,10 +853,10 @@ class ScController extends ApiController
 
             // Get general.acutal_sign
             $general_actualsign = DB::table('general.actual_sign as a')
-            ->where('a.PROCESSID', $requisition_id)
-            ->where('a.REFERENCE', $requisition_no)
-            ->where('a.COMPID', $title_id)
-            ->get();
+                ->where('a.PROCESSID', $requisition_id)
+                ->where('a.REFERENCE', $requisition_no)
+                ->where('a.COMPID', $title_id)
+                ->get();
             $reference          = $general_actualsign[0]->REFERENCE;
             $department         = $general_actualsign[0]->DEPARTMENT;
             $rm_name            = $general_actualsign[0]->REPORTING_MANAGER;
@@ -865,35 +865,35 @@ class ScController extends ApiController
             // is Done Approving
 
             $response = DB::table('general.actual_sign as a')->select('a.STATUS')
-            ->where('a.PROCESSID', $requisition_id)
-            ->where('a.REFERENCE', $requisition_no)
-            ->where('a.COMPID', $title_id)
-            ->orderBy('a.ID', 'desc')
-            ->limit(1)
-            ->get();
+                ->where('a.PROCESSID', $requisition_id)
+                ->where('a.REFERENCE', $requisition_no)
+                ->where('a.COMPID', $title_id)
+                ->orderBy('a.ID', 'desc')
+                ->limit(1)
+                ->get();
             $actual_status = $response[0]->STATUS;
             $done_approving = ($actual_status === 'In Progress' ? true : false);
 
             // Get sales order form name
             $res = DB::table('sales_order.sales_orders')->where('id', $soid)->select('purpose')->limit(1)->get();
-            $frmnme = empty($res[0]->purpose)? null : $res[0]->purpose;
-            
+            $frmnme = empty($res[0]->purpose) ? null : $res[0]->purpose;
+
 
             // Get Attachments of link sales order
             $attachmentsSOF = DB::table('general.attachments as a')
-            ->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')
-            ->where('a.REQID', $soid)
-            ->where('a.formName', $frmnme)
-            ->get();
+                ->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')
+                ->where('a.REQID', $soid)
+                ->where('a.formName', $frmnme)
+                ->get();
             // log::debug($frmnme);
 
             // Get Attachments of this MRF
             $attachmentsMRF = DB::table('general.attachments as a')
-            ->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')
-            ->where('a.REQID', $requisition_id)
-            ->where('a.formName', $frm_name)
-            ->get();
-            
+                ->select('a.id', 'a.INITID', 'a.REQID', 'a.filename', 'a.filepath', 'a.fileExtension', 'a.originalFilename', 'a.newFilename', 'a.formName', 'a.fileDestination', 'a.mimeType', 'a.created_at', 'a.updated_at')
+                ->where('a.REQID', $requisition_id)
+                ->where('a.formName', $frm_name)
+                ->get();
+
 
             $mrf  = array('Material Request - Project', 'Material Request - Delivery', 'Material Request - Demo', 'Material Request - POC',);
             $arf  = array('Asset Request - Project', 'Asset Request - Delivery', 'Asset Request - Demo', 'Asset Request - POC', 'Asset Request - Internal',);
@@ -916,8 +916,9 @@ class ScController extends ApiController
                 ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
                 ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
                 ->where('c.requisition_id', $req_id)
+                ->where('c.item_status', 'ACTIVE')
 
-                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id')
+                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status')
                 ->get();
 
 
@@ -930,7 +931,17 @@ class ScController extends ApiController
                 ->select('a.ID')
                 ->exists() ? true : false;
 
+            $isMRFWithdrawable = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`actual_sign` a 
+            WHERE a.`PROCESSID` = '".$req_id."' 
+            AND a.`FRM_NAME` = '".$frmname."' 
+            AND a.`COMPID` = '".$companyid."'
+            AND a.`USER_GRP_IND` = 'Acknowledge by Material Management' 
+            AND a.`STATUS` IN ('Not Started', 'Withdrawn')),FALSE) AS isMRFwithdrawable");
 
+       
+
+            log::debug($isMRFWithdrawable[0]->isMRFwithdrawable);
+            
 
 
             return response()->json([
@@ -967,7 +978,8 @@ class ScController extends ApiController
                 'req_details'    => $req_details,
                 'attachmentsSOF'  => $attachmentsSOF,
                 'attachmentsMRF' => $attachmentsMRF,
-                'gen_actualsign' => $general_actualsign
+                'gen_actualsign' => $general_actualsign,
+                'isMRFWithdrawable' => $isMRFWithdrawable[0]->isMRFwithdrawable,
 
             ], 200);
         } catch (\Throwable $th) {
@@ -984,40 +996,40 @@ class ScController extends ApiController
         }
     }
 
-    public function isAcnowledgeByMM($companyid, $req_id, $frmname) {
+    public function isAcnowledgeByMM($companyid, $req_id, $frmname)
+    {
 
-    // if (DB::table('general.actual_sign as a')
-    // ->where('a.USER_GRP_IND', 'Acknowledge by Material Management')
-    // ->where('a.STATUS', 'In Progress')
-    // ->where('a.COMPID', $companyid)
-    // ->where('a.PROCESSID', $req_id)
-    // ->where('a.FRM_NAME', $frmname)
-    // ->select('a.ID')
-    // ->exists()
-    // ) 
-    // {
-    //     $isAcknowledgeByMM = true;
-    // } 
-    // else {
-    //     $isAcknowledgeByMM = false;
-    // }
+        // if (DB::table('general.actual_sign as a')
+        // ->where('a.USER_GRP_IND', 'Acknowledge by Material Management')
+        // ->where('a.STATUS', 'In Progress')
+        // ->where('a.COMPID', $companyid)
+        // ->where('a.PROCESSID', $req_id)
+        // ->where('a.FRM_NAME', $frmname)
+        // ->select('a.ID')
+        // ->exists()
+        // ) 
+        // {
+        //     $isAcknowledgeByMM = true;
+        // } 
+        // else {
+        //     $isAcknowledgeByMM = false;
+        // }
 
 
-    $isAcknowledgeByMM = DB::table('general.actual_sign as a')
-    ->where('a.USER_GRP_IND', 'Acknowledge by Material Management')
-    ->where('a.STATUS', 'In Progress')
-    ->where('a.COMPID', $companyid)
-    ->where('a.PROCESSID', $req_id)
-    ->where('a.FRM_NAME', $frmname)
-    ->select('a.ID')
-    ->exists() ? true : false;
+        $isAcknowledgeByMM = DB::table('general.actual_sign as a')
+            ->where('a.USER_GRP_IND', 'Acknowledge by Material Management')
+            ->where('a.STATUS', 'In Progress')
+            ->where('a.COMPID', $companyid)
+            ->where('a.PROCESSID', $req_id)
+            ->where('a.FRM_NAME', $frmname)
+            ->select('a.ID')
+            ->exists() ? true : false;
 
-    return response()->json([
-        'status'  => true,
-        'data'   => $isAcknowledgeByMM,
-        'message' => 'Query Success'
-    ], 200);
-
+        return response()->json([
+            'status'  => true,
+            'data'   => $isAcknowledgeByMM,
+            'message' => 'Query Success'
+        ], 200);
     }
 
     public function mrfChangeStatus(Request $request)
@@ -1060,28 +1072,28 @@ class ScController extends ApiController
                     ->where('COMPID', $request->companyId)
                     ->update(['STATUS' => $status, 'SIGNDATETIME' => now(), 'UID_SIGN' => $request->loggedUserId, 'ApprovedRemarks' => $request->withdrawRemarks, 'webapp' => 1]);
 
-            // Change status of approve
+                // Change status of approve
             } else {
                 log::debug('else');
 
                 // Change status to done approving
                 if (filter_var($request->done_approving, FILTER_VALIDATE_BOOLEAN)) {
                     // Update delivery date and notes of requested item when in - For Input of Material Management
-                    if(filter_var($request->input, FILTER_VALIDATE_BOOLEAN)){
+                    if (filter_var($request->input, FILTER_VALIDATE_BOOLEAN)) {
                         log::debug('else if- Done Approving');
 
                         $requested_items = json_decode($request->requested_items, true);
-                        foreach($requested_items as $item){
+                        foreach ($requested_items as $item) {
 
-                            if(empty($item['date_delivered']) || is_null($item['date_delivered'])){
+                            if (empty($item['date_delivered']) || is_null($item['date_delivered'])) {
                                 $date_delivered = null;
                             } else {
                                 $date_delivered = date_create($item['date_delivered']);
                                 $date_delivered = date_format($date_delivered, 'Y-m-d');
                             }
-                            DB:: table('procurement.requisition_details')
+                            DB::table('procurement.requisition_details')
                                 ->where('req_dtls_id', $item['req_dtls_id'])
-                                ->update(['date_delivered' => $date_delivered,'notes' => $item['notes']]);
+                                ->update(['date_delivered' => $date_delivered, 'notes' => $item['notes']]);
                         }
                     }
 
@@ -1106,26 +1118,26 @@ class ScController extends ApiController
 
 
                     // acknowledgement of MM true if status in general.actual_sign is in progress
-                    if(filter_var($request->isAcknowledgeByMM, FILTER_VALIDATE_BOOLEAN)){
+                    if (filter_var($request->isAcknowledgeByMM, FILTER_VALIDATE_BOOLEAN)) {
                         DB::table('procurement.requisition_main')
                             ->where('requisition_id', $request->processId)
                             ->update(['acknowledge' => 1]);
                     }
 
                     // Update delivery date and notes of requested item when in - For Input of Material Management
-                    if(filter_var($request->input, FILTER_VALIDATE_BOOLEAN)){
+                    if (filter_var($request->input, FILTER_VALIDATE_BOOLEAN)) {
                         $requested_items = json_decode($request->requested_items, true);
-                        foreach($requested_items as $item){
+                        foreach ($requested_items as $item) {
 
-                            if(empty($item['date_delivered']) || is_null($item['date_delivered'])){
+                            if (empty($item['date_delivered']) || is_null($item['date_delivered'])) {
                                 $date_delivered = null;
                             } else {
                                 $date_delivered = date_create($item['date_delivered']);
                                 $date_delivered = date_format($date_delivered, 'Y-m-d');
                             }
-                            DB:: table('procurement.requisition_details')
+                            DB::table('procurement.requisition_details')
                                 ->where('req_dtls_id', $item['req_dtls_id'])
-                                ->update(['date_delivered' => $date_delivered,'notes' => $item['notes']]);
+                                ->update(['date_delivered' => $date_delivered, 'notes' => $item['notes']]);
                         }
                     }
 
@@ -1154,5 +1166,27 @@ class ScController extends ApiController
             log::debug('catch mrfWithdraw ' . $e);
             return response()->json($e, 500);
         }
+    }
+
+    public function mrfWithdrawItem(Request $request)
+    {
+
+
+        DB::beginTransaction();
+        try {
+
+            DB::table('procurement.requisition_details')
+                ->where('req_dtls_id', $request->req_dtls_id)
+                ->update(['item_status' => 'Cancelled', 'withdrawndate' => now(), 'DisplayList' => 'HISTORY']);
+
+            DB::commit();
+            return response()->json(['message' => 'Materials has been withdrawn'], 200);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            log::debug('catch mrfWithdraw ' . $e);
+            return response()->json($e, 500);
+        }
+        
     }
 }

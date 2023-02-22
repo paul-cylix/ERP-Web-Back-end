@@ -324,6 +324,8 @@ Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmen
 
 Route::get('get-mrf/{req_id}/{companyid}/{frmname}', [ScController::class, 'getMrf']);
 Route::post('mrf-change-status', [ScController::class, 'mrfChangeStatus']);
+Route::post('post-withdraw-item', [ScController::class, 'mrfWithdrawItem']);
+
 
 Route::get('get-isAcnowledgeByMM/{companyid}/{req_id}/{frmname}', [ScController::class, 'isAcnowledgeByMM']);
 
