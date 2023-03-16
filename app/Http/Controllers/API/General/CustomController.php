@@ -491,10 +491,10 @@ class CustomController extends ApiController
             Log::debug('1');
             $isCompleted = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`actual_sign` a 
             WHERE a.`PROCESSID` = '".$request->processId."'
-            AND a.`USER_GRP_IND` = 'Acknowledgement of Reporting Manager' 
+            AND a.`USER_GRP_IND` = 'For HR Management Approval' 
             AND a.`FRM_NAME` = 'Leave Request'
             AND a.`COMPID` = '".$request->companyId."'
-            AND a.`STATUS` = 'Completed'), FALSE) AS tableCheck");
+            AND a.`STATUS` = 'In Progress'), FALSE) AS tableCheck");
 
             Log::debug($isCompleted[0]->tableCheck);
             
