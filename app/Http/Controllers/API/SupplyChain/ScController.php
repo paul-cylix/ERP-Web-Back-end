@@ -1202,4 +1202,32 @@ class ScController extends ApiController
         }
         
     }
+
+    public function getAllMaterials($companyId) {
+
+        DB::beginTransaction();
+        try {
+
+            $posts = DB::select("call procurement.llard_load_item_request_web_api('%', '" . $companyId . "')");
+            return response()->json([
+                'success' => true,
+                'message' => 'Your query has been successfully processed.',
+                'data' => $posts,
+            ], 200);
+
+        } catch (\Exception $e) {
+            log::debug('catch getAllMaterials ' . $e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error! Please Contact the administrator',
+                'error' => $e,
+            ], 500);
+        }
+
+
+
+
+
+
+    }
 }

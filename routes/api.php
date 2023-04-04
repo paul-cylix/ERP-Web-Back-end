@@ -322,12 +322,14 @@ Route::get('get-brand', [ScController::class, 'getBrand']);
 Route::post('cart-purchase', [ScController::class, 'purchase']);
 Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmentsBySoid']);
 
+
 Route::get('get-mrf/{req_id}/{companyid}/{frmname}', [ScController::class, 'getMrf']);
 Route::post('mrf-change-status', [ScController::class, 'mrfChangeStatus']);
 Route::post('post-withdraw-item', [ScController::class, 'mrfWithdrawItem']);
 
 
 Route::get('get-isAcnowledgeByMM/{companyid}/{req_id}/{frmname}', [ScController::class, 'isAcnowledgeByMM']);
+Route::get('get-all-materials/{companyId}', [ScController::class, 'getAllMaterials']);
 
 
 
