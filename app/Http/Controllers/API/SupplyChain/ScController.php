@@ -9,6 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\SupplyChain\Cart;
 use Illuminate\Support\Facades\Log;
 use App\Models\General\ActualSign;
+use App\Http\Controllers\API\General\CustomController;
 
 class ScController extends ApiController
 {
@@ -1057,6 +1058,18 @@ class ScController extends ApiController
             // Change Status of withdrawn, Rejected and clarify
             if (in_array($request->frmstatus, $request_status, TRUE)) {
                 log::debug('if');
+
+                if($request->frmstatus === 'clarify') {
+                    // log::debug($request);
+
+                    $customController = new CustomController;
+
+                    $notificationIdClarity = $customController->addNotification($request);
+                    log::debug($notificationIdClarity);
+                    
+                }
+
+
                 DB::table('procurement.requisition_main')
                     ->where('requisition_id', $request->processId)
                     ->update(['status' => $status]);
