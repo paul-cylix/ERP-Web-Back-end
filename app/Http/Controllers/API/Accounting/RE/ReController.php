@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\General\ActualSign;
 use App\Models\General\Attachments;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Storage;
+use function Psy\debug;
 
 class ReController extends ApiController
 {
@@ -381,6 +382,8 @@ class ReController extends ApiController
             $idArray = $request->idOfAttachmentsToDelete;
             $idArray = json_decode($idArray, true);
 
+            Log::debug(count($idArray));
+
             if(count($idArray) >= 1) {
 
                 foreach ($idArray as $id) {
@@ -410,6 +413,7 @@ class ReController extends ApiController
             foreach($result2 as $res) {
                 $public_path = $res->filepath . '/' . $res->filename;
                 $new_public_path = "storage/Attachments/$request->companyId/$request->class/$reqRef/$res->filename";   // For moving the file
+                $new_public_path2 = "storage/Attachments/$request->companyId/$request->class/$reqRef";   // For moving the file
 
 
                 $destinationPath = "public/Attachments/{$request->companyId}/{$request->class}/" . $reqRef;   // For moving the file
@@ -417,9 +421,20 @@ class ReController extends ApiController
 
 
                 if(File::exists($public_path)) {
+                    log::debug('if loob');
+                    log::debug($new_public_path);
+
+
+                    $path = public_path($new_public_path2);
+
+                    if (!File::exists($path)) {
+                        File::makeDirectory($path, 0755, true);
+                    }
+
                     File::move(public_path($public_path), public_path($new_public_path));
                     // log::debug(public_path($public_path));
                     // log::debug(public_path($new_public_path));
+
 
                     $row = Attachments::find($res->id);
                     $row->filepath = $storagePath;
@@ -436,6 +451,8 @@ class ReController extends ApiController
         }
         catch(\Exception $e)
         {
+            log::debug('Catch SaveRE Submit');
+            log::debug($e);
             DB:: rollback();
             return response()->json($e, 500);
         }
