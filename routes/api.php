@@ -324,6 +324,10 @@ Route::get('get-attachments-by-soid/{soid}', [ScController::class, 'getAttachmen
 
 
 Route::get('get-mrf/{req_id}/{companyid}/{frmname}', [ScController::class, 'getMrf']);
+
+// Use to get mrf items with subquery and join || can be deleted anytime
+Route::get('gettestmrf', [ScController::class, 'gettestmrf']);
+
 Route::post('mrf-change-status', [ScController::class, 'mrfChangeStatus']);
 Route::post('post-withdraw-item', [ScController::class, 'mrfWithdrawItem']);
 

@@ -90,7 +90,10 @@ class ScController extends ApiController
 
     public function getUom()
     {
-        $uom = DB::select("SELECT a.`base1_uomid` AS 'uom_id', a.`base1_uom` AS 'uom_name' FROM procurement.`setup_group_detail` a WHERE a.`base1_uomid` != 0 GROUP BY a.`base1_uomid`");
+        // $uom = DB::select("SELECT a.`base1_uomid` AS 'uom_id', a.`base1_uom` AS 'uom_name' FROM procurement.`setup_group_detail` a WHERE a.`base1_uomid` != 0 GROUP BY a.`base1_uomid`");
+        // Added trim to avoid line breaks
+        $uom = DB::select("SELECT a.`base1_uomid` AS 'uom_id', REPLACE(REPLACE(a.`base1_uom`, '\r', ''), '\n', '') AS 'uom_name' FROM procurement.`setup_group_detail` a WHERE a.`base1_uomid` != 0 GROUP BY a.`base1_uomid`");
+
         return response()->json($uom);
     }
 
@@ -911,15 +914,30 @@ class ScController extends ApiController
 
 
 
+            // $requisition_details = DB::table('procurement.requisition_details AS c')
+            //     ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
+            //     ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+            //     ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+            //     ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+            //     ->where('c.requisition_id', $req_id)
+            //     ->where('c.item_status', 'ACTIVE')
+
+            //     ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status')
+            //     ->get();
+
+
             $requisition_details = DB::table('procurement.requisition_details AS c')
                 ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
                 ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
                 ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
                 ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+                ->join('procurement.setup_group_detail AS uom', 'uom.base1_uom', '=', 'c.uom')
                 ->where('c.requisition_id', $req_id)
                 ->where('c.item_status', 'ACTIVE')
+                ->where('uom.base1_uomid', '!=', 0)
+                ->groupBy('uom.base1_uomid')
 
-                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status')
+                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status', 'uom.base1_uomid AS uom_id', 'uom.base1_uom AS uom', 'c.itemid AS id')
                 ->get();
 
 
@@ -996,6 +1014,30 @@ class ScController extends ApiController
             ], 500);
         }
     }
+
+
+    // ONLY FOR TESTING MRF ITEM WITH SUBQUERY AND JOIN
+    public function gettestmrf($req_id = 6809) {
+        
+        $requisition_details = DB::table('procurement.requisition_details AS c')
+        ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
+        ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+        ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+        ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+        ->join('procurement.setup_group_detail AS uom', 'uom.base1_uom', '=', 'c.uom')
+        ->where('c.requisition_id', $req_id)
+        ->where('c.item_status', 'ACTIVE')
+        ->where('uom.base1_uomid', '!=', 0)
+        ->groupBy('uom.base1_uomid')
+
+        ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status', 'uom.base1_uomid AS uom_id', 'uom.base1_uom AS uom_name')
+        ->get();
+
+        return response()->json($requisition_details);
+
+    }
+
+
 
     public function isAcnowledgeByMM($companyid, $req_id, $frmname)
     {
