@@ -330,11 +330,15 @@ Route::get('gettestmrf', [ScController::class, 'gettestmrf']);
 
 Route::post('mrf-change-status', [ScController::class, 'mrfChangeStatus']);
 Route::post('post-withdraw-item', [ScController::class, 'mrfWithdrawItem']);
+Route::post('post-reply-item', [ScController::class, 'mrfReplyItem']);
+
 
 
 Route::get('get-isAcnowledgeByMM/{companyid}/{req_id}/{frmname}', [ScController::class, 'isAcnowledgeByMM']);
 Route::get('get-all-materials/{companyId}', [ScController::class, 'getAllMaterials']);
 
+// Test
+Route::get('get-all-items/', [ScController::class, 'getAllItems']);
 
 
 

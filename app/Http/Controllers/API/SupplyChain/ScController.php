@@ -10,6 +10,10 @@ use App\Models\SupplyChain\Cart;
 use Illuminate\Support\Facades\Log;
 use App\Models\General\ActualSign;
 use App\Http\Controllers\API\General\CustomController;
+use App\Traits\ApiResponser;
+use PhpParser\Node\Stmt\TryCatch;
+
+use function Psy\debug;
 
 class ScController extends ApiController
 {
@@ -844,6 +848,7 @@ class ScController extends ApiController
             $requisition_id = $req_main[0]->requisition_id;
             $requisition_no = $req_main[0]->requisition_no;
             $title_id       = $req_main[0]->title_id;
+            $trans_type     = $req_main[0]->trans_type;
 
             $user = DB::table('general.users as a')
                 ->where('a.id', $userid)
@@ -926,19 +931,34 @@ class ScController extends ApiController
             //     ->get();
 
 
+            // $requisition_details = DB::table('procurement.requisition_details AS c')
+            //     ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
+            //     ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+            //     ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+            //     ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+            //     ->join('procurement.setup_group_detail AS uom', 'uom.base1_uom', '=', 'c.uom')
+            //     ->where('c.requisition_id', $req_id)
+            //     ->where('c.item_status', 'ACTIVE')
+            //     ->where('uom.base1_uomid', '!=', 0)
+            //     ->groupBy('uom.base1_uomid')
+
+            //     ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status', 'uom.base1_uomid AS uom_id', 'uom.base1_uom AS uom', 'c.itemid AS id')
+            //     ->get();
+
+
+            // FIXED CODE OF ABOVE
             $requisition_details = DB::table('procurement.requisition_details AS c')
                 ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
                 ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
                 ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
                 ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
-                ->join('procurement.setup_group_detail AS uom', 'uom.base1_uom', '=', 'c.uom')
                 ->where('c.requisition_id', $req_id)
                 ->where('c.item_status', 'ACTIVE')
-                ->where('uom.base1_uomid', '!=', 0)
-                ->groupBy('uom.base1_uomid')
 
-                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status', 'uom.base1_uomid AS uom_id', 'uom.base1_uom AS uom', 'c.itemid AS id')
+                ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status', 'c.uomid AS uom_id', 'c.uom AS uom', 'c.itemid AS id')
                 ->get();
+
+
 
 
             $isAcknowledgeByMM = DB::table('general.actual_sign as a')
@@ -980,6 +1000,7 @@ class ScController extends ApiController
                     'date_requested'          => $date_requested,
                     'planned_delivery_date'   => $deadline_date,
                     'actual_delivery_date'    => $deadline_date,
+                    'soid'                    => $soid,
                     'project_id'              => $project_id,
                     'project_name'            => $project_name,
                     'client_id'               => $client_id,
@@ -989,7 +1010,9 @@ class ScController extends ApiController
                     'remarks'                 => $remarks,
                     'isAcknowledgeByMM'       => $isAcknowledgeByMM,
                     'done_approving'          => $done_approving,
-                    'requisition_details'     => $requisition_details
+                    'requisition_details'     => $requisition_details,
+                    'trans_type'              => $trans_type,
+                    
                 ],
 
 
@@ -1245,6 +1268,154 @@ class ScController extends ApiController
         
     }
 
+    public function mrfReplyItem(Request $request){
+
+        log::debug($request);
+
+        $notif = DB::select("SELECT * FROM general.`notifications` a WHERE a.`PROCESSID` = '" . $request->processId . "' AND a.`FRM_NAME` = '" . $request->form . "' AND a.`SETTLED` = 'NO' ORDER BY a.`ID` DESC ");
+
+        if ($notif == True) {
+            DB::beginTransaction();
+
+            try {
+
+                $nParentId = $notif[0]->ID;
+                $nReceiverId = $notif[0]->SENDERID;
+                $nActualId = $notif[0]->ACTUALID;
+
+                // QUERY SOF_NUM using soid in => sales_order.sales_orders
+                $result = DB::table('sales_order.sales_orders as so')->select('so.soNum')->where('so.id', $request->soid)->get();
+                log::debug('query sales_orders = ' . $result);
+                $so_num = $result[0]->soNum;
+
+
+                // update mrf main table || get back status to in progress
+                $affected = DB::table('procurement.requisition_main')
+                    ->where('requisition_id', $request->processId)
+                    ->update([
+                            "deadline_date"  => $request->plannedDeliveryDate,
+                            "remarks"        => $request->mrfRemarks,
+                            "status"         => 'In Progress',
+                            "project_id"     => $request->costCenterId,
+                            "req_person_id"  => $request->employeeId,
+                            "so_id"          => $request->soid,
+                            "so_num"         => $so_num,
+                            "userid"         => $request->loggedUserId,
+                            "costid"         => $request->costCenterId,
+                            "costname"       => $request->costCenterName,
+                            "clientid"       => $request->clientId,
+                            "clientname"     => $request->clientName,
+                            "short_text"     => $request->mrfShortText,
+                            "rmid"           => $request->reportingManagerId,
+                        ]);
+
+                // Create instance of CustomController
+                $customController = new CustomController;
+
+                // Update gen.actual_sign 1 line
+                $customController->updateStatus($request);
+
+                // Add new obj to $request
+                $request->request->add(['purpose' => $request->mrfRemarks]);
+                $request->request->add(['dateNeeded' => $request->plannedDeliveryDate]);
+                $request->request->add(['projectId' => $request->costCenterId]);
+                $request->request->add(['projectName' => $request->costCenterName]);
+                $request->request->add(['payeeName' => '']);
+                $request->request->add(['amount' => 0.00]);
+
+                // Update Actual Sign Data Multi Line
+                $customController->updateActualSign($request);
+
+                // Insert data from general notifications
+                $customController->insertNotification($request, $nParentId, $nReceiverId, $nActualId);
+
+
+        
+                
+                // Check if request Details exists
+                $recordExists = DB::table('procurement.requisition_details')->where('requisition_id', $request->processId)->exists();
+                
+                if($recordExists){
+                // Delete requested items
+                    DB::table('procurement.requisition_details')->where('requisition_id', $request->processId)->delete();
+                }
+
+
+                $requestedItems = $request->requestedItems;
+                $requestedItems = json_decode($requestedItems, true);
+
+                // Insert requested items in procurement.requisition_details
+                $arrayRequestedItems = [];
+        
+                foreach ($requestedItems as $requestedItem) {
+
+                    $arrayItem = [
+                        'requisition_id'   => $request->processId,
+                        'itemid'           => $requestedItem['id'],
+                        'item_name'        => $requestedItem['specification'],
+                        'item_description' => $requestedItem['description'],
+                        'uom'              => $requestedItem['uom'],
+                        'uomid'            => $requestedItem['uom_id'],
+                        'req_qty'          => $requestedItem['order_qty'],
+        
+                        'costID'           => $request->costCenterId,
+                        'cost_name'        => $request->costCenterName,
+                        'client_id'        => $request->clientId,
+                        'client_name'      => $request->clientName,
+                        'date_needed'      => $request->plannedDeliveryDate,
+                        'notes'            => '',
+                        "status"           => 'In Progress',
+                        "factor"           => '',
+                        "factorqty"        => 0,
+                        "PR_qty"           => 0,
+                        "resrve_qty"       => 0,
+                        "ActualQty"        => 0,
+                        "duomid"           => $requestedItem['uom_id'],
+                        "reservuomname"    => '',
+                    ];
+                    array_push($arrayRequestedItems, $arrayItem);
+                }
+        
+                DB::table('procurement.requisition_details')->insert($arrayRequestedItems);
+                
+                // Remove Attachments
+                $request->request->add(['removedFiles' => $request->attchIdsToDelete]);
+                $customController->removeAttachments($request);
+
+                // Insert Attachments
+                $this->addAttachments($request);
+
+                DB::commit();
+                return response()->json([
+                    'status'  => true,
+                    'message' => 'Request is now back to In Progress'
+                ], 200);
+
+            } catch (\Exception $e) {
+                DB::rollback();
+                log::debug('ERROR mrfReplyItem' . $e);
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Request Error, Inform the administrator and try again later'
+                ], 500);
+            }
+
+        } else {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Please inform the Administrator and try again later'
+            ], 500);
+        }
+
+
+
+        
+
+
+
+
+    }
+
     public function getAllMaterials($companyId) {
 
         DB::beginTransaction();
@@ -1266,10 +1437,37 @@ class ScController extends ApiController
             ], 500);
         }
 
+    }
 
+    // use to test get MRF Code
+    public function getAllItems(){
 
+        // OLD REDUNDANT CODE BUG setup_group_detail
+        // $requisition_details = DB::table('procurement.requisition_details AS c')
+        // ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
+        // ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+        // ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+        // ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+        // ->join('procurement.setup_group_detail AS uom', 'uom.base1_uom', '=', 'c.uom')
+        // ->where('c.requisition_id', 6814)
+        // ->where('c.item_status', 'ACTIVE')
+        // ->where('uom.base1_uomid', '!=', 0)
+        // ->groupBy('uom.base1_uomid')
+        // ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status', 'uom.base1_uomid AS uom_id', 'uom.base1_uom AS uom', 'c.itemid AS id')
+        // ->get();
 
+        // FIXED CODE OF ABOVE
+        $requisition_details = DB::table('procurement.requisition_details AS c')
+        ->join('procurement.setup_group_detail AS s', 'c.itemid', '=', 's.group_detail_id')
+        ->join('procurement.setup_brand AS b', 'b.id', '=', 's.brand_id')
+        ->join('procurement.setup_group_type AS cat', 'cat.id', '=', 's.group_id')
+        ->join('procurement.setup_group AS subcat', 'subcat.group_id', '=', 's.category_id')
+        ->where('c.requisition_id', 6814)
+        ->where('c.item_status', 'ACTIVE')
 
+        ->select('c.req_qty as order_qty', 's.description as description', 's.item_code as item_code', 's.specification as specification', 's.SKU as sku', 'cat.id as category_id', 'cat.type as category_name', 'subcat.group_id as sub_category_id', 'subcat.group_description as sub_category_name', 'b.id as brand_id', 'b.description as brand_name', 'c.notes', 'c.date_delivered', 'c.req_dtls_id', 'c.item_status', 'c.uomid AS uom_id', 'c.uom AS uom', 'c.itemid AS id')
+        ->get();
 
+        return response()->json(['data' => $requisition_details]);
     }
 }
