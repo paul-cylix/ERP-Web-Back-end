@@ -1337,7 +1337,7 @@ class ScController extends ApiController
                 
                 if($recordExists){
                 // Delete requested items
-                    DB::table('procurement.requisition_details')->where('requisition_id', $request->processId)->delete();
+                    DB::table('procurement.requisition_details')->where('requisition_id', $request->processId)->where('item_status','ACTIVE')->delete();
                 }
 
 
