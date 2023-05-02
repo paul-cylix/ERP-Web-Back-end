@@ -699,6 +699,11 @@ class CustomController extends ApiController
     public function expenseType()
     {
         $expenseType = DB::select("SELECT type FROM accounting.`expense_type_setup`");
+        
+        // $expenseType = DB::table('accounting.expense_type_setup as expense')
+        // ->select('expense.type')
+        // ->get();
+
         return response()->json([$expenseType], 200);
     }
 

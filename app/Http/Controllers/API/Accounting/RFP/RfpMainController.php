@@ -29,7 +29,6 @@ class RfpMainController extends ApiController
      */
     public function create(Request $request)
     {
-
     }
 
     /**
@@ -148,7 +147,7 @@ class RfpMainController extends ApiController
         // $actualSign = new ActualSign();
         // $actualSign->PROCESSID = '213700';
         $request = new Request();
-        $request->headers->set('New-Set','1');
+        $request->headers->set('New-Set', '1');
 
         $value = $request->header('New-Set', 'default');
         $rfpMain->save();
@@ -157,75 +156,76 @@ class RfpMainController extends ApiController
         $user = User::findOrFail($value);
 
 
-        for ($x = 0; $x < 5; $x++) 
-        {
-            $actualSignData[] = 
-            ['PROCESSID' => $rfpMain->ID,
-            'USER_GRP_IND' => 'Acknowledgement of Accounting',
-            'FRM_NAME' => $value,
-            'TaskTitle' => $user['name'],
-            'NS' => '',
-            'FRM_CLASS' => 'REQUESTFORPAYMENT',
-            'REMARKS' => 'test',
-            'STATUS' => 'Not Started',
-            'UID_SIGN' => '0',
-            'TS' => '2021-09-14 07:58:22',
-            'DUEDATE' => '2021-09-14 00:00:00',
-            // 'SIGNDATETIME' => '',
-            'ORDERS' => $x,
-            'REFERENCE' => 'RFP-2021-0358',
-            'PODATE' => '2021-09-14',
-            'PONUM' => '',
-            'DATE' => '2021-09-14',
-            'INITID' => '136',
-            'FNAME' => 'Rosevir',
-            'LNAME' => 'Ceballos',
-            'MI' => '',
-            'DEPARTMENT' => 'Information Technology',
-            'RM_ID' => '11',
-            'REPORTING_MANAGER' => 'Chua, Konrad A. ',
-            'PROJECTID' => '298',
-            'PROJECT' => '3rd Space.IP CCTV.OP.3RD01.01.001',
-            'COMPID' => '1',
-            'COMPANY' => 'Cylix Technologies, Inc.',
-            'TYPE' => 'Request for Payment',
-            'CLIENTID' => '0',
-            'CLIENTNAME' => '3rd Space',
-            'VENDORID' => '0',
-            'VENDORNAME' => '',
-            'Max_approverCount' => '5',
-            'GUID_GROUPS' => '',
-            'DoneApproving' => '0',
-            'WebpageLink' => 'rfp_approve.php',
-            'ApprovedRemarks' => '',
-            'Payee' => 'Paul Iverson Cortez',
-            'CurrentSender' => '0',
-            'CurrentReceiver' => '0',
-            'NOTIFICATIONID' => '0',
-            'SENDTOID' => '0',
-            'NRN' => 'Imported',
-            'imported_from_excel' => '0',
-            'Amount' => '241237.000000',
-            'webapp' => '1'];
+        for ($x = 0; $x < 5; $x++) {
+            $actualSignData[] =
+                [
+                    'PROCESSID' => $rfpMain->ID,
+                    'USER_GRP_IND' => 'Acknowledgement of Accounting',
+                    'FRM_NAME' => $value,
+                    'TaskTitle' => $user['name'],
+                    'NS' => '',
+                    'FRM_CLASS' => 'REQUESTFORPAYMENT',
+                    'REMARKS' => 'test',
+                    'STATUS' => 'Not Started',
+                    'UID_SIGN' => '0',
+                    'TS' => '2021-09-14 07:58:22',
+                    'DUEDATE' => '2021-09-14 00:00:00',
+                    // 'SIGNDATETIME' => '',
+                    'ORDERS' => $x,
+                    'REFERENCE' => 'RFP-2021-0358',
+                    'PODATE' => '2021-09-14',
+                    'PONUM' => '',
+                    'DATE' => '2021-09-14',
+                    'INITID' => '136',
+                    'FNAME' => 'Rosevir',
+                    'LNAME' => 'Ceballos',
+                    'MI' => '',
+                    'DEPARTMENT' => 'Information Technology',
+                    'RM_ID' => '11',
+                    'REPORTING_MANAGER' => 'Chua, Konrad A. ',
+                    'PROJECTID' => '298',
+                    'PROJECT' => '3rd Space.IP CCTV.OP.3RD01.01.001',
+                    'COMPID' => '1',
+                    'COMPANY' => 'Cylix Technologies, Inc.',
+                    'TYPE' => 'Request for Payment',
+                    'CLIENTID' => '0',
+                    'CLIENTNAME' => '3rd Space',
+                    'VENDORID' => '0',
+                    'VENDORNAME' => '',
+                    'Max_approverCount' => '5',
+                    'GUID_GROUPS' => '',
+                    'DoneApproving' => '0',
+                    'WebpageLink' => 'rfp_approve.php',
+                    'ApprovedRemarks' => '',
+                    'Payee' => 'Paul Iverson Cortez',
+                    'CurrentSender' => '0',
+                    'CurrentReceiver' => '0',
+                    'NOTIFICATIONID' => '0',
+                    'SENDTOID' => '0',
+                    'NRN' => 'Imported',
+                    'imported_from_excel' => '0',
+                    'Amount' => '241237.000000',
+                    'webapp' => '1'
+                ];
         }
-        if ($actualSignData[0]['ORDERS'] == 0){
+        if ($actualSignData[0]['ORDERS'] == 0) {
             $actualSignData[0]['USER_GRP_IND'] = 'Reporting Manager';
             $actualSignData[0]['STATUS'] = 'In Progress';
         }
 
-        if ($actualSignData[1]['ORDERS'] == 1){
+        if ($actualSignData[1]['ORDERS'] == 1) {
             $actualSignData[1]['USER_GRP_IND'] = 'For Approval of Management';
         }
 
-        if ($actualSignData[2]['ORDERS'] == 2){
+        if ($actualSignData[2]['ORDERS'] == 2) {
             $actualSignData[2]['USER_GRP_IND'] = 'Releasing of Cash';
         }
 
-        if ($actualSignData[3]['ORDERS'] == 3){
+        if ($actualSignData[3]['ORDERS'] == 3) {
             $actualSignData[3]['USER_GRP_IND'] = 'Initiator';
         }
 
-        if ($actualSignData[4]['ORDERS'] == 4){
+        if ($actualSignData[4]['ORDERS'] == 4) {
             $actualSignData[4]['USER_GRP_IND'] = 'Acknowledgement of Accounting';
         }
 
@@ -233,13 +233,9 @@ class RfpMainController extends ApiController
 
 
 
-  
-        ActualSign::insert($actualSignData); 
-        return($user);
 
-
-
-
+        ActualSign::insert($actualSignData);
+        return ($user);
     }
 
     // public function saveRFP(Request $request){
@@ -289,5 +285,15 @@ class RfpMainController extends ApiController
     public function destroy(RfpMain $rfpMain)
     {
         //
+    }
+
+    public function getRfpWithDetails($id)
+    {
+        $data = RfpMain::select('accounting.rfp_details.CLIENTNAME', 'accounting.rfp_details.PURPOSED', 'accounting.rfp_details.PAYEE', 'accounting.rfp_details.CURRENCY', 'accounting.rfp_details.MOP', 'accounting.rfp_details.PROJECT')
+            ->join('accounting.rfp_details', 'accounting.rfp_details.RFPID', '=', 'accounting.request_for_payment.ID')
+            ->where('accounting.request_for_payment.ID', '=', $id)
+            ->get();
+
+        return $data;
     }
 }

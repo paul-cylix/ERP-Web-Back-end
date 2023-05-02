@@ -67,6 +67,8 @@ use App\Http\Controllers\API\Workflow\DraftController;
 // Accounting - RFP
 Route::resource('rfp', RfpController::class);
 Route::resource('rfp-main', RfpMainController::class);
+Route::get('getRfpWithDetails/{id}', [RfpMainController::class, 'getRfpWithDetails']);
+
 Route::resource('rfp-main-detail', RfpMainDetailController::class,  ['only' => ['show']]);
 Route::resource('rfp-main-liquidation', RFPMainLiquidationController::class,  ['only' => ['show']]);
 Route::resource('rfp-main-actualsign', RfpMainActualSignController::class,  ['only' => ['show']]);
