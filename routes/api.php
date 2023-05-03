@@ -148,6 +148,8 @@ Route::get('/get-employees/{companyId}', [CustomController::class, 'getEmployees
 Route::get('/get-reports', [CustomController::class, 'getMediumOfReport']);
 Route::get('/get-leavetype', [CustomController::class, 'getLeaveType']);
 
+Route::get('/get-rfp/{id}/{companyId}/{loggedUserId}', [CustomController::class, 'getRfp']);
+
 
 
 
