@@ -1785,4 +1785,41 @@ class CustomController extends ApiController
 
         ]);
     }
+
+
+
+    // RFP Main and Details get query
+    public function getrfpMainDetail($processId){
+        $rfpDetails = RfpMain::select('accounting.rfp_details.CLIENTNAME', 'accounting.rfp_details.PURPOSED', 'accounting.rfp_details.PAYEE', 'accounting.rfp_details.CURRENCY', 'accounting.rfp_details.MOP', 'accounting.rfp_details.PROJECT', 'accounting.request_for_payment.REQREF')
+        ->join('accounting.rfp_details', 'accounting.rfp_details.RFPID', '=', 'accounting.request_for_payment.ID')
+        ->where('accounting.request_for_payment.ID', '=', $processId)
+        ->get();
+
+        return $rfpDetails;
+    }
+
+    // get actual_sign
+    public function getActualSign($processId, $companyId, $form){
+        $actualSign = DB::table('general.actual_sign as a')
+            ->where('a.PROCESSID', $processId)
+            ->where('a.FRM_NAME', $form)
+            ->where('a.COMPID', $companyId)
+            ->select('a.RM_ID', 'a.REPORTING_MANAGER', 'a.ID', 'a.USER_GRP_IND', 'a.STATUS', 'a.TS', 'a.DUEDATE', 'a.Amount', 'a.INITID')
+            ->get();
+
+        return $actualSign;
+    }
+
+    // get Attachments
+    public function getAttachments2($processId, $form){
+        $attachments = Attachments::where('REQID', $processId)->where('formName',$form)->get();
+        return $attachments;
+    }
+
+    public function getRfpLiquidation($processId) {
+        $liquidation = RfpLiquidation::where('RFPID', $processId)->get();
+        return $liquidation;
+    }
+
+
 }

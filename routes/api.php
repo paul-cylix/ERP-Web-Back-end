@@ -425,10 +425,13 @@ Route::get('/get-getREF2', [CustomController::class, 'getREF2']); // get request
 
 
 
+// API ROUTES v2
+Route::prefix('v2')->group(function () {
+    // RFP
+    Route::get('/get-rfpliquidation/{id}', [CustomController::class, 'getRfpLiquidation']); // get request for purchase request
 
-
-
-
+   
+});
 
 
 
