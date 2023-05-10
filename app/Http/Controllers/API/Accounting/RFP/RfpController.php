@@ -12,6 +12,9 @@ use Illuminate\Support\Carbon;
 use App\Models\General\Attachments;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\API\General\CustomController;
+use App\Traits\ApiResponser;
+use App\Traits\AccountingTrait;
 
 class RfpController extends ApiController
 {
@@ -172,4 +175,57 @@ class RfpController extends ApiController
     {
         //
     }
+
+
+
+
+    // v2 RFP methodods
+    public function getInprogress($processId, $loggedUserId, $companyId, $formName) {
+        $rfpMainDetail = $this->getrfpMainDetail($processId);
+        $actualSign    = $this->getActualSign($processId,$companyId,$formName);
+        $attachments   = $this->getAttachments($processId, $formName);
+        $liquidation   = $this->getRfpLiquidation($processId);
+        
+        $inprogressId     = null;
+        $isLiquidation    = false;
+        $reportingManager = array("code" => "", "name" => "");
+        $dateRequested    = null;
+        $dateNeeded       = null;
+        $amount           = 0;
+        $initId           = 0;
+
+        foreach ($actualSign as $data) {
+            if ($data->STATUS === 'In Progress') {
+                $inprogressId = $data->ID;
+            }
+
+            if ($data->USER_GRP_IND === 'Releasing of Cash' && $data->STATUS === 'Completed') {
+                $isLiquidation = true;
+            }
+
+            if ($data->USER_GRP_IND === 'Reporting Manager') {
+                $reportingManager["code"] = $data->RM_ID;
+                $reportingManager["name"] = $data->REPORTING_MANAGER;
+                $dateRequested            = Carbon::createFromFormat('Y-m-d H:i:s', $data->TS)->format('Y-m-d');
+                $dateNeeded               = Carbon::createFromFormat('Y-m-d H:i:s', $data->DUEDATE)->format('Y-m-d');
+                $amount                   = $data->Amount;
+                $initId                   = $data->INITID;
+            }
+        }
+        
+        return response()->json([
+            "inprogressId"     => $inprogressId,
+            "isLiquidation"    => $isLiquidation,
+            'reportingManager' => $reportingManager,
+            "dateRequested"    => $dateRequested,
+            "dateNeeded"       => $dateNeeded,
+            "amount"           => $amount,
+            "initId"           => $initId,
+            "rfpMainDetail"    => $rfpMainDetail,
+            "actualSign"       => $actualSign,
+            "attachments"      => $attachments,
+            "liquidation"      => $liquidation,
+        ]);
+    }
+
 }
