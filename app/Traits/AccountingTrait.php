@@ -61,4 +61,14 @@ trait AccountingTrait
     a GROUP BY uid;");
     return $recipients;
   }
+
+  public function getCurrency() {
+    $currency = DB::select("SELECT CurrencyName as 'code', CurrencyName as 'name' FROM accounting.`currencysetup`");
+    return $currency;
+  }
+
+  public function getExpenseType(){
+    $expenseType = DB::select("SELECT type AS 'code', type AS 'name' FROM accounting.`expense_type_setup`");
+    return $expenseType;
+  }
 }

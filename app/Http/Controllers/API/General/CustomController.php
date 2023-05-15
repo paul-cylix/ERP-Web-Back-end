@@ -1762,19 +1762,19 @@ class CustomController extends ApiController
         $businesses = DB::select("SELECT a.`Business_Number` AS code, a.`business_fullname` AS 'name' FROM general.`business_list` a WHERE a.`status` LIKE 'Active%' AND a.`title_id` = $companyId AND a.`Type` = 'CLIENT' ORDER BY a.`business_fullname` ASC");
 
         $currency = DB::select("SELECT CurrencyName as 'code', CurrencyName as 'name' FROM accounting.`currencysetup`");
-
         $expenseType = DB::select("SELECT type AS 'code', type AS 'name' FROM accounting.`expense_type_setup`");
 
 
         return response()->json([
             "inprogressId"     => $inprogressId,
             "isLiquidation"    => $isLiquidation,
+            "reportingManager" => $reportingManager,
             "dateRequested"    => $dateRequested,
             "dateNeeded"       => $dateNeeded,
             "amount"           => $amount,
             "initId"           => $initId,
-            "reportingManager" => $reportingManager,
             "rfpDetails"       => $rfpDetails,
+            
             "attachments"      => $attachments,
             "recipients"       => $recipients,
             "businesses"       => $businesses,

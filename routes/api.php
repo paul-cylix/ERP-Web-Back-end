@@ -148,7 +148,6 @@ Route::get('/get-employees/{companyId}', [CustomController::class, 'getEmployees
 Route::get('/get-reports', [CustomController::class, 'getMediumOfReport']);
 Route::get('/get-leavetype', [CustomController::class, 'getLeaveType']);
 
-Route::get('/get-rfp/{id}/{companyId}/{loggedUserId}', [CustomController::class, 'getRfp']);
 
 
 
@@ -425,12 +424,14 @@ Route::get('/get-getREF2', [CustomController::class, 'getREF2']); // get request
 
 
 
+Route::get('/get-rfp/{id}/{companyId}/{loggedUserId}', [CustomController::class, 'getRfp']);
+
+
 // API ROUTES v2
 Route::prefix('v2')->group(function () {
     // RFP
-    Route::get('/get-rfp-inprogress/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getInprogress']); // get request for purchase request
-
-   
+    Route::get('/get-rfp-inprogress/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getInprogress']); // get request for purchase request   
+    Route::get('/get-rfp-approvals/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getApprovals']); // get request for purchase request   
 });
 
 
