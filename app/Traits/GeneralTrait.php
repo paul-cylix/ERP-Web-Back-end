@@ -34,5 +34,18 @@ trait GeneralTrait
       return $projects;
   }
 
+  public function getProjectsListAndSoid($companyId) 
+  {
+    $projects = SetupProject::select('project_id AS code','project_name AS name','SOID')
+      ->where('project_type','!=','MAIN OFFICE')
+      ->where('status','=','Active')
+      ->where('title_id','=',$companyId)
+      ->orderBy('project_name')
+      ->get();
+      return $projects;
+  }
+
+
+
 
 }

@@ -434,6 +434,10 @@ Route::prefix('v2')->group(function () {
     Route::get('/get-rfp-approvals/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getApprovals']); // get request for purchase request   
     Route::get('/get-rfp-clarifications/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getClarifications']); // get request for purchase request   
 
+    
+    Route::get('/get-ot-approvals/{id}/{userId}/{compId}/{form}', [OtController::class, 'getApprovals']); // get request for purchase request   
+
+
 });
 
 

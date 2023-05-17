@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Models\General\ActualSign;
 
+
 class OtController extends ApiController
 {
     public function validateOT(Request $request)
@@ -734,6 +735,45 @@ class OtController extends ApiController
             // throw error response
             return response()->json($e, 500);
         }
+    }
+
+    public function getApprovals($processId, $loggedUserId, $companyId, $formName){
+        $otMain      = $this->getOt($processId);
+        $actualSign  = $this->getActualSign($processId,$companyId,$formName);
+        $attachments = $this->getAttachments($processId, $formName);
+        $recipients  = $this->getRecipient($processId, $loggedUserId, $companyId, $formName);
+        $projects    = $this->getProjectsListAndSoid($companyId);
+
+
+        $inprogressId = null;
+        $isRmApprovalBool = false;
+
+        
+        foreach ($actualSign as $data) {
+            if ($data->STATUS === 'In Progress') {
+                $inprogressId = $data->ID;
+            }
+
+            if ($data->USER_GRP_IND === 'Approval of Reporting Manager' && $data->STATUS === 'In Progress') {
+                $isRmApprovalBool = true;
+            }
+
+        }
+
+          // Approval of Reporting Manager || check kung yung order 2 ay naka inprogress return boolean
+
+
+
+        return response()->json([
+            "otMain"           => $otMain,
+            "actualSign"       => $actualSign,
+            "attachments"      => $attachments,
+            "recipients"       => $recipients,
+            "projects"         => $projects,
+            "inprogressId"     => $inprogressId,
+            "isRmApprovalBool" => $isRmApprovalBool,
+
+        ]);
     }
 
 }

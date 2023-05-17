@@ -8,8 +8,9 @@ use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Traits\HumanResourceTrait;
 
 class ApiController extends Controller
 {
-    use ApiResponser, AccountingTrait, GeneralTrait;
+    use ApiResponser, AccountingTrait, GeneralTrait, HumanResourceTrait;
 }
