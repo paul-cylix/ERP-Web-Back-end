@@ -282,11 +282,72 @@ class RfpController extends ApiController
             "recipients"       => $recipients,
             "currency"         => $currency,
             "expenseType"      => $expenseType,
-            "businesses"      => $businesses,
+            "businesses"       => $businesses,
         ]);
 
+    }
 
+    public function getClarifications($processId, $loggedUserId, $companyId, $formName){
+        $rfpMainDetail     = $this->getrfpMainDetail($processId);
+        $actualSign        = $this->getActualSign($processId,$companyId,$formName);
+        $attachments       = $this->getAttachments($processId, $formName);
+        $liquidation       = $this->getRfpLiquidation($processId);
+        $recipients        = $this->getRecipient($processId, $loggedUserId, $companyId, $formName);
+        $currency          = $this->getCurrency();
+        $expenseType       = $this->getExpenseType();
+        $businesses        = $this->getBusinesses($companyId);
+        $projectId         = $rfpMainDetail[0]->PROJECTID;
+        $client            = $this->getClient($projectId);
+        $reportingManagers = $this->getReportingManagers($loggedUserId);
+        $projects          = $this->getProjectsList();
 
+        $inprogressId     = null;
+        $isLiquidation    = false;
+        $reportingManager = array("code" => "", "name" => "");
+        $dateRequested    = null;
+        $dateNeeded       = null;
+        $amount           = 0;
+        $initId           = 0;
+
+        foreach ($actualSign as $data) {
+            if ($data->STATUS === 'In Progress') {
+                $inprogressId = $data->ID;
+            }
+
+            if ($data->USER_GRP_IND === 'Releasing of Cash' && $data->STATUS === 'Completed') {
+                $isLiquidation = true;
+            }
+
+            if ($data->USER_GRP_IND === 'Reporting Manager') {
+                $reportingManager["code"] = $data->RM_ID;
+                $reportingManager["name"] = $data->REPORTING_MANAGER;
+                $dateRequested            = Carbon::createFromFormat('Y-m-d H:i:s', $data->TS)->format('Y-m-d');
+                $dateNeeded               = Carbon::createFromFormat('Y-m-d H:i:s', $data->DUEDATE)->format('Y-m-d');
+                $amount                   = $data->Amount;
+                $initId                   = $data->INITID;
+            }
+        }
+        
+        return response()->json([
+            "inprogressId"      => $inprogressId,
+            "isLiquidation"     => $isLiquidation,
+            'reportingManager'  => $reportingManager,
+            'reportingManagers' => $reportingManagers,
+            "dateRequested"     => $dateRequested,
+            "dateNeeded"        => $dateNeeded,
+            "amount"            => $amount,
+            "initId"            => $initId,
+            "rfpMainDetail"     => $rfpMainDetail,
+            "actualSign"        => $actualSign,
+            "attachments"       => $attachments,
+            "liquidation"       => $liquidation,
+            "recipients"        => $recipients,
+            "currency"          => $currency,
+            "expenseType"       => $expenseType,
+            "businesses"        => $businesses,
+            "client"            => $client,
+            "projects"          => $projects,
+        ]);
     }
 
 }

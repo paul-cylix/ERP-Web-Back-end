@@ -15,7 +15,7 @@ trait AccountingTrait
   // Get request_for_payment and rfp_details
   public function getrfpMainDetail($processId)
   {
-    $rfpDetails = RfpMain::select('accounting.rfp_details.CLIENTNAME', 'accounting.rfp_details.PURPOSED', 'accounting.rfp_details.PAYEE', 'accounting.rfp_details.CURRENCY', 'accounting.rfp_details.MOP', 'accounting.rfp_details.PROJECT', 'accounting.request_for_payment.REQREF')
+    $rfpDetails = RfpMain::select('accounting.rfp_details.ClientID', 'accounting.rfp_details.CLIENTNAME', 'accounting.rfp_details.PURPOSED', 'accounting.rfp_details.PAYEE', 'accounting.rfp_details.CURRENCY', 'accounting.rfp_details.MOP' , 'accounting.rfp_details.PROJECTID', 'accounting.rfp_details.PROJECT', 'accounting.request_for_payment.REQREF')
       ->join('accounting.rfp_details', 'accounting.rfp_details.RFPID', '=', 'accounting.request_for_payment.ID')
       ->where('accounting.request_for_payment.ID', '=', $processId)
       ->get();

@@ -432,6 +432,8 @@ Route::prefix('v2')->group(function () {
     // RFP
     Route::get('/get-rfp-inprogress/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getInprogress']); // get request for purchase request   
     Route::get('/get-rfp-approvals/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getApprovals']); // get request for purchase request   
+    Route::get('/get-rfp-clarifications/{id}/{userId}/{compId}/{form}', [RfpController::class, 'getClarifications']); // get request for purchase request   
+
 });
 
 
