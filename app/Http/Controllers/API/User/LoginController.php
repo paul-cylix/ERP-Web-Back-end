@@ -35,13 +35,19 @@ class LoginController extends Controller
         $isManager = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemreportingmanager` a WHERE a.`RMID` = $user->id LIMIT 1), FALSE) AS isManager");
         $isManager = $isManager[0]->isManager;
 
+        $isHR = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemuserroleprofile` a WHERE a.`UID` = '".$user->id."' AND a.`ProfileName` = 'HR Payroll'), FALSE) AS 'isHR'");
+        $isHR = $isHR[0]->isHR;
+        
+        Log::debug($isHR);
+
+
         // get user joined company
         $companies = $this->showCompanies($user->id);
 
         
 
 
-        $userData = array('user' => $user, 'Personal_Access_Token' => $token, 'expires_at' => $expiration, 'isManager' => $isManager, 'company' => $companies );
+        $userData = array('user' => $user, 'Personal_Access_Token' => $token, 'expires_at' => $expiration, 'isManager' => $isManager, 'company' => $companies, 'isHR' => $isHR );
         
   
         return response()->json($userData);
