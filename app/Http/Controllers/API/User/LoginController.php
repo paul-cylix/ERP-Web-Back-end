@@ -35,7 +35,8 @@ class LoginController extends Controller
         $isManager = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemreportingmanager` a WHERE a.`RMID` = $user->id LIMIT 1), FALSE) AS isManager");
         $isManager = $isManager[0]->isManager;
 
-        $isHR = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemuserroleprofile` a WHERE a.`UID` = '".$user->id."' AND a.`ProfileName` = 'HR Payroll'), FALSE) AS 'isHR'");
+        // $isHR = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemuserroleprofile` a WHERE a.`UID` = '".$user->id."' AND a.`ProfileName` = 'HR Payroll'), FALSE) AS 'isHR'");
+        $isHR = DB::select("SELECT IFNULL((SELECT TRUE FROM general.`systemuserroleprofile` a WHERE a.`UID` = '".$user->id."' AND a.`ProfileName` IN ('HR Payroll', 'Admin', 'HR Coordinator')), FALSE) AS 'isHR'");
         $isHR = $isHR[0]->isHR;
         
         Log::debug($isHR);
